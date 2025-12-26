@@ -1,37 +1,31 @@
-import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { cn, isSameUrl, resolveUrl } from '@/lib/utils';
-import { edit as editAppearance } from '@/routes/appearance';
-import { edit } from '@/routes/profile';
-import { show } from '@/routes/two-factor';
-import { edit as editPassword } from '@/routes/user-password';
-import { type NavItem } from '@/types';
+import { edit } from '@/routes/user-password';
 import { Link } from '@inertiajs/react';
+import { Camera, LockKeyhole } from 'lucide-react';
 import { type PropsWithChildren } from 'react';
 
-const sidebarNavItems: NavItem[] = [
-    {
-        title: 'Profile',
-        href: edit(),
-        icon: null,
-    },
-    {
-        title: 'Password',
-        href: editPassword(),
-        icon: null,
-    },
-    {
-        title: 'Two-Factor Auth',
-        href: show(),
-        icon: null,
-    },
-    {
-        title: 'Appearance',
-        href: editAppearance(),
-        icon: null,
-    },
-];
+// const sidebarNavItems: NavItem[] = [
+//     {
+//         title: 'Profile',
+//         href: edit(),
+//         icon: null,
+//     },
+//     {
+//         title: 'Password',
+//         href: editPassword(),
+//         icon: null,
+//     },
+//     {
+//         title: 'Two-Factor Auth',
+//         href: show(),
+//         icon: null,
+//     },
+//     {
+//         title: 'Appearance',
+//         href: editAppearance(),
+//         icon: null,
+//     },
+// ];
 
 export default function SettingsLayout({ children }: PropsWithChildren) {
     // When server-side rendering, we only render the layout on the client...
@@ -42,46 +36,35 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
     const currentPath = window.location.pathname;
 
     return (
-        <div className="px-4 py-6">
-            <Heading
-                title="Settings"
-                description="Manage your profile and account settings"
-            />
-
-            <div className="flex flex-col lg:flex-row lg:space-x-12">
-                <aside className="w-full max-w-xl lg:w-48">
-                    <nav className="flex flex-col space-y-1 space-x-0">
-                        {sidebarNavItems.map((item, index) => (
-                            <Button
-                                key={`${resolveUrl(item.href)}-${index}`}
-                                size="sm"
-                                variant="ghost"
-                                asChild
-                                className={cn('w-full justify-start', {
-                                    'bg-muted': isSameUrl(
-                                        currentPath,
-                                        item.href,
-                                    ),
-                                })}
-                            >
-                                <Link href={item.href}>
-                                    {item.icon && (
-                                        <item.icon className="h-4 w-4" />
-                                    )}
-                                    {item.title}
-                                </Link>
-                            </Button>
-                        ))}
-                    </nav>
-                </aside>
-
-                <Separator className="my-6 lg:hidden" />
-
-                <div className="flex-1 md:max-w-2xl">
-                    <section className="max-w-xl space-y-12">
-                        {children}
-                    </section>
+        <div className="relative flex h-full w-full flex-col px-4 py-6">
+            <div className="flex h-[23%] w-full flex-row place-content-end items-center gap-x-3 rounded-t-lg bg-foreground pr-10">
+                <Button
+                    asChild
+                    size="icon"
+                    variant="default"
+                    className="w-fit px-5 hover:bg-gray-100 hover:text-primary-foreground"
+                >
+                    <Link href={edit()}>
+                        <LockKeyhole />
+                        <span>Change Password</span>
+                    </Link>
+                </Button>
+            </div>
+            <div className="flex h-full flex-col rounded-b-lg bg-white pt-24 shadow-md">
+                <div className="absolute top-12 left-1/2 z-10 -translate-x-1/2 text-center">
+                    <div className="relative">
+                        <img
+                            src="https://lh3.googleusercontent.com/BKN1q6592B6RRjUCzycpYLMsRXezlbNW7lbJ3Y1xDUuzdJ_D9tbhr9GHk2_STmHBcIZYu4mNpu1cGgTU=w544-h544-l90-rj"
+                            alt="Profile"
+                            className="h-36 w-36 rounded-full border-4 border-white bg-gray-200"
+                        />
+                        <button className="absolute right-3 bottom-2 rounded-full bg-white p-1.5 shadow-md">
+                            <Camera className="h-5 w-5" />
+                        </button>
+                    </div>
+                    <p>Full Name</p>
                 </div>
+                {children}
             </div>
         </div>
     );

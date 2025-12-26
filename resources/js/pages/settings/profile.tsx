@@ -1,18 +1,20 @@
-import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
-import { send } from '@/routes/verification';
 import { type BreadcrumbItem, type SharedData } from '@/types';
-import { Transition } from '@headlessui/react';
-import { Form, Head, Link, usePage } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
 
-import DeleteUser from '@/components/delete-user';
-import HeadingSmall from '@/components/heading-small';
-import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { edit } from '@/routes/profile';
+import { CalendarIcon } from 'lucide-react';
+import React, { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -21,6 +23,23 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+function formatDate(date: Date | undefined) {
+    if (!date) {
+        return '';
+    }
+    return date.toLocaleDateString('en-US', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+    });
+}
+function isValidDate(date: Date | undefined) {
+    if (!date) {
+        return false;
+    }
+    return !isNaN(date.getTime());
+}
+
 export default function Profile({
     mustVerifyEmail,
     status,
@@ -28,120 +47,137 @@ export default function Profile({
     mustVerifyEmail: boolean;
     status?: string;
 }) {
+    const [open, setOpen] = React.useState(false);
+    const [date, setDate] = React.useState<Date | undefined>(
+        new Date('2003-05-03'),
+    );
+    const [month, setMonth] = React.useState<Date | undefined>(date);
+    const [value, setValue] = React.useState(formatDate(date));
     const { auth } = usePage<SharedData>().props;
+
+    const [studentNumber, setStudentNumber] = useState('2023-00063-CM-0');
+    const [email, setEmail] = useState('mobaraqcamar@test.com');
+    const [firstName, setFirstName] = useState('Zanti');
+    const [lastName, setLastName] = useState('Man');
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Profile settings" />
-
             <SettingsLayout>
-                <div className="space-y-6">
-                    <HeadingSmall
-                        title="Profile information"
-                        description="Update your name and email address"
-                    />
-
-                    <Form
-                        {...ProfileController.update.form()}
-                        options={{
-                            preserveScroll: true,
-                        }}
-                        className="space-y-6"
-                    >
-                        {({ processing, recentlySuccessful, errors }) => (
-                            <>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="name">Name</Label>
-
+                <div className="mx-40 flex flex-col">
+                    <p>Account Details</p>
+                    <hr></hr>
+                    <div className="mt-2 mr-24 flex flex-col gap-y-4">
+                        <div className="flex flex-row justify-between">
+                            <div className="flex flex-col">
+                                <p>Student Number</p>
+                                <Input
+                                    value={studentNumber}
+                                    onChange={(e) =>
+                                        setStudentNumber(e.target.value)
+                                    }
+                                ></Input>
+                            </div>
+                            <div className="flex flex-col">
+                                <p>Email</p>
+                                <Input
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                ></Input>
+                            </div>
+                        </div>
+                        <div className="flex flex-row justify-between">
+                            <div className="flex flex-col">
+                                <p>First Name</p>
+                                <Input
+                                    value={firstName}
+                                    onChange={(e) =>
+                                        setFirstName(e.target.value)
+                                    }
+                                ></Input>
+                            </div>
+                            <div className="flex flex-col">
+                                <p>Last Name</p>
+                                <Input
+                                    value={lastName}
+                                    onChange={(e) =>
+                                        setLastName(e.target.value)
+                                    }
+                                ></Input>
+                            </div>
+                        </div>
+                        <div className="flex flex-row">
+                            <div className="flex flex-col gap-3">
+                                <Label htmlFor="date" className="px-1">
+                                    Date of Birth
+                                </Label>
+                                <div className="relative flex gap-2">
                                     <Input
-                                        id="name"
-                                        className="mt-1 block w-full"
-                                        defaultValue={auth.user.name}
-                                        name="name"
-                                        required
-                                        autoComplete="name"
-                                        placeholder="Full name"
+                                        id="date"
+                                        value={value}
+                                        placeholder="June 01, 2025"
+                                        className="bg-background pr-10"
+                                        onChange={(e) => {
+                                            const date = new Date(
+                                                e.target.value,
+                                            );
+                                            setValue(e.target.value);
+                                            if (isValidDate(date)) {
+                                                setDate(date);
+                                                setMonth(date);
+                                            }
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'ArrowDown') {
+                                                e.preventDefault();
+                                                setOpen(true);
+                                            }
+                                        }}
                                     />
-
-                                    <InputError
-                                        className="mt-2"
-                                        message={errors.name}
-                                    />
+                                    <Popover open={open} onOpenChange={setOpen}>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                id="date-picker"
+                                                variant="ghost"
+                                                className="absolute top-1/2 right-2 size-6 -translate-y-1/2"
+                                            >
+                                                <CalendarIcon className="size-3.5" />
+                                                <span className="sr-only">
+                                                    Select date
+                                                </span>
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent
+                                            className="w-auto overflow-hidden p-0"
+                                            align="end"
+                                            alignOffset={-8}
+                                            sideOffset={10}
+                                        >
+                                            <Calendar
+                                                mode="single"
+                                                selected={date}
+                                                captionLayout="dropdown"
+                                                month={month}
+                                                onMonthChange={setMonth}
+                                                onSelect={(selectedDate) => {
+                                                    setDate(selectedDate);
+                                                    setValue(
+                                                        formatDate(
+                                                            selectedDate,
+                                                        ),
+                                                    );
+                                                    setOpen(false);
+                                                }}
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
                                 </div>
-
-                                <div className="grid gap-2">
-                                    <Label htmlFor="email">Email address</Label>
-
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        className="mt-1 block w-full"
-                                        defaultValue={auth.user.email}
-                                        name="email"
-                                        required
-                                        autoComplete="username"
-                                        placeholder="Email address"
-                                    />
-
-                                    <InputError
-                                        className="mt-2"
-                                        message={errors.email}
-                                    />
-                                </div>
-
-                                {mustVerifyEmail &&
-                                    auth.user.email_verified_at === null && (
-                                        <div>
-                                            <p className="-mt-4 text-sm text-muted-foreground">
-                                                Your email address is
-                                                unverified.{' '}
-                                                <Link
-                                                    href={send()}
-                                                    as="button"
-                                                    className="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
-                                                >
-                                                    Click here to resend the
-                                                    verification email.
-                                                </Link>
-                                            </p>
-
-                                            {status ===
-                                                'verification-link-sent' && (
-                                                <div className="mt-2 text-sm font-medium text-green-600">
-                                                    A new verification link has
-                                                    been sent to your email
-                                                    address.
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-
-                                <div className="flex items-center gap-4">
-                                    <Button
-                                        disabled={processing}
-                                        data-test="update-profile-button"
-                                    >
-                                        Save
-                                    </Button>
-
-                                    <Transition
-                                        show={recentlySuccessful}
-                                        enter="transition ease-in-out"
-                                        enterFrom="opacity-0"
-                                        leave="transition ease-in-out"
-                                        leaveTo="opacity-0"
-                                    >
-                                        <p className="text-sm text-neutral-600">
-                                            Saved
-                                        </p>
-                                    </Transition>
-                                </div>
-                            </>
-                        )}
-                    </Form>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex flex-row place-content-end">
+                        <Button>Save</Button>
+                    </div>
                 </div>
-
-                <DeleteUser />
             </SettingsLayout>
         </AppLayout>
     );

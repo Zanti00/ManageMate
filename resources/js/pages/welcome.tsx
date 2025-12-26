@@ -1,4 +1,4 @@
-import { dashboard, login } from '@/routes';
+import { dashboard } from '@/routes/admin';
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 
@@ -31,7 +31,7 @@ export default function Welcome({
                         ) : (
                             <>
                                 <Link
-                                    href={login()}
+                                    // href={home()}
                                     className="inline-block rounded-sm border border-transparent px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#19140035] dark:text-[#EDEDEC] dark:hover:border-[#3E3E3A]"
                                 >
                                     Log ins

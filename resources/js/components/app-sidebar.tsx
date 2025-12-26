@@ -11,23 +11,24 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import adminEvent from '@/routes/admin/event';
+import scanQr from '@/routes/admin/scan-qr';
+import admins from '@/routes/superadmin/admins';
+import superAdminEvent from '@/routes/superadmin/event';
+import userEvent from '@/routes/user/event';
+import notification from '@/routes/user/notification';
 import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, Settings } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import {
+    Bell,
+    BookOpen,
+    Calendar,
+    Folder,
+    LayoutGrid,
+    ScanQrCode,
+    UserRoundCog,
+} from 'lucide-react';
 import AppLogo from './app-logo';
-
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-    {
-        title: 'Settings',
-        href: dashboard(),
-        icon: Settings,
-    },
-];
 
 const footerNavItems: NavItem[] = [
     {
@@ -43,6 +44,56 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const { auth } = usePage().props as any;
+
+    const getEventHref = () => {
+        if (auth.user.isSuperAdmin) return superAdminEvent.index();
+        if (auth.user.isAdmin) return adminEvent.index();
+        return userEvent.index();
+    };
+
+    const eventHref = getEventHref();
+
+    // Build navigation items based on user role
+    const mainNavItems: NavItem[] = [
+        {
+            title: 'Dashboard',
+            href: dashboard(),
+            icon: LayoutGrid,
+        },
+        {
+            title: 'Event Page',
+            href: eventHref,
+            icon: Calendar,
+        },
+    ];
+
+    // Add admin-only navigation items
+    if (auth.user.isAdmin) {
+        mainNavItems.push({
+            title: 'Scan QR',
+            href: scanQr.index(),
+            icon: ScanQrCode,
+        });
+    }
+
+    // Add user-only navigation items
+    if (auth.user.isUser) {
+        mainNavItems.push({
+            title: 'Notifications',
+            href: notification.index(),
+            icon: Bell,
+        });
+    }
+
+    if (auth.user.isSuperAdmin) {
+        mainNavItems.push({
+            title: 'Admins',
+            href: admins.index(),
+            icon: UserRoundCog,
+        });
+    }
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>

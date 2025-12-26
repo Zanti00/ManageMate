@@ -29,14 +29,14 @@ export default function Password() {
             <Head title="Password settings" />
 
             <SettingsLayout>
-                <div className="space-y-6">
+                <div className="mx-80 space-y-6">
                     <HeadingSmall
                         title="Update password"
                         description="Ensure your account is using a long, random password to stay secure"
                     />
 
                     <Form
-                        {...PasswordController.update.form()}
+                        {...PasswordController.update.put()}
                         options={{
                             preserveScroll: true,
                         }}
@@ -59,7 +59,7 @@ export default function Password() {
                     >
                         {({ errors, processing, recentlySuccessful }) => (
                             <>
-                                <div className="grid gap-2">
+                                <div className="grid">
                                     <Label htmlFor="current_password">
                                         Current password
                                     </Label>
@@ -79,7 +79,7 @@ export default function Password() {
                                     />
                                 </div>
 
-                                <div className="grid gap-2">
+                                <div className="grid">
                                     <Label htmlFor="password">
                                         New password
                                     </Label>
@@ -97,7 +97,7 @@ export default function Password() {
                                     <InputError message={errors.password} />
                                 </div>
 
-                                <div className="grid gap-2">
+                                <div className="grid">
                                     <Label htmlFor="password_confirmation">
                                         Confirm password
                                     </Label>
@@ -116,7 +116,7 @@ export default function Password() {
                                     />
                                 </div>
 
-                                <div className="flex items-center gap-4">
+                                <div className="flex place-content-end items-center gap-4">
                                     <Button
                                         disabled={processing}
                                         data-test="update-password-button"

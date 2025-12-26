@@ -37,6 +37,7 @@ export interface User {
     avatar?: string;
     email_verified_at: string | null;
     two_factor_enabled?: boolean;
+    is_admin?: number; // Add the is_admin field
     created_at: string;
     updated_at: string;
     [key: string]: unknown; // This allows for additional properties...
