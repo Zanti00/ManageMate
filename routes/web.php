@@ -3,8 +3,9 @@
 use App\Http\Controllers\Admin\EventController as AdminEventController;
 use App\Http\Controllers\Admin\ScanQRController;
 use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\SuperAdmin\AdminManagementController;
+use App\Http\Controllers\SuperAdmin\AdminController;
 use App\Http\Controllers\SuperAdmin\EventController as SuperAdminEventController;
+use App\Http\Controllers\User\DashboardController;
 use App\Http\Controllers\User\EventController as UserEventController;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
@@ -22,12 +23,12 @@ Route::get('/', function () {
 
 Route::get('/dashboard', function () {
     if (Gate::allows('admin')) {
-        return Inertia::render('admin/dashboard');
+        return redirect()->route('admin.dashboard');
     } elseif (Gate::allows('superadmin')) {
-        return Inertia::render('superadmin/dashboard');
+        return redirect()->route('superadmin.dashboard');
     }
 
-    return Inertia::render('user/dashboard');
+    return redirect()->route('user.dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 // ----------------------
@@ -35,12 +36,11 @@ Route::get('/dashboard', function () {
 // ----------------------
 Route::middleware(['auth', 'verified', 'can:user'])->prefix('user')->name('user.')->group(function () {
 
-    Route::get('/dashboard', function () {
-        return Inertia::render('user/dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::get('/events', [UserEventController::class, 'index'])->name('event.index');
-
+    Route::resource('/event', UserEventController::class);
+    Route::post('/event/{eventId}/register', [UserEventController::class, 'register'])->name('event.register');
+    Route::get('/user/event/my-events', [UserEventController::class, 'myevents'])->name('event.myevents');
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notification.index');
 });
 
@@ -53,9 +53,7 @@ Route::middleware(['auth', 'verified', 'can:admin'])->prefix('admin')->name('adm
         return Inertia::render('admin/dashboard');
     })->name('dashboard');
 
-    Route::get('/events', [AdminEventController::class, 'index'])->name('event.index');
-    Route::get('/events/create', [AdminEventController::class, 'create'])->name('event.create');
-    Route::get('/events/view', [AdminEventController::class, 'view'])->name('event.view');
+    Route::resource('event', AdminEventController::class);
     Route::get('/scanqr', [ScanQRController::class, 'index'])->name('scan-qr.index');
 });
 
@@ -68,10 +66,11 @@ Route::middleware(['auth', 'verified', 'can:superadmin'])->prefix('superadmin')-
         return Inertia::render('superadmin/dashboard');
     })->name('dashboard');
 
-    Route::get('/events', [SuperAdminEventController::class, 'index'])->name('event.index');
-    Route::get('/admins', [AdminManagementController::class, 'index'])->name('admins.index');
-    Route::get('/admins/view', [AdminManagementController::class, 'edit'])->name('admins.view');
-    Route::get('/admins/create', [AdminManagementController::class, 'create'])->name('admins.create');
+    Route::resource('event', SuperAdminEventController::class);
+    Route::patch('/event/{event}/approve-event', [SuperAdminEventController::class, 'approve_event'])->name('event.approve');
+    Route::patch('/event/{event}/reject-event', [SuperAdminEventController::class, 'reject_event'])->name('event.reject');
+    Route::resource('admin', AdminController::class);
+    Route::patch('/admin/{admin}/restore', [AdminController::class, 'restore'])->name('admin.restore');
 });
 
 require __DIR__.'/settings.php';

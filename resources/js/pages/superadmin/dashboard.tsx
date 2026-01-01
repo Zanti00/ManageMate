@@ -157,7 +157,7 @@ export default function SuperAdminDashboard() {
                     <Card className="col-span-2 p-6">
                         <div className="flex flex-col gap-4">
                             <div className="flex flex-row justify-between">
-                                <Label>Top Performing Organization</Label>
+                                <Label>Top Performing Organizations</Label>
                                 <Label>View All</Label>
                             </div>
                             <Card className="bg-gray-100 py-3">

@@ -1,20 +1,12 @@
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Card, CardTitle } from '@/components/ui/card';
-import { EventCard } from '@/components/ui/card-event';
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover';
+import { EventCard } from '@/components/ui/event-card';
 import { SearchInput } from '@/components/ui/search-input';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import admin from '@/routes/admin';
 import { type BreadcrumbItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { ChevronDownIcon } from 'lucide-react';
-import React from 'react';
+import { useState } from 'react';
 
 const { create } = admin.event;
 
@@ -25,71 +17,120 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function AdminEvent() {
-    const [open, setOpen] = React.useState(false);
-    const [date, setDate] = React.useState<Date | undefined>(undefined);
+type FilterValues = 'Pending' | 'Approved' | 'Rejected' | 'Closed';
+
+type Event = {
+    id: number;
+    title: string;
+    location: string;
+    price: number;
+    start_date: string;
+    end_date: string;
+    start_time: string;
+    end_time: string;
+    submit_date: number;
+    attendees?: number;
+    status?: FilterValues; // for compatibility, but will be set below
+};
+
+interface Props {
+    events?: Event[];
+}
+
+export default function AdminEvent({ events = [] }: Props) {
+    const eventsWithStatus = events.map((event) => ({
+        ...event,
+        status: getStatus(event),
+    }));
+
+    const [statusFilter, setStatusFilter] = useState<'all' | FilterValues>(
+        'all',
+    );
+
+    const filteredStatus =
+        statusFilter === 'all'
+            ? eventsWithStatus
+            : eventsWithStatus.filter((e) => e.status === statusFilter);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <div className="flex flex-col gap-y-5 p-4">
-                <Card className="shadow-md">
-                    <div className="flex flex-row items-center justify-between px-4">
-                        <div className="flex flex-row">
-                            <Button>
-                                <Link href={create().url}>Create Event</Link>
-                            </Button>
-                        </div>
-                        <div className="flex flex-row items-center gap-2">
-                            <Button>Sort by</Button>
-                            <div className="flex flex-col gap-3">
-                                <Popover open={open} onOpenChange={setOpen}>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant="default"
-                                            id="date"
-                                            className="w-[100%] justify-between font-normal"
-                                        >
-                                            {date
-                                                ? date.toLocaleDateString()
-                                                : 'Select date'}
-                                            <ChevronDownIcon />
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent
-                                        className="w-auto overflow-hidden p-0"
-                                        align="start"
-                                    >
-                                        <Calendar
-                                            mode="single"
-                                            selected={date}
-                                            captionLayout="dropdown"
-                                            onSelect={(date) => {
-                                                setDate(date);
-                                                setOpen(false);
-                                            }}
-                                        />
-                                    </PopoverContent>
-                                </Popover>
-                            </div>
-                            <SearchInput
-                                className="w-64"
-                                placeholder="Search..."
-                            />
-                        </div>
+            <div className="flex flex-col gap-y-5 p-8">
+                <div className="flex flex-row-reverse gap-4">
+                    <Button>
+                        <Link href={create().url}>Create Event</Link>
+                    </Button>
+                </div>
+                <Tabs
+                    value={statusFilter}
+                    onValueChange={(value) => setStatusFilter(value as any)}
+                >
+                    <div className="flex flex-row justify-between gap-50 rounded-2xl bg-white p-3 shadow-sm">
+                        <TabsList className="h-10 gap-3">
+                            <TabsTrigger value="all">
+                                All ({events.length})
+                            </TabsTrigger>
+
+                            <TabsTrigger value="Pending">
+                                Pending (
+                                {
+                                    eventsWithStatus.filter(
+                                        (e) => e.status === 'Pending',
+                                    ).length
+                                }
+                                )
+                            </TabsTrigger>
+
+                            <TabsTrigger value="Approved">
+                                Approved (
+                                {
+                                    eventsWithStatus.filter(
+                                        (e) => e.status === 'Approved',
+                                    ).length
+                                }
+                                )
+                            </TabsTrigger>
+                            <TabsTrigger value="Rejected">
+                                Rejected (
+                                {
+                                    eventsWithStatus.filter(
+                                        (e) => e.status === 'Rejected',
+                                    ).length
+                                }
+                                )
+                            </TabsTrigger>
+                            <TabsTrigger value="Closed">
+                                Closed (
+                                {
+                                    eventsWithStatus.filter(
+                                        (e) => e.status === 'Closed',
+                                    ).length
+                                }
+                                )
+                            </TabsTrigger>
+                        </TabsList>
+                        <SearchInput></SearchInput>
                     </div>
-                </Card>
-                <Card className="px-4 shadow-md">
-                    <div className="flex flex-row justify-between">
-                        <CardTitle>All Events</CardTitle>
-                        <div className="flex flex-row gap-x-1">
-                            <Badge variant="pending">Pending</Badge>
-                            <Badge variant="approved">Approved</Badge>
-                            <Badge variant="rejected">Rejected</Badge>
-                            <Badge variant="closed">Closed</Badge>
-                        </div>
-                    </div>
-                    <EventCard></EventCard>
-                </Card>
+                </Tabs>
+                <div className="grid grid-cols-3 gap-6">
+                    {filteredStatus.map((event) => (
+                        <EventCard key={event.id} {...event} />
+                    ))}
+                </div>
             </div>
         </AppLayout>
     );
+}
+
+function getStatus(event: any): FilterValues {
+    if (event.status === 'pending') {
+        return 'Pending' as FilterValues;
+    } else if (event.status === 'approved') {
+        return 'Approved' as FilterValues;
+    } else if (event.status === 'rejected') {
+        return 'Rejected' as FilterValues;
+    } else if (event.status === 'closed') {
+        return 'Closed' as FilterValues;
+    } else {
+        return 'Pending' as FilterValues;
+    }
 }

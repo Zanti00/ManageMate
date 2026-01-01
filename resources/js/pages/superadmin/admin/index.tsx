@@ -12,7 +12,7 @@ import { useState } from 'react';
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Admins',
-        href: superadmin.admins.index.url(),
+        href: superadmin.admin.index.url(),
     },
 ];
 
@@ -20,74 +20,46 @@ type FilterValues = 'Active' | 'Inactive';
 
 type Admin = {
     id: number;
-    status: FilterValues;
-    orgName: string;
-    orgEmail: string;
-    admin: string;
-    adminContact: string;
-    adminJoinDate: Date;
-    totalEvent: number;
-    activeEvent: number;
-    pendingEvent: number;
-    attendees: number;
+    first_name: string;
+    middle_name?: string;
+    last_name: string;
+    email: string;
+    phone_number: string;
+    created_at: string;
+    is_deleted: string;
+    totalEvent?: number;
+    activeEvent?: number;
+    pendingEvent?: number;
+    attendees?: number;
+    status?: FilterValues; // for compatibility, but will be set below
 };
 
-const admins: Admin[] = [
-    {
-        id: 1,
-        orgName: 'CommITs',
-        orgEmail: 'commitspupqc@test.com',
-        admin: 'Vanessa Reuteras',
-        adminContact: '09770626462',
-        adminJoinDate: new Date('2024-01-15'),
-        totalEvent: 5,
-        activeEvent: 3,
-        pendingEvent: 2,
-        attendees: 150,
-        status: 'Active',
-    },
-    {
-        id: 2,
-        orgName: 'Tech Club',
-        orgEmail: 'techclub@test.com',
-        admin: 'John Doe',
-        adminContact: '09123456789',
-        adminJoinDate: new Date('2024-02-20'),
-        totalEvent: 3,
-        activeEvent: 1,
-        pendingEvent: 1,
-        attendees: 80,
-        status: 'Active',
-    },
-    {
-        id: 3,
-        orgName: 'Science Society',
-        orgEmail: 'science@test.com',
-        admin: 'Jane Smith',
-        adminContact: '09987654321',
-        adminJoinDate: new Date('2023-12-10'),
-        totalEvent: 2,
-        activeEvent: 0,
-        pendingEvent: 0,
-        attendees: 45,
-        status: 'Inactive',
-    },
-];
+interface Props {
+    admins?: Admin[];
+}
 
-export default function AdminsManagement() {
+export default function AdminsManagement({ admins = [] }: Props) {
+    const adminsWithStatus = admins.map((admin) => ({
+        ...admin,
+        status:
+            admin.is_deleted === '0'
+                ? ('Active' as FilterValues)
+                : ('Inactive' as FilterValues),
+    }));
+
     const [statusFilter, setStatusFilter] = useState<'all' | FilterValues>(
         'all',
     );
 
     const filteredStatus =
         statusFilter === 'all'
-            ? admins
-            : admins.filter((e) => e.status === statusFilter);
+            ? adminsWithStatus
+            : adminsWithStatus.filter((e) => e.status === statusFilter);
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-8 p-6">
                 <div className="flex flex-row place-content-end">
-                    <Link href={superadmin.admins.create.url()}>
+                    <Link href={superadmin.admin.create.url()}>
                         <Button>Create Admin</Button>
                     </Link>
                 </div>
@@ -122,8 +94,9 @@ export default function AdminsManagement() {
                             <TabsTrigger value="Active">
                                 Active (
                                 {
-                                    admins.filter((e) => e.status === 'Active')
-                                        .length
+                                    adminsWithStatus.filter(
+                                        (e) => e.status === 'Active',
+                                    ).length
                                 }
                                 )
                             </TabsTrigger>
@@ -131,7 +104,7 @@ export default function AdminsManagement() {
                             <TabsTrigger value="Inactive">
                                 Inactive (
                                 {
-                                    admins.filter(
+                                    adminsWithStatus.filter(
                                         (e) => e.status === 'Inactive',
                                     ).length
                                 }
@@ -143,20 +116,7 @@ export default function AdminsManagement() {
                 </Tabs>
                 <div className="grid grid-cols-2 gap-8">
                     {filteredStatus.map((admin) => (
-                        <AdminCard
-                            key={admin.id}
-                            id={admin.id}
-                            status={admin.status}
-                            orgName={admin.orgName}
-                            orgEmail={admin.orgEmail}
-                            admin={admin.admin}
-                            adminContact={admin.adminContact}
-                            adminJoinDate={admin.adminJoinDate}
-                            totalEvent={admin.totalEvent}
-                            activeEvent={admin.activeEvent}
-                            pendingEvent={admin.pendingEvent}
-                            attendees={admin.attendees}
-                        ></AdminCard>
+                        <AdminCard key={admin.id} {...admin} />
                     ))}
                 </div>
             </div>

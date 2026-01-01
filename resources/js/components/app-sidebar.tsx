@@ -11,18 +11,16 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
-import adminEvent from '@/routes/admin/event';
-import scanQr from '@/routes/admin/scan-qr';
-import admins from '@/routes/superadmin/admins';
-import superAdminEvent from '@/routes/superadmin/event';
-import userEvent from '@/routes/user/event';
-import notification from '@/routes/user/notification';
+import admin from '@/routes/admin';
+import superadmin from '@/routes/superadmin';
+import user from '@/routes/user';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import {
     Bell,
     BookOpen,
     Calendar,
+    CalendarHeart,
     Folder,
     LayoutGrid,
     ScanQrCode,
@@ -44,25 +42,34 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { auth } = usePage().props as any;
 
     const getEventHref = () => {
-        if (auth.user.isSuperAdmin) return superAdminEvent.index();
-        if (auth.user.isAdmin) return adminEvent.index();
-        return userEvent.index();
+        if (auth.user.isSuperAdmin) return superadmin.event.index();
+        if (auth.user.isAdmin) return admin.event.index();
+        return user.event.index();
     };
 
     const eventHref = getEventHref();
+
+    const getDashboardHref = () => {
+        if (auth.user.isSuperAdmin) return superadmin.dashboard();
+        if (auth.user.isAdmin) return admin.dashboard();
+        return user.dashboard();
+    };
+
+    const dashboardHref = getDashboardHref();
 
     // Build navigation items based on user role
     const mainNavItems: NavItem[] = [
         {
             title: 'Dashboard',
-            href: dashboard(),
+            href: dashboardHref,
             icon: LayoutGrid,
         },
         {
-            title: 'Event Page',
+            title: 'Events',
             href: eventHref,
             icon: Calendar,
         },
@@ -72,7 +79,7 @@ export function AppSidebar() {
     if (auth.user.isAdmin) {
         mainNavItems.push({
             title: 'Scan QR',
-            href: scanQr.index(),
+            href: admin.scanQr.index(),
             icon: ScanQrCode,
         });
     }
@@ -80,8 +87,13 @@ export function AppSidebar() {
     // Add user-only navigation items
     if (auth.user.isUser) {
         mainNavItems.push({
+            title: 'My Events',
+            href: user.event.myevents(),
+            icon: CalendarHeart,
+        });
+        mainNavItems.push({
             title: 'Notifications',
-            href: notification.index(),
+            href: user.notification.index(),
             icon: Bell,
         });
     }
@@ -89,7 +101,7 @@ export function AppSidebar() {
     if (auth.user.isSuperAdmin) {
         mainNavItems.push({
             title: 'Admins',
-            href: admins.index(),
+            href: superadmin.admin.index(),
             icon: UserRoundCog,
         });
     }

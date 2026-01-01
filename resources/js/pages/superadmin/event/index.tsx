@@ -1,9 +1,15 @@
+import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardTitle } from '@/components/ui/card';
 import { SearchInput } from '@/components/ui/search-input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import superadmin from '@/routes/superadmin';
 import { BreadcrumbItem } from '@/types';
+import { formatDate, formatDateRange } from '@/utils/date-format';
+import { getEventStatus } from '@/utils/event-status';
+import { formatPrice } from '@/utils/price-format';
+import { Link, router } from '@inertiajs/react';
+import { Check, Eye, X } from 'lucide-react';
 import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -13,57 +19,44 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-type EventStatus = 'pending' | 'approved' | 'rejected' | 'closed';
+type EventStatus = 'Pending' | 'Approved' | 'Rejected' | 'Closed';
 
 type Event = {
     id: number;
-    name: string;
+    title: string;
     organization: string;
-    date: string;
-    attendees: string;
+    location: string;
+    price: number;
+    start_date: string;
+    end_date: string;
+    start_time: string;
+    end_time: string;
+    registration_start_date: string;
+    registration_end_date: string;
+    registration_start_time: string;
+    registration_end_time: string;
+    created_at: string;
     status: EventStatus;
-    submitted: string;
 };
 
-const events: Event[] = [
-    {
-        id: 1,
-        name: 'Tech Innovation Summit 2024',
-        organization: 'Engineering Dept',
-        date: 'June 15, 2024',
-        attendees: '250 / 300',
-        status: 'pending',
-        submitted: '2 days ago',
-    },
-    {
-        id: 2,
-        name: 'Annual Art Exhibition',
-        organization: 'Arts & Sciences',
-        date: 'June 18, 2024',
-        attendees: '180 / 200',
-        status: 'pending',
-        submitted: '1 day ago',
-    },
-    {
-        id: 3,
-        name: 'Business Leadership Conference',
-        organization: 'Business School',
-        date: 'June 20, 2024',
-        attendees: '320 / 350',
-        status: 'approved',
-        submitted: '5 days ago',
-    },
-];
+interface Props {
+    events?: Event[];
+}
 
-export default function SuperAdminEvent() {
+export default function SuperAdminEvent({ events = [] }: Props) {
+    const eventsWithStatus = events.map((event) => ({
+        ...event,
+        status: getEventStatus(event),
+    }));
+
     const [statusFilter, setStatusFilter] = useState<'all' | EventStatus>(
         'all',
     );
 
     const filteredEvents =
         statusFilter === 'all'
-            ? events
-            : events.filter((e) => e.status === statusFilter);
+            ? eventsWithStatus
+            : eventsWithStatus.filter((e) => e.status === statusFilter);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -100,40 +93,42 @@ export default function SuperAdminEvent() {
                                 All ({events.length})
                             </TabsTrigger>
 
-                            <TabsTrigger value="pending">
+                            <TabsTrigger value="Pending">
                                 Pending (
                                 {
-                                    events.filter((e) => e.status === 'pending')
-                                        .length
+                                    eventsWithStatus.filter(
+                                        (e) => e.status === 'Pending',
+                                    ).length
                                 }
                                 )
                             </TabsTrigger>
 
-                            <TabsTrigger value="approved">
+                            <TabsTrigger value="Approved">
                                 Approved (
                                 {
-                                    events.filter(
-                                        (e) => e.status === 'approved',
+                                    eventsWithStatus.filter(
+                                        (e) => e.status === 'Approved',
                                     ).length
                                 }
                                 )
                             </TabsTrigger>
 
-                            <TabsTrigger value="rejected">
+                            <TabsTrigger value="Rejected">
                                 Rejected (
                                 {
-                                    events.filter(
-                                        (e) => e.status === 'rejected',
+                                    eventsWithStatus.filter(
+                                        (e) => e.status === 'Rejected',
                                     ).length
                                 }
                                 )
                             </TabsTrigger>
 
-                            <TabsTrigger value="closed">
+                            <TabsTrigger value="Closed">
                                 Closed (
                                 {
-                                    events.filter((e) => e.status === 'closed')
-                                        .length
+                                    eventsWithStatus.filter(
+                                        (e) => e.status === 'Closed',
+                                    ).length
                                 }
                                 )
                             </TabsTrigger>
@@ -141,47 +136,136 @@ export default function SuperAdminEvent() {
                         <SearchInput></SearchInput>
                     </div>
                 </Tabs>
-                <table className="w-full overflow-hidden rounded-2xl text-sm shadow-md">
-                    <thead className="bg-foreground/95">
-                        <tr className="text-left text-background">
-                            <th className="p-4">Event</th>
-                            <th>Organization</th>
-                            <th>Date & Time</th>
-                            <th>Attendees</th>
-                            <th>Status</th>
-                            <th>Submitted</th>
-                        </tr>
-                    </thead>
-
-                    <tbody className="bg-card">
-                        {filteredEvents.map((event) => (
-                            <tr key={event.id} className="hover:bg-gray-100">
-                                <td className="p-4 font-medium">
-                                    {event.name}
-                                </td>
-                                <td>{event.organization}</td>
-                                <td>{event.date}</td>
-                                <td>{event.attendees}</td>
-                                <td>
-                                    <span
-                                        className={`rounded-full px-3 py-1 text-xs ${
-                                            event.status === 'pending'
-                                                ? 'bg-yellow-100 text-yellow-700'
-                                                : event.status === 'approved'
-                                                  ? 'bg-green-100 text-green-700'
-                                                  : event.status === 'rejected'
-                                                    ? 'bg-red-100 text-red-700'
-                                                    : 'bg-gray-100 text-gray-700'
-                                        }`}
-                                    >
-                                        {event.status}
-                                    </span>
-                                </td>
-                                <td>{event.submitted}</td>
+                <div className="scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 h-[450px] overflow-x-auto bg-white">
+                    <table className="w-full min-w-[1500px] table-fixed text-sm">
+                        <thead className="bg-foreground/95">
+                            <tr className="text-left text-background">
+                                <th className="px-4 py-2 pl-4">EVENT</th>
+                                <th className="px-4 py-2">ORGANIZATION</th>
+                                <th className="px-4 py-2">EVENT DURATION</th>
+                                <th className="px-4 py-2">
+                                    REGISTRATION DURATION
+                                </th>
+                                <th className="px-4 py-2">LOCATION</th>
+                                <th className="px-4 py-2">PRICE</th>
+                                <th className="px-4 py-2">STATUS</th>
+                                <th className="px-4 py-2">SUBMIT DATE</th>
+                                <th className="py-2 pr-6 text-right">
+                                    ACTIONS
+                                </th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+
+                        <tbody className="bg-card">
+                            {filteredEvents.length === 0 ? (
+                                <tr>
+                                    <td
+                                        colSpan={9}
+                                        className="py-12 text-center text-gray-500"
+                                    >
+                                        No events found
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredEvents.map((event) => (
+                                    <tr
+                                        key={event.id}
+                                        className="hover:bg-gray-100"
+                                    >
+                                        <td className="truncate p-4 font-medium">
+                                            {event.title}
+                                        </td>
+                                        <td className="p-4 font-medium">
+                                            {event.organization}
+                                        </td>
+                                        <td className="p-4 font-medium">
+                                            {formatDateRange(
+                                                event.start_date,
+                                                event.end_date,
+                                            )}
+                                        </td>
+                                        <td className="p-4 font-medium">
+                                            {formatDateRange(
+                                                event.registration_start_date,
+                                                event.registration_end_date,
+                                            )}
+                                        </td>
+                                        <td className="truncate p-4 font-medium">
+                                            {event.location}
+                                        </td>
+                                        <td className="p-4 font-medium">
+                                            {formatPrice(event.price)}
+                                        </td>
+                                        <td className="items-start self-start p-4 font-medium">
+                                            <span
+                                                className={`rounded-full px-3 py-1 text-xs ${
+                                                    event.status === 'Pending'
+                                                        ? 'bg-yellow-100 text-yellow-700'
+                                                        : event.status ===
+                                                            'Approved'
+                                                          ? 'bg-green-100 text-green-700'
+                                                          : event.status ===
+                                                              'Rejected'
+                                                            ? 'bg-red-100 text-red-700'
+                                                            : 'bg-gray-100 text-gray-700'
+                                                }`}
+                                            >
+                                                {event.status}
+                                            </span>
+                                        </td>
+                                        <td className="p-4 font-medium">
+                                            {formatDate(event.created_at)}
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="flex flex-row gap-2">
+                                                <Button
+                                                    onClick={() =>
+                                                        router.patch(
+                                                            `/superadmin/event/${event.id}/approve-event`,
+                                                        )
+                                                    }
+                                                    className="bg-green-600"
+                                                    disabled={
+                                                        event.status ===
+                                                        'Approved'
+                                                    }
+                                                >
+                                                    <Check />
+                                                </Button>
+
+                                                <Button
+                                                    onClick={() =>
+                                                        router.patch(
+                                                            `/superadmin/event/${event.id}/reject-event`,
+                                                        )
+                                                    }
+                                                    className="bg-red-600"
+                                                    disabled={
+                                                        event.status ===
+                                                        'Rejected'
+                                                    }
+                                                >
+                                                    <X />
+                                                </Button>
+                                                <Link
+                                                    href={
+                                                        superadmin.event.show(
+                                                            event.id,
+                                                        ).url
+                                                    }
+                                                >
+                                                    <Button>
+                                                        <Eye />
+                                                    </Button>
+                                                </Link>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </AppLayout>
     );

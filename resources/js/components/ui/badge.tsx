@@ -14,9 +14,9 @@ const badgeVariants = cva(
         approved:
           "border-transparent bg-green-50 text-green-600",
         rejected:
-          "border-transparent bg-red-50 text-rejected",
+          "border-transparent bg-red-50 text-red-600",
         closed:
-          "text-primary bg-closed/30 text-closed",
+          "border-transparent bg-gray-50 text-gray-600",
       },
     },
     defaultVariants: {

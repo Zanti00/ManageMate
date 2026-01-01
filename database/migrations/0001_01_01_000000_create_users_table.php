@@ -13,13 +13,19 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->timestamps();
+            $table->string('username')->nullable();
+            $table->string('first_name');
+            $table->string('middle_name')->nullable();
+            $table->string('last_name');
+            $table->string('position_title')->nullable();
             $table->string('email')->unique();
+            $table->string('phone_number')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
-            $table->timestamps();
-            $table->string('role')->nullable(); // remove the nullable when pushing to production
+            $table->boolean('is_deleted')->nullable()->default(false);
+            $table->enum('role', ['user', 'admin', 'superadmin'])->default('user');
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

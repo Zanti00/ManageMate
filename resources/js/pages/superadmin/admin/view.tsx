@@ -8,6 +8,7 @@ import { BreadcrumbItem } from '@/types';
 import { Mail, Phone } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { Link, router, useForm } from '@inertiajs/react';
 import {
     ArcElement,
     BarElement,
@@ -38,7 +39,7 @@ ChartJS.register(
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Edit Admin',
-        href: superadmin.admins.view.url(),
+        href: superadmin.admin.edit.url(1), // add the real id later
     },
 ];
 
@@ -76,7 +77,42 @@ const eventCategoriesData: ChartData<'doughnut'> = {
     ],
 };
 
-export default function SuperAdminEditAdmin() {
+type Admin = {
+    id: number;
+    first_name: string;
+    middle_name?: string;
+    last_name: string;
+    email: string;
+    phone_number: string;
+    created_at: string;
+    is_deleted: string;
+    totalEvent?: number;
+    activeEvent?: number;
+    pendingEvent?: number;
+    attendees?: number;
+};
+
+interface Props {
+    admin: Admin;
+}
+
+export default function ViewAdmin({ admin }: Props) {
+    const createdAt = admin?.created_at
+        ? new Date(admin.created_at).toLocaleDateString('en-US', {
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric',
+          })
+        : 'N/A';
+
+    if (!admin) {
+        return <div className="p-6">User not found</div>;
+    }
+
+    const { delete: destroy } = useForm();
+
+    console.log(admin);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-6 p-8">
@@ -90,31 +126,58 @@ export default function SuperAdminEditAdmin() {
                             />
                         </div>
                         <div className="flex flex-2 flex-col justify-center gap-2">
-                            <CardTitle>Engineering Dept</CardTitle>
+                            <CardTitle>{admin.first_name}</CardTitle>
                             <div className="flex flex-row items-center gap-2">
                                 <Mail size={12}></Mail>
-                                <CardDescription>
-                                    engineeringdept@test.com
-                                </CardDescription>
+                                <CardDescription>{admin.email}</CardDescription>
                                 <Phone size={12}></Phone>
                                 <CardDescription>
-                                    +1 (555) 123-4567
+                                    {admin.phone_number ?? 'N/A'}
                                 </CardDescription>
                             </div>
                             <div className="flex flex-row gap-2">
-                                <Badge variant="approved">Active</Badge>
+                                {admin.is_deleted === '0' ? (
+                                    <Badge variant="approved">Active</Badge>
+                                ) : (
+                                    <Badge variant="rejected">Inactive</Badge>
+                                )}
                                 <CardDescription>
-                                    Joined January 15, 2023
+                                    Joined {createdAt}
                                 </CardDescription>
                             </div>
                         </div>
                         <div className="flex flex-row gap-2">
-                            <Button className="bg-gray-100 text-black">
-                                Edit
-                            </Button>
-                            <Button className="bg-red-50 text-red-600">
-                                Deactivate
-                            </Button>
+                            <Link href={superadmin.admin.edit.url(admin.id)}>
+                                <Button className="bg-gray-100 text-black">
+                                    Edit
+                                </Button>
+                            </Link>
+                            {admin.is_deleted === '0' ? (
+                                <Button
+                                    onClick={() => {
+                                        if (confirm('Are you sure?'))
+                                            destroy(
+                                                superadmin.admin.destroy.url(
+                                                    admin.id,
+                                                ),
+                                            );
+                                    }}
+                                    className="bg-red-50 text-red-600"
+                                >
+                                    Deactivate
+                                </Button>
+                            ) : (
+                                <Button
+                                    className="bg-green-50 text-green-600"
+                                    onClick={() =>
+                                        router.patch(
+                                            `/superadmin/admin/${admin.id}/restore`,
+                                        )
+                                    }
+                                >
+                                    Activate
+                                </Button>
+                            )}
                         </div>
                     </div>
                 </Card>

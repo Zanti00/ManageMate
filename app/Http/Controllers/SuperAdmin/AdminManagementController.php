@@ -9,16 +9,16 @@ class AdminManagementController extends Controller
 {
     public function index()
     {
-        return Inertia::render('superadmin/admins/index');
+        return Inertia::render('superadmin/admin/index');
     }
 
     public function edit()
     {
-        return Inertia::render('superadmin/admins/view');
+        return Inertia::render('superadmin/admin/view');
     }
 
     public function create()
     {
-        return Inertia::render('superadmin/admins/create');
+        return Inertia::render('superadmin/admin/create');
     }
 }
