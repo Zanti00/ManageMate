@@ -17,11 +17,24 @@ class AdminController extends Controller
     public function index()
     {
         $admins = DB::select('EXEC GetAdmins');
-        // Ensure admins is always an array (not null/undefined)
+        $userId = $admins[0]->id;
+        $eventStats = DB::select('EXEC CountEventStatsByAdmin @user_id = :user_id', ['user_id' => $userId]);
+
         $admins = $admins ?: [];
+
+        $stats = $eventStats[0] ?? null;
+
+        $totalEvents = $stats ? (string) ($stats->total_events ?? 0) : '0';
+        $pendingEvents = $stats ? (string) ($stats->pending_events ?? 0) : '0';
+        $activeEvents = $stats ? (string) ($stats->active_events ?? 0) : '0';
+        $rejectedEvents = $stats ? (string) ($stats->rejected_events ?? 0) : '0';
 
         return Inertia::render('superadmin/admin/index', [
             'admins' => $admins,
+            'total_events' => $totalEvents,
+            'pending_events' => $pendingEvents,
+            'active_events' => $activeEvents,
+            'rejected_events' => $rejectedEvents,
         ]);
     }
 
@@ -98,11 +111,23 @@ class AdminController extends Controller
             'EXEC GetAdminById :id',
             ['id' => $id]
         );
+        $eventStats = DB::select('EXEC CountEventStatsByAdmin @user_id = :user_id', ['user_id' => $id]);
 
         $admin = $admin ? $admin[0] : null;
 
+        $stats = $eventStats[0] ?? null;
+
+        $totalEvents = $stats ? (string) ($stats->total_events ?? 0) : '0';
+        $pendingEvents = $stats ? (string) ($stats->pending_events ?? 0) : '0';
+        $activeEvents = $stats ? (string) ($stats->active_events ?? 0) : '0';
+        $rejectedEvents = $stats ? (string) ($stats->rejected_events ?? 0) : '0';
+
         return Inertia::render('superadmin/admin/view', [
             'admin' => $admin,
+            'total_events' => $totalEvents,
+            'pending_events' => $pendingEvents,
+            'active_events' => $activeEvents,
+            'rejected_events' => $rejectedEvents,
         ]);
     }
 

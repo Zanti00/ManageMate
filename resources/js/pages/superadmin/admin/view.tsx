@@ -5,9 +5,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import superadmin from '@/routes/superadmin';
 import { BreadcrumbItem } from '@/types';
-import { Mail, Phone } from 'lucide-react';
+import {
+    Calendar,
+    CircleCheckBig,
+    CircleX,
+    Clock,
+    Mail,
+    Phone,
+} from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { SummaryCard } from '@/components/ui/summary-card';
 import { Link, router, useForm } from '@inertiajs/react';
 import {
     ArcElement,
@@ -94,9 +102,19 @@ type Admin = {
 
 interface Props {
     admin: Admin;
+    total_events: string;
+    pending_events: string;
+    active_events: string;
+    rejected_events: string;
 }
 
-export default function ViewAdmin({ admin }: Props) {
+export default function ViewAdmin({
+    admin,
+    total_events,
+    pending_events,
+    active_events,
+    rejected_events,
+}: Props) {
     const createdAt = admin?.created_at
         ? new Date(admin.created_at).toLocaleDateString('en-US', {
               month: 'long',
@@ -181,23 +199,31 @@ export default function ViewAdmin({ admin }: Props) {
                         </div>
                     </div>
                 </Card>
-                <div className="grid grid-cols-4 gap-6">
-                    <Card className="flex flex-col">
-                        <CardTitle>8</CardTitle>
-                        <CardDescription>Total Events</CardDescription>
-                    </Card>
-                    <Card className="flex flex-col">
-                        <CardTitle>8</CardTitle>
-                        <CardDescription>Total Events</CardDescription>
-                    </Card>
-                    <Card className="flex flex-col">
-                        <CardTitle>8</CardTitle>
-                        <CardDescription>Total Events</CardDescription>
-                    </Card>
-                    <Card className="flex flex-col">
-                        <CardTitle>8</CardTitle>
-                        <CardDescription>Total Events</CardDescription>
-                    </Card>
+                <div className="bg bg bg grid grid-cols-4 gap-6">
+                    <SummaryCard
+                        value={total_events}
+                        label={'Total Events'}
+                        icon={Calendar}
+                        iconBg="bg-gradient-to-br from-teal-400 to-teal-600"
+                    ></SummaryCard>
+                    <SummaryCard
+                        value={active_events}
+                        label={'Active Events'}
+                        icon={CircleCheckBig}
+                        iconBg="bg-gradient-to-br from-lime-400 to-lime-600"
+                    ></SummaryCard>
+                    <SummaryCard
+                        value={pending_events}
+                        label={'Pending Approval'}
+                        icon={Clock}
+                        iconBg="bg-gradient-to-br from-amber-400 to-amber-600"
+                    ></SummaryCard>
+                    <SummaryCard
+                        value={rejected_events}
+                        label={'Rejected Events'}
+                        icon={CircleX}
+                        iconBg="bg-gradient-to-br from-rose-400 to-rose-600"
+                    ></SummaryCard>
                 </div>
                 <Tabs defaultValue="overview">
                     <Card className="p-6">

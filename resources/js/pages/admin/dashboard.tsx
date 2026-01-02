@@ -1,8 +1,10 @@
-import { Card, CardDescription, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { SummaryCard } from '@/components/ui/summary-card';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes/admin';
 import { type BreadcrumbItem } from '@/types';
+import { formatPercentage } from '@/utils/percentage-format';
 import type { ChartData } from 'chart.js';
 import {
     ArcElement,
@@ -16,6 +18,7 @@ import {
     Title,
     Tooltip,
 } from 'chart.js';
+import { Calendar, Star, TrendingUp, Users } from 'lucide-react';
 import { Bar, Line, Pie } from 'react-chartjs-2';
 
 ChartJS.register(
@@ -73,27 +76,47 @@ const eventStatusData: ChartData<'pie'> = {
     ],
 };
 
-export default function AdminDashboard() {
+interface Props {
+    total_events: string;
+    total_attendees: string;
+    attendance_rate: number;
+}
+
+export default function AdminDashboard({
+    total_events,
+    total_attendees,
+    attendance_rate,
+}: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-5 p-10">
                 <div className="grid grid-cols-4 gap-6">
-                    <Card>
-                        <CardTitle>48</CardTitle>
-                        <CardDescription>Total Organizations</CardDescription>
-                    </Card>
-                    <Card>
-                        <CardTitle>48</CardTitle>
-                        <CardDescription>Total Organizations</CardDescription>
-                    </Card>
-                    <Card>
-                        <CardTitle>48</CardTitle>
-                        <CardDescription>Total Organizations</CardDescription>
-                    </Card>
-                    <Card>
-                        <CardTitle>48</CardTitle>
-                        <CardDescription>Total Organizations</CardDescription>
-                    </Card>
+                    <SummaryCard
+                        value={total_events}
+                        label={'Total Events'}
+                        icon={Calendar}
+                        iconBg="bg-gradient-to-br from-teal-400 to-teal-600"
+                    ></SummaryCard>
+                    <SummaryCard
+                        value={total_attendees}
+                        label={'Total Attendees'}
+                        icon={Users}
+                        className="fill-white"
+                        iconBg="bg-gradient-to-br from-orange-400 to-orange-600"
+                    ></SummaryCard>
+                    <SummaryCard
+                        value={total_events}
+                        label={'Average Rating'}
+                        icon={Star}
+                        className="fill-white"
+                        iconBg="bg-gradient-to-br from-purple-400 to-purple-600"
+                    ></SummaryCard>
+                    <SummaryCard
+                        value={formatPercentage(attendance_rate)}
+                        label={'Overall Attendance Rate'}
+                        icon={TrendingUp}
+                        iconBg="bg-gradient-to-br from-emerald-400 to-emerald-600"
+                    ></SummaryCard>
                 </div>
                 <div className="grid grid-cols-4 gap-6">
                     <Card className="col-span-2 gap-1 px-4">

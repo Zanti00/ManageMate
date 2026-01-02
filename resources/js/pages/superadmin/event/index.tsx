@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/button';
-import { Card, CardDescription, CardTitle } from '@/components/ui/card';
 import { SearchInput } from '@/components/ui/search-input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
@@ -61,28 +60,6 @@ export default function SuperAdminEvent({ events = [] }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-6 p-6">
-                <div className="grid grid-cols-5 gap-4">
-                    <Card className="flex flex-col">
-                        <CardTitle>8</CardTitle>
-                        <CardDescription>Total Events</CardDescription>
-                    </Card>
-                    <Card className="flex flex-col">
-                        <CardTitle>8</CardTitle>
-                        <CardDescription>Total Events</CardDescription>
-                    </Card>
-                    <Card className="flex flex-col">
-                        <CardTitle>8</CardTitle>
-                        <CardDescription>Total Events</CardDescription>
-                    </Card>
-                    <Card className="flex flex-col">
-                        <CardTitle>8</CardTitle>
-                        <CardDescription>Total Events</CardDescription>
-                    </Card>
-                    <Card className="flex flex-col">
-                        <CardTitle>8</CardTitle>
-                        <CardDescription>Total Events</CardDescription>
-                    </Card>
-                </div>
                 <Tabs
                     value={statusFilter}
                     onValueChange={(value) => setStatusFilter(value as any)}

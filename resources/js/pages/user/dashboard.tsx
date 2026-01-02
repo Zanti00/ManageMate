@@ -1,11 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
     Carousel,
     CarouselApi,
@@ -15,11 +10,13 @@ import {
     CarouselPrevious,
 } from '@/components/ui/carousel';
 import { HorizontalEventCard } from '@/components/ui/horizontal-event-card';
+import { SummaryCard } from '@/components/ui/summary-card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import user from '@/routes/user';
 import { type BreadcrumbItem } from '@/types';
 import dayjs from 'dayjs';
+import { Bell, CalendarClock, CalendarDays, CalendarHeart } from 'lucide-react';
 import React, { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -60,11 +57,13 @@ type UpcomingEvent = {
 interface Props {
     upcomingEvents?: UpcomingEvent[];
     eventsToday?: EventToday[];
+    total_rows: string;
 }
 
 export default function Dashboard({
     eventsToday = [],
     upcomingEvents = [],
+    total_rows,
 }: Props) {
     const [date, setDate] = useState<Date | undefined>(new Date());
 
@@ -94,11 +93,6 @@ export default function Dashboard({
                 : ('This Week' as FilterValues),
     }));
 
-    const filteredStatus =
-        statusFilter === 'all'
-            ? eventsWithFilter
-            : eventsWithFilter.filter((e) => e.status === statusFilter);
-
     const today = dayjs().format('YYYY-MM-DD');
     const todaysEvents = eventsToday.filter(
         (eventsToday) =>
@@ -109,22 +103,32 @@ export default function Dashboard({
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-5 p-8">
                 <div className="grid grid-cols-4 gap-6">
-                    <Card className="col-span-1">
-                        <CardTitle>8</CardTitle>
-                        <CardDescription>Total Events</CardDescription>
-                    </Card>
-                    <Card className="col-span-1">
-                        <CardTitle>8</CardTitle>
-                        <CardDescription>Total Events</CardDescription>
-                    </Card>
-                    <Card className="col-span-1">
-                        <CardTitle>8</CardTitle>
-                        <CardDescription>Total Events</CardDescription>
-                    </Card>
-                    <Card className="col-span-1">
-                        <CardTitle>8</CardTitle>
-                        <CardDescription>Total Events</CardDescription>
-                    </Card>
+                    <SummaryCard
+                        value={total_rows}
+                        label={'My Events'}
+                        icon={CalendarHeart}
+                        iconBg="bg-gradient-to-br from-teal-400 to-teal-600"
+                    ></SummaryCard>
+                    <SummaryCard
+                        value={upcomingEvents.length.toString() ?? '0'}
+                        label={'Upcoming'}
+                        icon={CalendarClock}
+                        iconBg={
+                            'bg-gradient-to-br from-emerald-400 to-emerald-600'
+                        }
+                    ></SummaryCard>
+                    <SummaryCard
+                        value={'1'}
+                        label={'This Week'}
+                        icon={CalendarDays}
+                        iconBg="bg-gradient-to-br from-orange-400 to-orange-600"
+                    ></SummaryCard>
+                    <SummaryCard
+                        value={'1'}
+                        label={'Notifications'}
+                        icon={Bell}
+                        iconBg="bg-gradient-to-br from-rose-400 to-rose-600"
+                    ></SummaryCard>
                 </div>
                 <div className="flex flex-row">
                     <strong className="text-2xl font-extrabold text-black">

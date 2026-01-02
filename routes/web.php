@@ -1,11 +1,12 @@
 <?php
 
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\EventController as AdminEventController;
 use App\Http\Controllers\Admin\ScanQRController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SuperAdmin\AdminController;
 use App\Http\Controllers\SuperAdmin\EventController as SuperAdminEventController;
-use App\Http\Controllers\User\DashboardController;
+use App\Http\Controllers\User\DashboardController as UserDashboardController;
 use App\Http\Controllers\User\EventController as UserEventController;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
@@ -36,7 +37,7 @@ Route::get('/dashboard', function () {
 // ----------------------
 Route::middleware(['auth', 'verified', 'can:user'])->prefix('user')->name('user.')->group(function () {
 
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('/event', UserEventController::class);
     Route::post('/event/{eventId}/register', [UserEventController::class, 'register'])->name('event.register');
@@ -53,6 +54,7 @@ Route::middleware(['auth', 'verified', 'can:admin'])->prefix('admin')->name('adm
         return Inertia::render('admin/dashboard');
     })->name('dashboard');
 
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::resource('event', AdminEventController::class);
     Route::get('/scanqr', [ScanQRController::class, 'index'])->name('scan-qr.index');
 });

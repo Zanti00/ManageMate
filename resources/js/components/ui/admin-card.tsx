@@ -21,14 +21,10 @@ type Admin = {
     phone_number: string;
     created_at: string;
     is_deleted: number | boolean | string;
-    totalEvent?: number;
-    activeEvent?: number;
-    pendingEvent?: number;
-    attendees?: number;
     status?: FilterValues;
 };
 
-type Props = Admin;
+type Props = Admin & { total_events?: string, pending_events?: string, active_events?: string, rejected_events?: string,  };
 
 function AdminCard({
     id,
@@ -38,11 +34,11 @@ function AdminCard({
     email,
     phone_number,
     created_at,
-    totalEvent = 0,
-    activeEvent = 0,
-    pendingEvent = 0,
-    attendees = 0,
     status = 'Active',
+    total_events,
+    pending_events, 
+    active_events,
+    rejected_events
 }: Props) {
     return (
         <Card>
@@ -77,20 +73,20 @@ function AdminCard({
                 </div>
                 <Card className='flex flex-row shadow-none bg-gray-100 p-4 items-center justify-center'>
                     <div className="flex flex-col text-center">
-                        <CardTitle className='text-black'>{totalEvent}</CardTitle>
+                        <CardTitle className='text-black'>{total_events}</CardTitle>
                         <CardDescription>Total Events</CardDescription>
                     </div>
                     <div className="flex flex-col text-center">
-                        <CardTitle className='text-approved'>{activeEvent}</CardTitle>
+                        <CardTitle className='text-approved'>{active_events}</CardTitle>
                         <CardDescription>Active Events</CardDescription>
                     </div>
                     <div className="flex flex-col text-center">
-                        <CardTitle className='text-pending'>{pendingEvent}</CardTitle>
+                        <CardTitle className='text-pending'>{pending_events}</CardTitle>
                         <CardDescription>Pending Events</CardDescription>
                     </div>
                     <div className="flex flex-col text-center">
-                        <CardTitle>{attendees}</CardTitle>
-                        <CardDescription>Attendees</CardDescription>
+                        <CardTitle>{rejected_events}</CardTitle>
+                        <CardDescription>Rejected Events</CardDescription>
                     </div>
                 </Card>
                 <Link href={superadmin.admin.show.url(id)}>

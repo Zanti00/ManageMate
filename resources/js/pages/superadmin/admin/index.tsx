@@ -1,6 +1,5 @@
 import { AdminCard } from '@/components/ui/admin-card';
 import { Button } from '@/components/ui/button';
-import { Card, CardDescription, CardTitle } from '@/components/ui/card';
 import { SearchInput } from '@/components/ui/search-input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
@@ -27,18 +26,25 @@ type Admin = {
     phone_number: string;
     created_at: string;
     is_deleted: string;
-    totalEvent?: number;
-    activeEvent?: number;
-    pendingEvent?: number;
-    attendees?: number;
-    status?: FilterValues; // for compatibility, but will be set below
+    attendees?: string;
+    status?: FilterValues;
 };
 
 interface Props {
     admins?: Admin[];
+    total_events: string;
+    pending_events: string;
+    active_events: string;
+    rejected_events: string;
 }
 
-export default function AdminsManagement({ admins = [] }: Props) {
+export default function AdminsManagement({
+    admins = [],
+    total_events,
+    pending_events,
+    active_events,
+    rejected_events,
+}: Props) {
     const adminsWithStatus = admins.map((admin) => ({
         ...admin,
         status:
@@ -62,24 +68,6 @@ export default function AdminsManagement({ admins = [] }: Props) {
                     <Link href={superadmin.admin.create.url()}>
                         <Button>Create Admin</Button>
                     </Link>
-                </div>
-                <div className="grid grid-cols-4 gap-4">
-                    <Card className="flex flex-col">
-                        <CardTitle>8</CardTitle>
-                        <CardDescription>Total Events</CardDescription>
-                    </Card>
-                    <Card className="flex flex-col">
-                        <CardTitle>8</CardTitle>
-                        <CardDescription>Total Events</CardDescription>
-                    </Card>
-                    <Card className="flex flex-col">
-                        <CardTitle>8</CardTitle>
-                        <CardDescription>Total Events</CardDescription>
-                    </Card>
-                    <Card className="flex flex-col">
-                        <CardTitle>8</CardTitle>
-                        <CardDescription>Total Events</CardDescription>
-                    </Card>
                 </div>
                 <Tabs
                     value={statusFilter}
@@ -116,7 +104,14 @@ export default function AdminsManagement({ admins = [] }: Props) {
                 </Tabs>
                 <div className="grid grid-cols-2 gap-8">
                     {filteredStatus.map((admin) => (
-                        <AdminCard key={admin.id} {...admin} />
+                        <AdminCard
+                            key={admin.id}
+                            {...admin}
+                            total_events={total_events}
+                            pending_events={pending_events}
+                            active_events={active_events}
+                            rejected_events={rejected_events}
+                        />
                     ))}
                 </div>
             </div>

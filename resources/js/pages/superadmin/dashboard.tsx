@@ -1,5 +1,6 @@
-import { Card, CardDescription, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { SummaryCard } from '@/components/ui/summary-card';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
@@ -16,6 +17,7 @@ import {
     Title,
     Tooltip,
 } from 'chart.js';
+import { Building2, CalendarDays, Clock, User } from 'lucide-react';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
 
 ChartJS.register(
@@ -103,25 +105,37 @@ export default function SuperAdminDashboard() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-8 p-6">
                 <div className="grid grid-cols-4 gap-4">
-                    <Card>
-                        <CardTitle>48</CardTitle>
-                        <CardDescription>Total Organizations</CardDescription>
-                    </Card>
-                    <Card>
-                        <CardTitle>48</CardTitle>
-                        <CardDescription>Total Organizations</CardDescription>
-                    </Card>
-                    <Card>
-                        <CardTitle>48</CardTitle>
-                        <CardDescription>Total Organizations</CardDescription>
-                    </Card>
-                    <Card>
-                        <CardTitle>48</CardTitle>
-                        <CardDescription>Total Organizations</CardDescription>
-                    </Card>
+                    <SummaryCard
+                        value={'1'}
+                        label={'Total Organizations'}
+                        icon={Building2}
+                        iconBg="bg-gradient-to-br from-purple-400 to-purple-600"
+                    ></SummaryCard>
+                    <SummaryCard
+                        value={'1'}
+                        label={'Active Admins'}
+                        icon={User}
+                        className="fill-white"
+                        iconBg="bg-gradient-to-br from-emerald-400 to-emerald-600"
+                    ></SummaryCard>
+                    <SummaryCard
+                        value={'1'}
+                        label={'Pending Events'}
+                        icon={Clock}
+                        iconBg="bg-gradient-to-br from-amber-400 to-amber-600"
+                    ></SummaryCard>
+                    <SummaryCard
+                        value={'1'}
+                        label={'Active Events'}
+                        icon={CalendarDays}
+                        iconBg="bg-gradient-to-br from-lime-400 to-lime-600"
+                    ></SummaryCard>
                 </div>
                 <div className="grid grid-cols-3 gap-4">
-                    <Card className="col-span-1 items-center justify-center p-4">
+                    <Card className="col-span-1 p-6">
+                        <div className="flex flex-row">
+                            <Label>Event Status Overview</Label>
+                        </div>
                         <Doughnut
                             data={eventStatusOverviewData}
                             options={{

@@ -1,10 +1,9 @@
-import { Card, CardDescription, CardTitle } from '@/components/ui/card';
 import { EventCard } from '@/components/ui/event-card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import user from '@/routes/user';
 import { BreadcrumbItem } from '@/types';
-import { getEventStatus } from '@/utils/event-status';
+import { getEventDisplayStatus } from '@/utils/event-status';
 import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -37,7 +36,7 @@ interface Props {
 export default function MyEvents({ events = [] }: Props) {
     const eventsWithStatus = events.map((event) => ({
         ...event,
-        status: getEventStatus(event),
+        status: getEventDisplayStatus(event),
     }));
 
     const [statusFilter, setStatusFilter] = useState<'all' | FilterValues>(
@@ -54,24 +53,6 @@ export default function MyEvents({ events = [] }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-8 p-8">
-                <div className="grid grid-cols-4 gap-6">
-                    <Card className="col-span-1">
-                        <CardTitle>8</CardTitle>
-                        <CardDescription>Total Events</CardDescription>
-                    </Card>
-                    <Card className="col-span-1">
-                        <CardTitle>8</CardTitle>
-                        <CardDescription>Total Events</CardDescription>
-                    </Card>
-                    <Card className="col-span-1">
-                        <CardTitle>8</CardTitle>
-                        <CardDescription>Total Events</CardDescription>
-                    </Card>
-                    <Card className="col-span-1">
-                        <CardTitle>8</CardTitle>
-                        <CardDescription>Total Events</CardDescription>
-                    </Card>
-                </div>
                 <div className="flex flex-row">
                     <Tabs
                         value={statusFilter}

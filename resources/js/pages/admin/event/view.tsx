@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { SummaryCard } from '@/components/ui/summary-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import admin from '@/routes/admin';
@@ -10,6 +11,7 @@ import { formatDateRange, formatTimeRange } from '@/utils/date-format';
 import { getEventStatus } from '@/utils/event-status';
 import { formatPrice } from '@/utils/price-format';
 import { ChartData } from 'chart.js';
+import { PhilippinePeso, Star, Users } from 'lucide-react';
 import { Bar, Line, Pie } from 'react-chartjs-2';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -20,28 +22,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 type EventStatus = 'Pending' | 'Approved' | 'Rejected' | 'Closed';
-
-type Event = {
-    id: number;
-    title: string;
-    description: string;
-    location: string;
-    price: number;
-    start_date: string;
-    end_date: string;
-    start_time: string;
-    end_time: string;
-    registration_start_date: string;
-    registration_end_date: string;
-    registration_start_time: string;
-    registration_end_time: string;
-    status: EventStatus;
-    is_registered: boolean;
-};
-
-interface Props {
-    event: Event;
-}
 
 type EventExample = {
     id: number;
@@ -130,6 +110,30 @@ const checkInData: ChartData<'bar'> = {
     ],
 };
 
+type Event = {
+    id: number;
+    title: string;
+    description: string;
+    location: string;
+    attendees: string;
+    registries: string;
+    start_date: string;
+    end_date: string;
+    start_time: string;
+    end_time: string;
+    registration_start_date: string;
+    registration_end_date: string;
+    registration_start_time: string;
+    registration_end_time: string;
+    status: EventStatus;
+    price: number;
+    earnings: number;
+};
+
+interface Props {
+    event: Event;
+}
+
 export default function EventView({ event }: Props) {
     if (!event) {
         return <div className="p-6">Event not found</div>;
@@ -191,46 +195,33 @@ export default function EventView({ event }: Props) {
                         </div>
                     </Card>
                     <div className="grid grid-cols-4 gap-4">
-                        <Card>
-                            <div className="flex flex-col p-4">
-                                <Label className="text-2xl font-extrabold">
-                                    245
-                                </Label>
-                                <Label className="text-gray-800">
-                                    Registered Attendees
-                                </Label>
-                            </div>
-                        </Card>
-                        <Card>
-                            <div className="flex flex-col p-4">
-                                <Label className="text-2xl font-extrabold">
-                                    245
-                                </Label>
-                                <Label className="text-gray-800">
-                                    Total Attendees
-                                </Label>
-                            </div>
-                        </Card>
-                        <Card>
-                            <div className="flex flex-col p-4">
-                                <Label className="text-2xl font-extrabold">
-                                    245
-                                </Label>
-                                <Label className="text-gray-800">
-                                    Total Earnings
-                                </Label>
-                            </div>
-                        </Card>
-                        <Card>
-                            <div className="flex flex-col p-4">
-                                <Label className="text-2xl font-extrabold">
-                                    245
-                                </Label>
-                                <Label className="text-gray-800">
-                                    Average Rating
-                                </Label>
-                            </div>
-                        </Card>
+                        <SummaryCard
+                            value={event.registries}
+                            label={'Total Registree'}
+                            icon={Users}
+                            className="fill-white"
+                            iconBg="bg-gradient-to-br from-teal-400 to-teal-600"
+                        ></SummaryCard>
+                        <SummaryCard
+                            value={event.attendees}
+                            label={'Total Attendees'}
+                            icon={Users}
+                            className="fill-white"
+                            iconBg="bg-gradient-to-br from-orange-400 to-orange-600"
+                        ></SummaryCard>
+                        <SummaryCard
+                            value={formatPrice(event.earnings)}
+                            label={'Total Earnings'}
+                            icon={PhilippinePeso}
+                            iconBg="bg-gradient-to-br from-purple-400 to-purple-600"
+                        ></SummaryCard>
+                        <SummaryCard
+                            value={'1'}
+                            label={'Average Rating'}
+                            icon={Star}
+                            className="fill-white"
+                            iconBg="bg-gradient-to-br from-emerald-400 to-emerald-600"
+                        ></SummaryCard>
                     </div>
                     <div className="rounded-2xl bg-white p-2">
                         <Tabs defaultValue="overview">

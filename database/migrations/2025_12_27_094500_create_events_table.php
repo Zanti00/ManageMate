@@ -19,6 +19,7 @@ return new class extends Migration
             $table->text('description');
             $table->string('organization')->nullable();
             $table->smallInteger('attendees')->nullable();
+            $table->smallInteger('registries')->nullable();
             $table->enum('status', ['pending', 'approved', 'rejected', 'closed'])->default('pending');
             $table->date('start_date');
             $table->date('end_date');
@@ -30,6 +31,7 @@ return new class extends Migration
             $table->time('registration_end_time');
             $table->string('location');
             $table->double('price');
+            $table->double('earnings')->nullable();
             $table->boolean('is_deleted')->default(false);
         });
     }
