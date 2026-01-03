@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\EventController as AdminEventController;
 use App\Http\Controllers\Admin\ScanQRController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SuperAdmin\AdminController;
+use App\Http\Controllers\SuperAdmin\DashboardController as SuperadminDashboardController;
 use App\Http\Controllers\SuperAdmin\EventController as SuperAdminEventController;
 use App\Http\Controllers\User\DashboardController as UserDashboardController;
 use App\Http\Controllers\User\EventController as UserEventController;
@@ -64,9 +65,7 @@ Route::middleware(['auth', 'verified', 'can:admin'])->prefix('admin')->name('adm
 // ----------------------
 Route::middleware(['auth', 'verified', 'can:superadmin'])->prefix('superadmin')->name('superadmin.')->group(function () {
 
-    Route::get('/dashboard', function () {
-        return Inertia::render('superadmin/dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [SuperadminDashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('event', SuperAdminEventController::class);
     Route::patch('/event/{event}/approve-event', [SuperAdminEventController::class, 'approve_event'])->name('event.approve');

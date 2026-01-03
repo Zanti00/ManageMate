@@ -51,20 +51,6 @@ const monthlyEventData: ChartData<'bar'> = {
     ],
 };
 
-const attendanceTrendData: ChartData<'line'> = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    datasets: [
-        {
-            label: 'Attendance',
-            data: [1200, 1800, 2400, 2100, 2800, 3200],
-            backgroundColor: ['pink'],
-            borderColor: ['pink'],
-            pointBackgroundColor: ['pink'],
-            pointBorderWidth: 5,
-        },
-    ],
-};
-
 const eventStatusData: ChartData<'pie'> = {
     labels: ['Pending', 'Approved', 'Rejected'],
     datasets: [
@@ -76,17 +62,44 @@ const eventStatusData: ChartData<'pie'> = {
     ],
 };
 
+type AttendanceTrendData = {
+    month: number;
+    month_name: string;
+    total_attendees: number;
+};
+
 interface Props {
     total_events: string;
     total_attendees: string;
     attendance_rate: number;
+    attendance_trend_data: AttendanceTrendData[];
 }
 
 export default function AdminDashboard({
     total_events,
     total_attendees,
     attendance_rate,
+    attendance_trend_data = [],
 }: Props) {
+    const monthLabels = attendance_trend_data.map((item) => item.month_name);
+    const attendeesValues = attendance_trend_data.map(
+        (item) => item.total_attendees,
+    );
+
+    const attendanceTrendData: ChartData<'line'> = {
+        labels: monthLabels,
+        datasets: [
+            {
+                label: 'Attendance',
+                data: attendeesValues,
+                backgroundColor: ['pink'],
+                borderColor: ['pink'],
+                pointBackgroundColor: ['pink'],
+                pointBorderWidth: 5,
+            },
+        ],
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-5 p-10">

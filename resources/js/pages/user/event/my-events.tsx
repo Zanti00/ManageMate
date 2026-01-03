@@ -1,3 +1,4 @@
+import { Card } from '@/components/ui/card';
 import { EventCard } from '@/components/ui/event-card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
@@ -66,7 +67,6 @@ export default function MyEvents({ events = [] }: Props) {
                                 >
                                     All Events ({events.length})
                                 </TabsTrigger>
-
                                 <TabsTrigger
                                     value="Upcoming"
                                     className="bg-gray-200"
@@ -79,7 +79,6 @@ export default function MyEvents({ events = [] }: Props) {
                                     }
                                     )
                                 </TabsTrigger>
-
                                 <TabsTrigger
                                     value="Ongoing"
                                     className="bg-gray-200"
@@ -108,15 +107,23 @@ export default function MyEvents({ events = [] }: Props) {
                         </div>
                     </Tabs>
                 </div>
-                <div className="grid grid-cols-3 gap-6">
-                    {filteredStatus.map((event) => (
-                        <EventCard
-                            key={event.id}
-                            {...event}
-                            viewDetailsHref={user.event.show(event.id).url}
-                        />
-                    ))}
-                </div>
+                {filteredStatus.length === 0 ? (
+                    <Card className="p-12">
+                        <div className="text-center text-gray-500">
+                            No events found
+                        </div>
+                    </Card>
+                ) : (
+                    <div className="grid grid-cols-3 gap-6">
+                        {filteredStatus.map((event) => (
+                            <EventCard
+                                key={event.id}
+                                {...event}
+                                viewDetailsHref={user.event.show(event.id).url}
+                            />
+                        ))}
+                    </div>
+                )}
             </div>
         </AppLayout>
     );

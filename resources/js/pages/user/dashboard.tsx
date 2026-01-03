@@ -15,6 +15,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import user from '@/routes/user';
 import { type BreadcrumbItem } from '@/types';
+import { Link } from '@inertiajs/react';
 import dayjs from 'dayjs';
 import { Bell, CalendarClock, CalendarDays, CalendarHeart } from 'lucide-react';
 import React, { useState } from 'react';
@@ -55,15 +56,17 @@ type UpcomingEvent = {
 };
 
 interface Props {
-    upcomingEvents?: UpcomingEvent[];
-    eventsToday?: EventToday[];
-    total_rows: string;
+    upcoming_events?: UpcomingEvent[];
+    events_today?: EventToday[];
+    total_active_registered_events: string;
+    total_events_this_week: string;
 }
 
 export default function Dashboard({
-    eventsToday = [],
-    upcomingEvents = [],
-    total_rows,
+    events_today = [],
+    upcoming_events = [],
+    total_active_registered_events,
+    total_events_this_week,
 }: Props) {
     const [date, setDate] = useState<Date | undefined>(new Date());
 
@@ -85,32 +88,31 @@ export default function Dashboard({
         'all',
     );
 
-    const eventsWithFilter = upcomingEvents.map((upcomingEvent) => ({
-        ...upcomingEvent,
+    const eventsWithFilter = upcoming_events.map((event) => ({
+        ...event,
         status:
-            upcomingEvent.start_date === new Date().toISOString().split('T')[0]
+            event.start_date === dayjs().format('YYYY-MM-DD')
                 ? ('Today' as FilterValues)
                 : ('This Week' as FilterValues),
     }));
 
-    const today = dayjs().format('YYYY-MM-DD');
-    const todaysEvents = eventsToday.filter(
-        (eventsToday) =>
-            dayjs(eventsToday.start_date).format('YYYY-MM-DD') === today,
-    );
+    const filteredUpcomingEvents =
+        statusFilter === 'all'
+            ? upcoming_events
+            : eventsWithFilter.filter((e) => e.status === statusFilter);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-5 p-8">
                 <div className="grid grid-cols-4 gap-6">
                     <SummaryCard
-                        value={total_rows}
+                        value={total_active_registered_events}
                         label={'My Events'}
                         icon={CalendarHeart}
                         iconBg="bg-gradient-to-br from-teal-400 to-teal-600"
                     ></SummaryCard>
                     <SummaryCard
-                        value={upcomingEvents.length.toString() ?? '0'}
+                        value={upcoming_events.length.toString() ?? '0'}
                         label={'Upcoming'}
                         icon={CalendarClock}
                         iconBg={
@@ -118,7 +120,7 @@ export default function Dashboard({
                         }
                     ></SummaryCard>
                     <SummaryCard
-                        value={'1'}
+                        value={total_events_this_week}
                         label={'This Week'}
                         icon={CalendarDays}
                         iconBg="bg-gradient-to-br from-orange-400 to-orange-600"
@@ -135,6 +137,7 @@ export default function Dashboard({
                         Featured Event
                     </strong>
                 </div>
+                {/* Carousel */}
                 <div className="grid grid-cols-1">
                     <div className="col-span-1">
                         <div className="mx-auto w-full">
@@ -197,6 +200,7 @@ export default function Dashboard({
                         </div>
                     </div>
                 </div>
+                {/* end of carousel */}
                 <div className="grid grid-cols-3 gap-8">
                     <div className="col-span-2 flex flex-col gap-6">
                         <div className="flex flex-col gap-3">
@@ -206,17 +210,19 @@ export default function Dashboard({
                                     Happening Now
                                 </strong>
                             </div>
-                            {todaysEvents.length === 0 ? (
+                            {events_today.length === 0 ? (
                                 <div className="py-8 text-center text-gray-500">
                                     No events happening today.
                                 </div>
                             ) : (
-                                todaysEvents.map((eventToday) => (
-                                    <HorizontalEventCard
-                                        key={eventToday.id}
-                                        event={eventToday}
-                                        className="border-1 border-emerald-300"
-                                    />
+                                events_today.map((event) => (
+                                    <Link href={user.event.show(event.id).url}>
+                                        <HorizontalEventCard
+                                            key={event.id}
+                                            event={event}
+                                            className="border-1 border-emerald-300"
+                                        />
+                                    </Link>
                                 ))
                             )}
                         </div>
@@ -237,11 +243,11 @@ export default function Dashboard({
                                                 value="all"
                                                 className="bg-gray-200"
                                             >
-                                                All ({upcomingEvents.length})
+                                                All ({upcoming_events.length})
                                             </TabsTrigger>
 
                                             <TabsTrigger
-                                                value="Active"
+                                                value="Today"
                                                 className="bg-gray-200"
                                             >
                                                 Today (
@@ -256,7 +262,7 @@ export default function Dashboard({
                                             </TabsTrigger>
 
                                             <TabsTrigger
-                                                value="Inactive"
+                                                value="This Week"
                                                 className="bg-gray-200"
                                             >
                                                 This Week (
@@ -273,17 +279,19 @@ export default function Dashboard({
                                     </div>
                                 </Tabs>
                             </div>
-                            {upcomingEvents.length === 0 ? (
+                            {upcoming_events.length === 0 ? (
                                 <div className="py-8 text-center text-gray-500">
                                     No upcoming events as of now.
                                 </div>
                             ) : (
-                                upcomingEvents.map((event) => (
-                                    <HorizontalEventCard
-                                        key={event.id}
-                                        event={event}
-                                        className="border-1 border-emerald-300"
-                                    />
+                                filteredUpcomingEvents.map((event) => (
+                                    <Link href={user.event.show(event.id).url}>
+                                        <HorizontalEventCard
+                                            key={event.id}
+                                            event={event}
+                                            className="border-1 border-emerald-300"
+                                        />
+                                    </Link>
                                 ))
                             )}
                         </div>

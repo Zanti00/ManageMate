@@ -100,7 +100,17 @@ const organizationActivityData: ChartData<'bar'> = {
     ],
 };
 
-export default function SuperAdminDashboard() {
+interface Props {
+    active_admins: string;
+    pending_events: string;
+    active_events: string;
+}
+
+export default function SuperAdminDashboard({
+    active_admins,
+    pending_events,
+    active_events,
+}: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-8 p-6">
@@ -112,20 +122,20 @@ export default function SuperAdminDashboard() {
                         iconBg="bg-gradient-to-br from-purple-400 to-purple-600"
                     ></SummaryCard>
                     <SummaryCard
-                        value={'1'}
+                        value={active_admins}
                         label={'Active Admins'}
                         icon={User}
                         className="fill-white"
                         iconBg="bg-gradient-to-br from-emerald-400 to-emerald-600"
                     ></SummaryCard>
                     <SummaryCard
-                        value={'1'}
+                        value={pending_events}
                         label={'Pending Events'}
                         icon={Clock}
                         iconBg="bg-gradient-to-br from-amber-400 to-amber-600"
                     ></SummaryCard>
                     <SummaryCard
-                        value={'1'}
+                        value={active_events}
                         label={'Active Events'}
                         icon={CalendarDays}
                         iconBg="bg-gradient-to-br from-lime-400 to-lime-600"

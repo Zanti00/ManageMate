@@ -1,12 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { EventCard } from '@/components/ui/event-card';
+import { EventCardSkeleton } from '@/components/ui/event-card-skeleton';
 import { SearchInput } from '@/components/ui/search-input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import admin from '@/routes/admin';
 import { type BreadcrumbItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const { create } = admin.event;
 
@@ -47,10 +48,22 @@ export default function AdminEvent({ events = [] }: Props) {
         'all',
     );
 
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setIsLoading(false);
+        }, 2000); // 2 seconds delay
+
+        return () => clearTimeout(timer);
+    }, []);
+
     const filteredStatus =
         statusFilter === 'all'
             ? eventsWithStatus
             : eventsWithStatus.filter((e) => e.status === statusFilter);
+
+    const showSkeleton = isLoading || events === undefined;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -112,9 +125,13 @@ export default function AdminEvent({ events = [] }: Props) {
                     </div>
                 </Tabs>
                 <div className="grid grid-cols-3 gap-6">
-                    {filteredStatus.map((event) => (
-                        <EventCard key={event.id} {...event} />
-                    ))}
+                    {showSkeleton
+                        ? Array.from({ length: 6 }).map((_, i) => (
+                              <EventCardSkeleton key={i} />
+                          ))
+                        : filteredStatus.map((event) => (
+                              <EventCard key={event.id} {...event} />
+                          ))}
                 </div>
             </div>
         </AppLayout>
