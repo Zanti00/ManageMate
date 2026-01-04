@@ -104,8 +104,17 @@ class EventController extends Controller
 
         $event = ! empty($event) ? $event[0] : null;
 
+        $registrationTrendData = DB::select('EXEC GetRegistrationTrendByEvent @id = :id', [
+            'id' => $id,
+        ]);
+
+        $registrationTrendLabels = array_column($registrationTrendData, 'date_label');
+        $registrationTrendValue = array_column($registrationTrendData, 'total_registrations');
+
         return Inertia::render('admin/event/view', [
             'event' => $event,
+            'registration_trend_labels' => $registrationTrendLabels,
+            'registration_trend_data' => $registrationTrendValue,
         ]);
     }
 

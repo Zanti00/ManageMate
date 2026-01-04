@@ -10,9 +10,33 @@ import { BreadcrumbItem } from '@/types';
 import { formatDateRange, formatTimeRange } from '@/utils/date-format';
 import { getEventStatus } from '@/utils/event-status';
 import { formatPrice } from '@/utils/price-format';
-import { ChartData } from 'chart.js';
+import {
+    ArcElement,
+    BarElement,
+    CategoryScale,
+    ChartData,
+    Chart as ChartJS,
+    Legend,
+    LinearScale,
+    LineElement,
+    PointElement,
+    Title,
+    Tooltip,
+} from 'chart.js';
 import { PhilippinePeso, Star, Users } from 'lucide-react';
 import { Bar, Line, Pie } from 'react-chartjs-2';
+
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    BarElement,
+    ArcElement,
+    Title,
+    Tooltip,
+    Legend,
+);
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -62,20 +86,6 @@ const events: EventExample[] = [
         submitted: '5 days ago',
     },
 ];
-
-const registrationTrendData: ChartData<'line'> = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    datasets: [
-        {
-            label: 'Attendance',
-            data: [1200, 1800, 2400, 2100, 2800, 3200],
-            backgroundColor: ['pink'],
-            borderColor: ['pink'],
-            pointBackgroundColor: ['pink'],
-            pointBorderWidth: 5,
-        },
-    ],
-};
 
 const yearLevelData: ChartData<'pie'> = {
     labels: ['1st year', '2nd', '3rd'],
@@ -132,12 +142,33 @@ type Event = {
 
 interface Props {
     event: Event;
+    registration_trend_labels: string[];
+    registration_trend_data: number[];
 }
 
-export default function EventView({ event }: Props) {
+export default function EventView({
+    event,
+    registration_trend_labels = [],
+    registration_trend_data = [],
+}: Props) {
     if (!event) {
         return <div className="p-6">Event not found</div>;
     }
+
+    const registrationTrendData: ChartData<'line'> = {
+        labels: registration_trend_labels,
+        datasets: [
+            {
+                label: 'Registrations',
+                data: registration_trend_data,
+                backgroundColor: ['pink'],
+                borderColor: ['pink'],
+                pointBackgroundColor: ['pink'],
+                tension: 0.2,
+                pointBorderWidth: 5,
+            },
+        ],
+    };
 
     const eventStatus = getEventStatus(event);
 
@@ -197,7 +228,7 @@ export default function EventView({ event }: Props) {
                     <div className="grid grid-cols-4 gap-4">
                         <SummaryCard
                             value={event.registries}
-                            label={'Total Registree'}
+                            label={'Total Registries'}
                             icon={Users}
                             className="fill-white"
                             iconBg="bg-gradient-to-br from-teal-400 to-teal-600"
