@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('middle_name')->nullable();
             $table->string('last_name');
             $table->string('position_title')->nullable();
+            $table->unsignedTinyInteger('year_level')->nullable();
+            $table->string('program')->nullable();
             $table->string('email')->unique();
             $table->string('phone_number')->nullable();
             $table->timestamp('email_verified_at')->nullable();

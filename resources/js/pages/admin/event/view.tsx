@@ -47,6 +47,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 type EventStatus = 'Pending' | 'Approved' | 'Rejected' | 'Closed';
 
+// delete this before production
 type EventExample = {
     id: number;
     name: string;
@@ -86,17 +87,6 @@ const events: EventExample[] = [
         submitted: '5 days ago',
     },
 ];
-
-const yearLevelData: ChartData<'pie'> = {
-    labels: ['1st year', '2nd', '3rd'],
-    datasets: [
-        {
-            label: 'Event Status',
-            data: [3, 6, 7],
-            backgroundColor: ['yellow', 'green', 'red'],
-        },
-    ],
-};
 
 const courseDistributionData: ChartData<'bar'> = {
     labels: ['Event 1', 'Event 2', 'Event 3'],
@@ -140,16 +130,23 @@ type Event = {
     earnings: number;
 };
 
+type StudentYearLevelData = {
+    year_level: string;
+    total: number;
+};
+
 interface Props {
     event: Event;
     registration_trend_labels: string[];
     registration_trend_data: number[];
+    student_year_level_data: StudentYearLevelData[];
 }
 
 export default function EventView({
     event,
     registration_trend_labels = [],
     registration_trend_data = [],
+    student_year_level_data = [],
 }: Props) {
     if (!event) {
         return <div className="p-6">Event not found</div>;
@@ -166,6 +163,17 @@ export default function EventView({
                 pointBackgroundColor: ['pink'],
                 tension: 0.2,
                 pointBorderWidth: 5,
+            },
+        ],
+    };
+
+    const yearLevelData: ChartData<'pie'> = {
+        labels: student_year_level_data.map((item) => item.year_level),
+        datasets: [
+            {
+                label: 'Event Status',
+                data: student_year_level_data.map((item) => item.total),
+                backgroundColor: ['yellow', 'green', 'red', 'black'],
             },
         ],
     };

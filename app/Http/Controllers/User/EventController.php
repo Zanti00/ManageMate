@@ -3,42 +3,30 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Services\User\EventService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class EventController extends Controller
 {
+    public function __construct(private EventService $eventService) {}
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $userId = Auth::id();
-        $allEvents = DB::select('EXEC GetEvents @user_id = :user_id', ['user_id' => $userId]);
-
-        // Convert to collection for easier manipulation
-        $eventsCollection = collect($allEvents);
-
-        // Get pagination parameters
-        $perPage = $request->input('per_page', 9); // 9 items to fit 3x3 grid nicely
+        $perPage = $request->input('per_page', 9); // 9 items for 3x3 grid
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
 
-        // Slice the collection to get items for current page
-        $currentPageItems = $eventsCollection->slice(($currentPage - 1) * $perPage, $perPage)->values();
-
-        // Create paginator
-        $events = new LengthAwarePaginator(
-            $currentPageItems,
-            $eventsCollection->count(),
+        $events = $this->eventService->getPaginatedEvents(
+            Auth::id(),
             $perPage,
             $currentPage,
-            [
-                'path' => $request->url(),
-                'query' => $request->query(),
-            ]
+            $request->url(),
+            $request->query()
         );
 
         return Inertia::render('user/event/index', [
@@ -67,21 +55,7 @@ class EventController extends Controller
      */
     public function show(string $id)
     {
-        $userId = Auth::id();
-
-        $event = DB::select(
-            'EXEC GetEventById @id = :id, @user_id = :user_id',
-            [
-                'id' => $id,
-                'user_id' => $userId,
-            ]
-        );
-
-        $event = $event ? $event[0] : null;
-
-        if ($event) {
-            $event->is_registered = (bool) $event->is_registered;
-        }
+        $event = $this->eventService->getEventDetails((int) $id, Auth::id());
 
         return Inertia::render('user/event/view', [
             'event' => $event,
@@ -114,9 +88,7 @@ class EventController extends Controller
 
     public function myevents()
     {
-        $userId = Auth::id();
-
-        $events = DB::select('EXEC GetRegisteredEventsById @user_id = :user_id', ['user_id' => $userId]);
+        $events = $this->eventService->getRegisteredEvents(Auth::id());
 
         return Inertia::render('user/event/my-events', [
             'events' => $events,
@@ -125,18 +97,8 @@ class EventController extends Controller
 
     public function register(string $eventId)
     {
-
-        $userId = Auth::id();
-
         try {
-            DB::statement('EXEC InsertEventById 
-            @user_id = :user_id, 
-            @event_id = :event_id',
-                [
-                    'user_id' => $userId,
-                    'event_id' => $eventId,
-                ]
-            );
+            $this->eventService->registerUserToEvent(Auth::id(), (int) $eventId);
 
             return redirect()->back()->with('success', 'Registration successful!');
 

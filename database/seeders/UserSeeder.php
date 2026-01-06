@@ -20,6 +20,8 @@ class UserSeeder extends Seeder
                 'first_name' => 'Test',
                 'last_name' => 'User',
                 'password' => 'password',
+                'year_level' => 1,
+                'program' => 'Bachelor of Science in Information Technology (BSIT)',
                 'email_verified_at' => now(),
             ]
         );

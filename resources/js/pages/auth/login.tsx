@@ -2,6 +2,12 @@ import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
@@ -10,6 +16,7 @@ import { store } from '@/routes/login';
 import { request } from '@/routes/password';
 import { store as registerStore } from '@/routes/register';
 import { Form, Head } from '@inertiajs/react';
+import { Ellipsis } from 'lucide-react';
 import { useState } from 'react';
 
 interface LoginProps {
@@ -24,6 +31,10 @@ export default function Login({
     canRegister,
 }: LoginProps) {
     const [isLogin, setIsLogin] = useState(true);
+    const [yearLevel, setYearLevel] = useState('1');
+    const [program, setProgram] = useState(
+        'Bachelor of Science in Information Technology (BSIT)',
+    );
 
     return (
         <AuthLayout
@@ -176,6 +187,193 @@ export default function Login({
                                         message={errors.last_name}
                                         className="mt-2"
                                     />
+                                </div>
+
+                                <div className="grid grid-cols-4 gap-2">
+                                    <div className="col-span-3 flex flex-col gap-2">
+                                        <Label htmlFor="program">Program</Label>
+                                        <div className="flex flex-row gap-2">
+                                            <div className="flex-[5]">
+                                                <Input
+                                                    name="program"
+                                                    className="text-lg"
+                                                    value={program}
+                                                />
+                                                <InputError
+                                                    message={errors.program}
+                                                    className="mt-2"
+                                                />
+                                            </div>
+                                            <div className="flex-[1]">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger
+                                                        asChild
+                                                    >
+                                                        <Button className="w-full text-left">
+                                                            <Ellipsis />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="start">
+                                                        <DropdownMenuItem
+                                                            onClick={() =>
+                                                                setProgram(
+                                                                    'Bachelor of Science in Information Technology (BSIT)',
+                                                                )
+                                                            }
+                                                        >
+                                                            Bachelor of Science
+                                                            in Information
+                                                            Technology (BSIT)
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            onClick={() =>
+                                                                setProgram(
+                                                                    'Bachelor of Business Technology and Livelihood Education major in Home Economics (BBTLEDHE)',
+                                                                )
+                                                            }
+                                                        >
+                                                            Bachelor of Business
+                                                            Technology and
+                                                            Livelihood Education
+                                                            major in Home
+                                                            Economics (BBTLEDHE)
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            onClick={() =>
+                                                                setProgram(
+                                                                    'Bachelor of Business Technology and Livelihood Education major in Information Communication and Technology (BTLEDICT)',
+                                                                )
+                                                            }
+                                                        >
+                                                            Bachelor of Business
+                                                            Technology and
+                                                            Livelihood Education
+                                                            major in Information
+                                                            Communication and
+                                                            Technology
+                                                            (BTLEDICT)
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            onClick={() =>
+                                                                setProgram(
+                                                                    'Bachelor of Science in Business Administration major in Human Resource Management (BSBAHRM)',
+                                                                )
+                                                            }
+                                                        >
+                                                            Bachelor of Science
+                                                            in Business
+                                                            Administration major
+                                                            in Human Resource
+                                                            Management (BSBAHRM)
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            onClick={() =>
+                                                                setProgram(
+                                                                    'Bachelor of Science in Business Administration major in Marketing Management (BSBA-MM)',
+                                                                )
+                                                            }
+                                                        >
+                                                            Bachelor of Science
+                                                            in Business
+                                                            Administration major
+                                                            in Marketing
+                                                            Management (BSBA-MM)
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            onClick={() =>
+                                                                setProgram(
+                                                                    'Bachelor of Science in Entrepreneurship (BSENTREP)',
+                                                                )
+                                                            }
+                                                        >
+                                                            Bachelor of Science
+                                                            in Entrepreneurship
+                                                            (BSENTREP)
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            onClick={() =>
+                                                                setProgram(
+                                                                    'Bachelor of Public Administration with specialization in Fiscal Administration (BPAFA)',
+                                                                )
+                                                            }
+                                                        >
+                                                            Bachelor of Public
+                                                            Administration with
+                                                            specialization in
+                                                            Fiscal
+                                                            Administration
+                                                            (BPAFA)
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            onClick={() =>
+                                                                setProgram(
+                                                                    'Diploma in Office Management Technology Medical Office Management (DOMTMOM)',
+                                                                )
+                                                            }
+                                                        >
+                                                            Diploma in Office
+                                                            Management
+                                                            Technology Medical
+                                                            Office Management
+                                                            (DOMTMOM)
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="col-span-1 flex flex-col gap-2">
+                                        <Label htmlFor="year_level">
+                                            Year Level
+                                        </Label>
+                                        <div className="flex flex-row gap-2">
+                                            <Input
+                                                name="year_level"
+                                                value={yearLevel}
+                                            />
+                                            <InputError
+                                                message={errors.year_level}
+                                                className="mt-2"
+                                            />
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button className="w-full text-left">
+                                                        <Ellipsis />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="start">
+                                                    <DropdownMenuItem
+                                                        onClick={() =>
+                                                            setYearLevel('1')
+                                                        }
+                                                    >
+                                                        1
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={() =>
+                                                            setYearLevel('2')
+                                                        }
+                                                    >
+                                                        2
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={() =>
+                                                            setYearLevel('3')
+                                                        }
+                                                    >
+                                                        3
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={() =>
+                                                            setYearLevel('4')
+                                                        }
+                                                    >
+                                                        4
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div className="grid gap-2">

@@ -3,18 +3,20 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Services\SuperAdmin\EventService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class EventController extends Controller
 {
+    public function __construct(private EventService $eventService) {}
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $events = DB::select('EXEC GetAllEvents');
+        $events = $this->eventService->getAllEvents();
 
         return Inertia::render('superadmin/event/index', [
             'events' => $events,
@@ -42,8 +44,7 @@ class EventController extends Controller
      */
     public function show(string $id)
     {
-        $event = DB::select('EXEC GetEventById @id = :id, @user_id = NULL', ['id' => $id]);
-        $event = $event ? $event[0] : null;
+        $event = $this->eventService->getEventById((int) $id);
 
         return Inertia::render('superadmin/event/view', ['event' => $event]);
     }
@@ -74,15 +75,25 @@ class EventController extends Controller
 
     public function approve_event(string $id)
     {
-        DB::statement('EXEC ApproveEvent @id = :id', ['id' => $id]);
+        try {
+            $this->eventService->approveEvent((int) $id);
 
-        return redirect()->route('superadmin.event.index')->with('success', 'Event approved');
+            return redirect()->route('superadmin.event.index')
+                ->with('success', 'Event approved successfully!');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Failed to approve event: '.$e->getMessage()]);
+        }
     }
 
     public function reject_event(string $id)
     {
-        DB::statement('EXEC RejectEvent @id = :id', ['id' => $id]);
+        try {
+            $this->eventService->rejectEvent((int) $id);
 
-        return redirect()->route('superadmin.event.index')->with('success', 'Event rejected');
+            return redirect()->route('superadmin.event.index')
+                ->with('success', 'Event rejected successfully!');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Failed to reject event: '.$e->getMessage()]);
+        }
     }
 }

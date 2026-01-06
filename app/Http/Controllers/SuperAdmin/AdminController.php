@@ -3,38 +3,28 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Services\SuperAdmin\AdminService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class AdminController extends Controller
 {
+    public function __construct(private AdminService $adminService) {}
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $admins = DB::select('EXEC GetAdmins');
-        $userId = $admins[0]->id;
-        $eventStats = DB::select('EXEC CountEventStatsByAdmin @user_id = :user_id', ['user_id' => $userId]);
-
-        $admins = $admins ?: [];
-
-        $stats = $eventStats[0] ?? null;
-
-        $totalEvents = $stats ? (string) ($stats->total_events ?? 0) : '0';
-        $pendingEvents = $stats ? (string) ($stats->pending_events ?? 0) : '0';
-        $activeEvents = $stats ? (string) ($stats->active_events ?? 0) : '0';
-        $rejectedEvents = $stats ? (string) ($stats->rejected_events ?? 0) : '0';
+        $data = $this->adminService->getAllAdminsWithStats();
 
         return Inertia::render('superadmin/admin/index', [
-            'admins' => $admins,
-            'total_events' => $totalEvents,
-            'pending_events' => $pendingEvents,
-            'active_events' => $activeEvents,
-            'rejected_events' => $rejectedEvents,
+            'admins' => $data['admins'],
+            'total_events' => $data['stats']['total_events'],
+            'pending_events' => $data['stats']['pending_events'],
+            'active_events' => $data['stats']['active_events'],
+            'rejected_events' => $data['stats']['rejected_events'],
         ]);
     }
 
@@ -63,35 +53,7 @@ class AdminController extends Controller
         ]);
 
         try {
-            // Use stored procedure with all fields except password
-            DB::statement(
-                'EXEC InsertAdmins
-                @username = :username,
-                @first_name = :first_name,
-                @middle_name = :middle_name,
-                @last_name = :last_name,
-                @position_title = :position_title,
-                @email = :email,
-                @phone_number = :phone_number,
-                @password = :password,
-                @role = :role',
-                [
-                    'username' => $validated['username'],
-                    'first_name' => $validated['first_name'],
-                    'middle_name' => $validated['middle_name'],
-                    'last_name' => $validated['last_name'],
-                    'position_title' => $validated['position_title'],
-                    'email' => $validated['email'],
-                    'phone_number' => $validated['phone_number'],
-                    'password' => 'temporary',
-                    'role' => 'admin',
-                ]
-            );
-
-            // I used eloquent hashing because stored procedure alters the hashed password
-            $user = User::where('email', $validated['email'])->first();
-            $user->password = $validated['password'];
-            $user->save();
+            $this->adminService->createAdmin($validated);
 
             return redirect()->route('superadmin.admin.index')
                 ->with('success', 'Admin created successfully!');
@@ -107,27 +69,14 @@ class AdminController extends Controller
      */
     public function show(string $id)
     {
-        $admin = DB::select(
-            'EXEC GetAdminById :id',
-            ['id' => $id]
-        );
-        $eventStats = DB::select('EXEC CountEventStatsByAdmin @user_id = :user_id', ['user_id' => $id]);
-
-        $admin = $admin ? $admin[0] : null;
-
-        $stats = $eventStats[0] ?? null;
-
-        $totalEvents = $stats ? (string) ($stats->total_events ?? 0) : '0';
-        $pendingEvents = $stats ? (string) ($stats->pending_events ?? 0) : '0';
-        $activeEvents = $stats ? (string) ($stats->active_events ?? 0) : '0';
-        $rejectedEvents = $stats ? (string) ($stats->rejected_events ?? 0) : '0';
+        $data = $this->adminService->getAdminWithStats((int) $id);
 
         return Inertia::render('superadmin/admin/view', [
-            'admin' => $admin,
-            'total_events' => $totalEvents,
-            'pending_events' => $pendingEvents,
-            'active_events' => $activeEvents,
-            'rejected_events' => $rejectedEvents,
+            'admin' => $data['admin'],
+            'total_events' => $data['stats']['total_events'],
+            'pending_events' => $data['stats']['pending_events'],
+            'active_events' => $data['stats']['active_events'],
+            'rejected_events' => $data['stats']['rejected_events'],
         ]);
     }
 
@@ -136,15 +85,10 @@ class AdminController extends Controller
      */
     public function edit(string $id)
     {
-        $admin = DB::select(
-            'EXEC GetAdminById :id',
-            ['id' => $id]
-        );
-
-        $admin = $admin ? $admin[0] : null;
+        $data = $this->adminService->getAdminWithStats((int) $id);
 
         return Inertia::render('superadmin/admin/edit', [
-            'admin' => $admin,
+            'admin' => $data['admin'],
         ]);
     }
 
@@ -166,34 +110,13 @@ class AdminController extends Controller
         ]);
 
         try {
-            // Use stored procedure with all fields except password
-            DB::statement(
-                'EXEC EditAdmin
-                @id = :id,
-                @username = :username,
-                @first_name = :first_name,
-                @middle_name = :middle_name,
-                @last_name = :last_name,
-                @position_title = :position_title,
-                @email = :email,
-                @phone_number = :phone_number',
-                [
-                    'id' => $id,
-                    'username' => $validated['username'],
-                    'first_name' => $validated['first_name'],
-                    'middle_name' => $validated['middle_name'],
-                    'last_name' => $validated['last_name'],
-                    'position_title' => $validated['position_title'],
-                    'email' => $validated['email'],
-                    'phone_number' => $validated['phone_number'],
-                ]
-            );
+            $this->adminService->updateAdmin((int) $id, $validated);
 
             return redirect()->route('superadmin.admin.show', $id)
                 ->with('success', 'Admin edited successfully!');
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to create admin: '.$e->getMessage()])
+            return back()->withErrors(['error' => 'Failed to update admin: '.$e->getMessage()])
                 ->withInput();
         }
     }
@@ -204,32 +127,24 @@ class AdminController extends Controller
     public function destroy(string $id)
     {
         try {
-            DB::statement(
-                'EXEC DeleteAdmin @id = :id',
-                ['id' => $id]
-            );
+            $this->adminService->deleteAdmin((int) $id);
 
             return redirect()->route('superadmin.admin.index')
                 ->with('success', 'Admin deleted successfully!');
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to create admin: '.$e->getMessage()])
-                ->withInput();
+            return back()->withErrors(['error' => 'Failed to delete admin: '.$e->getMessage()]);
         }
     }
 
     public function restore(string $id)
     {
         try {
-            DB::statement(
-                'EXEC RestoreAdmin @id = :id',
-                ['id' => $id]
-            );
+            $this->adminService->restoreAdmin((int) $id);
 
             return redirect()->route('superadmin.admin.index')
                 ->with('success', 'Admin restored successfully!');
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to create admin: '.$e->getMessage()])
-                ->withInput();
+            return back()->withErrors(['error' => 'Failed to restore admin: '.$e->getMessage()]);
         }
     }
 }
