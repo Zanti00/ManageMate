@@ -17,6 +17,20 @@ export function formatTime(timeStr: string): string {
     });
 }
 
+export function formatDateTime(dateStr: string): string {
+    const date = new Date(dateStr);
+    const formattedDate = date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+    });
+    const formattedTime = date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+    });
+    return `${formattedDate}, ${formattedTime}`;
+}
+
 export function formatDateRange(startDate: string, endDate: string): string {
     if (startDate === endDate) {
         return formatDate(startDate);

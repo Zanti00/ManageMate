@@ -71,12 +71,18 @@ class EventController extends Controller
         $event = $this->eventRepo->getEventById((int) $id);
         $registrationTrendData = $this->eventRepo->getRegistrationTrend((int) $id);
         $studentYearLevelData = $this->eventRepo->getStudentYearLevelData((int) $id);
+        $programDistributionData = $this->eventRepo->getProgramDistributionData((int) $id);
+        $checkInTimelineData = $this->eventRepo->getCheckInTimelineData((int) $id);
+        $eventAttendees = $this->eventRepo->getAttendeesByEvent((int) $id);
 
         return Inertia::render('admin/event/view', [
             'event' => $event,
             'registration_trend_labels' => array_column($registrationTrendData, 'date_label'),
             'registration_trend_data' => array_column($registrationTrendData, 'total_registrations'),
             'student_year_level_data' => $studentYearLevelData,
+            'program_distribution_data' => $programDistributionData,
+            'check_in_timeline_data' => $checkInTimelineData,
+            'event_attendees' => $eventAttendees,
         ]);
     }
 

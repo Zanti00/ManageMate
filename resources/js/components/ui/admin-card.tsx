@@ -58,7 +58,7 @@ function AdminCard({
                         </div>
                     </div>
                     {status === 'Active' 
-                        ? <Badge className="h-5" variant="approved">{status}</Badge> 
+                        ? <Badge className="h-5" variant="active">{status}</Badge> 
                         : <Badge className="h-5" variant="rejected">{status}</Badge>}
                 </div>
                 <div className="flex flex-row gap-3">

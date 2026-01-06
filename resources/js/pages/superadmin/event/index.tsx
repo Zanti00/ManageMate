@@ -18,7 +18,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-type EventStatus = 'Pending' | 'Approved' | 'Rejected' | 'Closed';
+type EventStatus = 'Pending' | 'Active' | 'Rejected' | 'Closed';
 
 type Event = {
     id: number;
@@ -80,11 +80,11 @@ export default function SuperAdminEvent({ events = [] }: Props) {
                                 )
                             </TabsTrigger>
 
-                            <TabsTrigger value="Approved">
-                                Approved (
+                            <TabsTrigger value="Active">
+                                Active (
                                 {
                                     eventsWithStatus.filter(
-                                        (e) => e.status === 'Approved',
+                                        (e) => e.status === 'Active',
                                     ).length
                                 }
                                 )
@@ -179,7 +179,7 @@ export default function SuperAdminEvent({ events = [] }: Props) {
                                                     event.status === 'Pending'
                                                         ? 'bg-yellow-100 text-yellow-700'
                                                         : event.status ===
-                                                            'Approved'
+                                                            'Active'
                                                           ? 'bg-green-100 text-green-700'
                                                           : event.status ===
                                                               'Rejected'
@@ -204,7 +204,7 @@ export default function SuperAdminEvent({ events = [] }: Props) {
                                                     className="bg-green-600"
                                                     disabled={
                                                         event.status ===
-                                                        'Approved'
+                                                        'Active'
                                                     }
                                                 >
                                                     <Check />

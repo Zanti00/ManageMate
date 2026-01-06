@@ -19,7 +19,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-type EventStatus = 'Pending' | 'Approved' | 'Rejected' | 'Closed';
+type EventStatus = 'Pending' | 'Active' | 'Rejected' | 'Closed';
 
 type Event = {
     id: number;
@@ -69,9 +69,9 @@ export default function ViewEvent({ event }: Props) {
                                                 Closed
                                             </Badge>
                                         )}
-                                        {eventStatus === 'Approved' && (
-                                            <Badge variant="approved">
-                                                Approved
+                                        {eventStatus === 'Active' && (
+                                            <Badge variant="active">
+                                                Active
                                             </Badge>
                                         )}
                                         {eventStatus === 'Pending' && (
@@ -209,7 +209,7 @@ export default function ViewEvent({ event }: Props) {
                                             )
                                         }
                                         className="bg-green-600 hover:bg-green-800"
-                                        disabled={eventStatus === 'Approved'}
+                                        disabled={eventStatus === 'Active'}
                                     >
                                         Approve
                                     </Button>

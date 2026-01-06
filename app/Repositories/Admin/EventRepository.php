@@ -49,6 +49,21 @@ class EventRepository
         return DB::select('EXEC GetStudentYearLevelDataByEvent @event_id = :event_id', ['event_id' => $eventId]);
     }
 
+    public function getProgramDistributionData(int $eventId): array
+    {
+        return DB::select('EXEC GetProgramDistributionDataByEvent @event_id = :event_id', ['event_id' => $eventId]);
+    }
+
+    public function getCheckInTimelineData(int $eventId): array
+    {
+        return DB::select('EXEC GetCheckInTimelineDataByEvent @event_id = :event_id', ['event_id' => $eventId]);
+    }
+
+    public function getAttendeesByEvent(int $eventId): array
+    {
+        return DB::select('EXEC GetAttendeesByEvent @event_id = :event_id', ['event_id' => $eventId]);
+    }
+
     public function getTopFiveEventsByAdmin(int $userId): array
     {
         return DB::select('EXEC GetTopFiveEventsByAdmin @user_id = :user_id', ['user_id' => $userId]);

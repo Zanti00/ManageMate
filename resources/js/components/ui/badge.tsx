@@ -11,7 +11,7 @@ const badgeVariants = cva(
       variant: {
         pending:
           "border-transparent bg-yellow-50 text-yellow-600",
-        approved:
+        active:
           "border-transparent bg-green-50 text-green-600",
         rejected:
           "border-transparent bg-red-50 text-red-600",

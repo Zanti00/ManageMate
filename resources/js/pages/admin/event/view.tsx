@@ -7,7 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import admin from '@/routes/admin';
 import { BreadcrumbItem } from '@/types';
-import { formatDateRange, formatTimeRange } from '@/utils/date-format';
+import {
+    formatDateRange,
+    formatDateTime,
+    formatTimeRange,
+} from '@/utils/date-format';
 import { getEventStatus } from '@/utils/event-status';
 import { formatPrice } from '@/utils/price-format';
 import {
@@ -45,70 +49,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-type EventStatus = 'Pending' | 'Approved' | 'Rejected' | 'Closed';
-
-// delete this before production
-type EventExample = {
-    id: number;
-    name: string;
-    organization: string;
-    date: string;
-    attendees: string;
-    status: EventStatus;
-    submitted: string;
-};
-
-const events: EventExample[] = [
-    {
-        id: 1,
-        name: 'Tech Innovation Summit 2024',
-        organization: 'Engineering Dept',
-        date: 'June 15, 2024',
-        attendees: '250 / 300',
-        status: 'Pending',
-        submitted: '2 days ago',
-    },
-    {
-        id: 2,
-        name: 'Annual Art Exhibition',
-        organization: 'Arts & Sciences',
-        date: 'June 18, 2024',
-        attendees: '180 / 200',
-        status: 'Pending',
-        submitted: '1 day ago',
-    },
-    {
-        id: 3,
-        name: 'Business Leadership Conference',
-        organization: 'Business School',
-        date: 'June 20, 2024',
-        attendees: '320 / 350',
-        status: 'Approved',
-        submitted: '5 days ago',
-    },
-];
-
-const courseDistributionData: ChartData<'bar'> = {
-    labels: ['Event 1', 'Event 2', 'Event 3'],
-    datasets: [
-        {
-            label: 'Count',
-            data: [123, 1, 3],
-            backgroundColor: ['pink'],
-        },
-    ],
-};
-
-const checkInData: ChartData<'bar'> = {
-    labels: ['Event 1', 'Event 2', 'Event 3'],
-    datasets: [
-        {
-            label: 'Check-ins',
-            data: [123, 1, 3],
-            backgroundColor: ['pink'],
-        },
-    ],
-};
+type EventStatus = 'Pending' | 'Active' | 'Rejected' | 'Closed';
 
 type Event = {
     id: number;
@@ -135,11 +76,33 @@ type StudentYearLevelData = {
     total: number;
 };
 
+type ProgramDistributionData = {
+    program: string;
+    total: number;
+};
+
+type CheckInTimelineData = {
+    check_in_time: string;
+    total_check_ins: number;
+};
+
+type EventAttendee = {
+    username: string;
+    year_level: string;
+    program: string;
+    email: string;
+    register_date: string;
+    check_in_date: string;
+};
+
 interface Props {
     event: Event;
     registration_trend_labels: string[];
     registration_trend_data: number[];
     student_year_level_data: StudentYearLevelData[];
+    program_distribution_data: ProgramDistributionData[];
+    check_in_timeline_data: CheckInTimelineData[];
+    event_attendees: EventAttendee[];
 }
 
 export default function EventView({
@@ -147,6 +110,9 @@ export default function EventView({
     registration_trend_labels = [],
     registration_trend_data = [],
     student_year_level_data = [],
+    program_distribution_data = [],
+    check_in_timeline_data = [],
+    event_attendees = [],
 }: Props) {
     if (!event) {
         return <div className="p-6">Event not found</div>;
@@ -178,6 +144,36 @@ export default function EventView({
         ],
     };
 
+    const programDistributionData: ChartData<'bar'> = {
+        labels: program_distribution_data.map((item) => item.program),
+        datasets: [
+            {
+                label: 'Count',
+                data: program_distribution_data.map((item) => item.total),
+                backgroundColor: ['pink'],
+            },
+        ],
+    };
+
+    const checkInTimelineData: ChartData<'line'> = {
+        labels: check_in_timeline_data.map((item) =>
+            formatDateTime(item.check_in_time),
+        ),
+        datasets: [
+            {
+                label: 'Check-Ins',
+                data: check_in_timeline_data.map(
+                    (item) => item.total_check_ins,
+                ),
+                backgroundColor: ['pink'],
+                borderColor: ['pink'],
+                pointBackgroundColor: ['pink'],
+                tension: 0.2,
+                pointBorderWidth: 5,
+            },
+        ],
+    };
+
     const eventStatus = getEventStatus(event);
 
     return (
@@ -199,8 +195,8 @@ export default function EventView({
                                                     Closed
                                                 </Badge>
                                             )}
-                                            {eventStatus === 'Approved' && (
-                                                <Badge variant="approved">
+                                            {eventStatus === 'Active' && (
+                                                <Badge variant="active">
                                                     Approved
                                                 </Badge>
                                             )}
@@ -426,16 +422,23 @@ export default function EventView({
                                             </div>
                                             <div className="flex flex-col">
                                                 <p className="font-extrabold">
-                                                    Course Distribution
+                                                    Program Distribution
                                                 </p>
                                                 <div className="col-span-1 h-64 w-full">
                                                     <Bar
                                                         data={
-                                                            courseDistributionData
+                                                            programDistributionData
                                                         }
                                                         options={{
                                                             responsive: true,
                                                             maintainAspectRatio: false,
+                                                            scales: {
+                                                                y: {
+                                                                    ticks: {
+                                                                        stepSize: 1,
+                                                                    },
+                                                                },
+                                                            },
                                                         }}
                                                         className="h-full w-full"
                                                     />
@@ -447,13 +450,29 @@ export default function EventView({
                                                 Check-in Timeline
                                             </p>
                                             <div className="flex h-64 w-full flex-col px-4">
-                                                <Bar
-                                                    data={checkInData}
+                                                <Line
+                                                    data={checkInTimelineData}
                                                     options={{
                                                         responsive: true,
                                                         maintainAspectRatio: false,
+                                                        scales: {
+                                                            y: {
+                                                                ticks: {
+                                                                    stepSize: 1,
+                                                                    callback:
+                                                                        function (
+                                                                            value,
+                                                                        ) {
+                                                                            return Number.isInteger(
+                                                                                value,
+                                                                            )
+                                                                                ? value
+                                                                                : '';
+                                                                        },
+                                                                },
+                                                            },
+                                                        },
                                                     }}
-                                                    className="h-full w-full"
                                                 />
                                             </div>
                                         </div>
@@ -461,53 +480,79 @@ export default function EventView({
                                 </Card>
                             </TabsContent>
                             <TabsContent value="attendees">
-                                <table className="w-full overflow-hidden rounded-2xl text-sm shadow-md">
-                                    <thead>
-                                        <tr className="text-left text-black">
-                                            <th className="p-4">Event</th>
-                                            <th>Organization</th>
-                                            <th>Date & Time</th>
-                                            <th>Attendees</th>
-                                            <th>Status</th>
-                                            <th>Submitted</th>
-                                        </tr>
-                                    </thead>
-
-                                    <tbody className="bg-card">
-                                        {events.map((event) => (
-                                            <tr
-                                                key={event.id}
-                                                className="hover:bg-gray-100"
-                                            >
-                                                <td className="p-4 font-medium">
-                                                    {event.name}
-                                                </td>
-                                                <td>{event.organization}</td>
-                                                <td>{event.date}</td>
-                                                <td>{event.attendees}</td>
-                                                <td>
-                                                    <span
-                                                        className={`rounded-full px-3 py-1 text-xs ${
-                                                            event.status ===
-                                                            'Pending'
-                                                                ? 'bg-yellow-100 text-yellow-700'
-                                                                : event.status ===
-                                                                    'Approved'
-                                                                  ? 'bg-green-100 text-green-700'
-                                                                  : event.status ===
-                                                                      'Rejected'
-                                                                    ? 'bg-red-100 text-red-700'
-                                                                    : 'bg-gray-100 text-gray-700'
-                                                        }`}
-                                                    >
-                                                        {event.status}
-                                                    </span>
-                                                </td>
-                                                <td>{event.submitted}</td>
+                                <div className="mb-4 h-[450px] overflow-y-auto">
+                                    <table className="w-full table-fixed text-sm">
+                                        <thead className="bg-foreground/95">
+                                            <tr className="text-left text-background">
+                                                <th className="px-4 py-2 pl-4">
+                                                    Username
+                                                </th>
+                                                <th className="px-4 py-2">
+                                                    Year Level
+                                                </th>
+                                                <th className="px-4 py-2">
+                                                    Program
+                                                </th>
+                                                <th className="px-4 py-2">
+                                                    Email
+                                                </th>
+                                                <th className="px-4 py-2">
+                                                    Register Date
+                                                </th>
+                                                <th className="px-4 py-2">
+                                                    Check-in Date
+                                                </th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                        </thead>
+
+                                        <tbody className="bg-card">
+                                            {event_attendees.length === 0 ? (
+                                                <tr>
+                                                    <td
+                                                        colSpan={6}
+                                                        className="py-12 text-center text-gray-500"
+                                                    >
+                                                        No attendees found
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                event_attendees.map(
+                                                    (attendee) => (
+                                                        <tr className="hover:bg-gray-100">
+                                                            <td className="truncate p-4 font-medium">
+                                                                {attendee.username ||
+                                                                    'N/A'}
+                                                            </td>
+                                                            <td className="p-4 font-medium">
+                                                                {
+                                                                    attendee.year_level
+                                                                }
+                                                            </td>
+                                                            <td className="p-4 font-medium">
+                                                                {
+                                                                    attendee.program
+                                                                }
+                                                            </td>
+                                                            <td className="p-4 font-medium">
+                                                                {attendee.email}
+                                                            </td>
+                                                            <td className="truncate p-4 font-medium">
+                                                                {formatDateTime(
+                                                                    attendee.register_date,
+                                                                )}
+                                                            </td>
+                                                            <td className="p-4 font-medium">
+                                                                {formatDateTime(
+                                                                    attendee.check_in_date,
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    ),
+                                                )
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </TabsContent>
                         </Tabs>
                     </div>

@@ -8,7 +8,7 @@ import { Badge } from './badge';
 import { Link } from '@inertiajs/react';
 import { formatDateRange, formatTimeRange } from '@/utils/date-format';
 
-type EventStatus = 'Pending' | 'Approved' | 'Rejected' | 'Closed' | 'Upcoming' | 'Ongoing';
+type EventStatus = 'Pending' | 'Active' | 'Rejected' | 'Closed' | 'Upcoming' | 'Ongoing';
 
 type Event = {
     id: number;
@@ -48,8 +48,8 @@ function EventCard({ hideStatus = false, viewDetailsHref, className, ...event }:
                                     {event.status === 'Pending' && (
                                         <Badge variant="pending">Pending</Badge>
                                     )}
-                                    {event.status === 'Approved' && (
-                                        <Badge variant="approved">Approved</Badge>
+                                    {event.status === 'Active' && (
+                                        <Badge variant="active">Active</Badge>
                                     )}
                                     {event.status === 'Rejected' && (
                                         <Badge variant="rejected">Rejected</Badge>
@@ -58,7 +58,7 @@ function EventCard({ hideStatus = false, viewDetailsHref, className, ...event }:
                                         <Badge variant="closed">Closed</Badge>
                                     )}
                                     {event.status === 'Upcoming' && (
-                                        <Badge variant="approved">Upcoming</Badge>
+                                        <Badge variant="active">Upcoming</Badge>
                                     )}
                                     {event.status === 'Ongoing' && (
                                         <Badge variant="pending">Ongoing</Badge>

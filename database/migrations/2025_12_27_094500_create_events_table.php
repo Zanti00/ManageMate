@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('organization')->nullable();
             $table->smallInteger('attendees')->nullable();
             $table->smallInteger('registries')->nullable();
-            $table->enum('status', ['pending', 'approved', 'rejected', 'closed'])->default('pending');
+            $table->enum('status', ['pending', 'active', 'rejected', 'closed'])->default('pending');
             $table->date('start_date');
             $table->date('end_date');
             $table->time('start_time');

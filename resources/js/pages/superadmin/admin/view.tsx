@@ -155,7 +155,7 @@ export default function ViewAdmin({
                             </div>
                             <div className="flex flex-row gap-2">
                                 {admin.is_deleted === '0' ? (
-                                    <Badge variant="approved">Active</Badge>
+                                    <Badge variant="active">Active</Badge>
                                 ) : (
                                     <Badge variant="rejected">Inactive</Badge>
                                 )}

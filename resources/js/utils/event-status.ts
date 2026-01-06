@@ -1,4 +1,4 @@
-export type EventStatus = 'Pending' | 'Approved' | 'Rejected' | 'Closed';
+export type EventStatus = 'Pending' | 'Active' | 'Rejected' | 'Closed';
 
 type EventWithStatus = {
     status?: string;
@@ -16,8 +16,8 @@ export function getEventStatus(event: EventWithStatus): EventStatus {
     switch (statusLower) {
         case 'pending':
             return 'Pending';
-        case 'approved':
-            return 'Approved';
+        case 'active':
+            return 'Active';
         case 'rejected':
             return 'Rejected';
         case 'closed':

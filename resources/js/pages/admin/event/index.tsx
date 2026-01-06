@@ -18,7 +18,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-type FilterValues = 'Pending' | 'Approved' | 'Rejected' | 'Closed';
+type FilterValues = 'Pending' | 'Active' | 'Rejected' | 'Closed';
 
 type Event = {
     id: number;
@@ -93,11 +93,11 @@ export default function AdminEvent({ events = [] }: Props) {
                                 )
                             </TabsTrigger>
 
-                            <TabsTrigger value="Approved">
-                                Approved (
+                            <TabsTrigger value="Active">
+                                Active (
                                 {
                                     eventsWithStatus.filter(
-                                        (e) => e.status === 'Approved',
+                                        (e) => e.status === 'Active',
                                     ).length
                                 }
                                 )
