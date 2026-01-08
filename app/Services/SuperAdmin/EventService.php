@@ -3,6 +3,7 @@
 namespace App\Services\SuperAdmin;
 
 use App\Repositories\SuperAdmin\EventRepository;
+use Illuminate\Support\Facades\Log;
 
 class EventService
 {
@@ -26,5 +27,18 @@ class EventService
     public function rejectEvent(int $id): void
     {
         $this->eventRepo->reject($id);
+    }
+
+    public function getMonthlyPerformanceData(int $id): array
+    {
+        $year = (int) now()->year;
+
+        $result = $this->eventRepo->getMonthlyPerformanceById($id, $year);
+
+        Log::info('query result', [
+            'result' => $result,
+        ]);
+
+        return $result;
     }
 }

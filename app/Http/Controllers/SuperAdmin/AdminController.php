@@ -70,6 +70,8 @@ class AdminController extends Controller
     public function show(string $id)
     {
         $data = $this->adminService->getAdminWithStats((int) $id);
+        $monthlyPerformanceData = $this->adminService->getMonthlyPerformanceData((int) $id);
+        $events = $this->adminService->getEvents((int) $id);
 
         return Inertia::render('superadmin/admin/view', [
             'admin' => $data['admin'],
@@ -77,6 +79,8 @@ class AdminController extends Controller
             'pending_events' => $data['stats']['pending_events'],
             'active_events' => $data['stats']['active_events'],
             'rejected_events' => $data['stats']['rejected_events'],
+            'monthly_performance_data' => $monthlyPerformanceData['monthly_performance_data'],
+            'events' => $events['events'],
         ]);
     }
 

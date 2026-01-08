@@ -87,6 +87,27 @@ class AdminService
             'pending_events' => (string) ($stats->pending_events ?? 0),
             'active_events' => (string) ($stats->active_events ?? 0),
             'rejected_events' => (string) ($stats->rejected_events ?? 0),
+            'closed_events' => (string) ($stats->closed_events ?? 0),
+        ];
+    }
+
+    public function getMonthlyPerformanceData(int $userId)
+    {
+        $year = (int) now()->year;
+
+        $monthlyPerformanceData = $this->adminRepo->getMonthlyPerformanceById($userId, $year);
+
+        return [
+            'monthly_performance_data' => $monthlyPerformanceData,
+        ];
+    }
+
+    public function getEvents(int $id)
+    {
+        $events = $this->adminRepo->getEvents($id);
+
+        return [
+            'events' => $events,
         ];
     }
 

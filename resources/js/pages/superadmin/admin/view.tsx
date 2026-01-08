@@ -16,6 +16,7 @@ import {
 
 import { Button } from '@/components/ui/button';
 import { SummaryCard } from '@/components/ui/summary-card';
+import { formatDateRange } from '@/utils/date-format';
 import { Link, router, useForm } from '@inertiajs/react';
 import {
     ArcElement,
@@ -51,40 +52,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const monthlyPerformanceData: ChartData<'line'> = {
-    labels: ['Jan', 'Feb', 'Mar'],
-    datasets: [
-        {
-            data: [1, 3, 2],
-            backgroundColor: ['pink'],
-            borderColor: ['pink'],
-            pointBackgroundColor: ['pink'],
-        },
-        {
-            data: [4, 1, 5],
-            backgroundColor: ['rgb(255, 205, 86)'],
-            borderColor: ['rgb(255, 205, 86)'],
-            pointBackgroundColor: ['rgb(255, 205, 86)'],
-        },
-    ],
-};
-
-const eventCategoriesData: ChartData<'doughnut'> = {
-    labels: ['Pending', 'Approved', 'Rejected', 'Closed'],
-    datasets: [
-        {
-            label: 'Event Status Overview',
-            data: [24, 156, 8, 89],
-            backgroundColor: [
-                'rgb(255, 205, 86)',
-                'rgb(54, 162, 235)',
-                'rgb(255, 99, 132)',
-                'gray',
-            ],
-        },
-    ],
-};
-
 type Admin = {
     id: number;
     first_name: string;
@@ -100,12 +67,30 @@ type Admin = {
     attendees?: number;
 };
 
+type MonthlyPerformanceData = {
+    month_number: number;
+    month_name: string;
+    total_attendees: number;
+    total_events: number;
+};
+
+type Event = {
+    id: number;
+    title: string;
+    start_date: string;
+    end_date: string;
+    status: string;
+};
+
 interface Props {
     admin: Admin;
     total_events: string;
     pending_events: string;
     active_events: string;
     rejected_events: string;
+    closed_events: string;
+    monthly_performance_data: MonthlyPerformanceData[];
+    events: Event[];
 }
 
 export default function ViewAdmin({
@@ -114,7 +99,14 @@ export default function ViewAdmin({
     pending_events,
     active_events,
     rejected_events,
+    closed_events,
+    monthly_performance_data = [],
+    events = [],
 }: Props) {
+    if (!admin) {
+        return <div className="p-6">User not found</div>;
+    }
+
     const createdAt = admin?.created_at
         ? new Date(admin.created_at).toLocaleDateString('en-US', {
               month: 'long',
@@ -123,13 +115,52 @@ export default function ViewAdmin({
           })
         : 'N/A';
 
-    if (!admin) {
-        return <div className="p-6">User not found</div>;
-    }
+    const monthlyPerformanceData: ChartData<'line'> = {
+        labels: monthly_performance_data.map((item) => item.month_name),
+        datasets: [
+            {
+                label: 'Attendees',
+                data: monthly_performance_data.map(
+                    (item) => item.total_attendees,
+                ),
+                backgroundColor: ['pink'],
+                borderColor: ['pink'],
+                pointBackgroundColor: ['pink'],
+                tension: 0.4,
+            },
+            {
+                label: 'Events',
+                data: monthly_performance_data.map((item) => item.total_events),
+                backgroundColor: ['rgb(255, 205, 86)'],
+                borderColor: ['rgb(255, 205, 86)'],
+                pointBackgroundColor: ['rgb(255, 205, 86)'],
+                tension: 0.4,
+            },
+        ],
+    };
+
+    const eventCategoriesData: ChartData<'doughnut'> = {
+        labels: ['Pending', 'Active', 'Rejected', 'Closed'],
+        datasets: [
+            {
+                label: 'Event Status Overview',
+                data: [
+                    Number(pending_events),
+                    Number(active_events),
+                    Number(rejected_events),
+                    Number(closed_events),
+                ],
+                backgroundColor: [
+                    'rgb(255, 205, 86)',
+                    'rgb(75, 192, 75)',
+                    'rgb(255, 99, 132)',
+                    'gray',
+                ],
+            },
+        ],
+    };
 
     const { delete: destroy } = useForm();
-
-    console.log(admin);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -249,17 +280,55 @@ export default function ViewAdmin({
                             </div>
                         </TabsContent>
                         <TabsContent value="events">
-                            <div className="flex flex-col gap-6">
+                            <div className="flex flex-col gap-2">
                                 <Label>Recent Events</Label>
-                                <Card className="flex flex-row justify-between border-1 border-gray-200 px-4 shadow-none">
-                                    <div className="flex flex-col gap-2">
-                                        <Label>
-                                            Tech Innovation Summit 2024
-                                        </Label>
-                                        <Label>June 15, 2024</Label>
-                                    </div>
-                                    <Badge variant={'pending'}>Pending</Badge>
-                                </Card>
+                                {events.map((event) => (
+                                    <Link
+                                        href={superadmin.event.show(event.id)}
+                                    >
+                                        <div className="flex flex-col gap-6">
+                                            <Card className="flex flex-row justify-between border-1 border-gray-200 px-4 shadow-none">
+                                                <div className="flex flex-col gap-2">
+                                                    <Label>{event.title}</Label>
+                                                    <Label>
+                                                        {formatDateRange(
+                                                            event.start_date,
+                                                            event.end_date,
+                                                        )}
+                                                    </Label>
+                                                </div>
+                                                {event.status && (
+                                                    <div>
+                                                        {event.status ===
+                                                            'pending' && (
+                                                            <Badge variant="pending">
+                                                                Pending
+                                                            </Badge>
+                                                        )}
+                                                        {event.status ===
+                                                            'active' && (
+                                                            <Badge variant="active">
+                                                                Active
+                                                            </Badge>
+                                                        )}
+                                                        {event.status ===
+                                                            'rejected' && (
+                                                            <Badge variant="rejected">
+                                                                Rejected
+                                                            </Badge>
+                                                        )}
+                                                        {event.status ===
+                                                            'closed' && (
+                                                            <Badge variant="closed">
+                                                                Closed
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </Card>
+                                        </div>
+                                    </Link>
+                                ))}
                             </div>
                         </TabsContent>
 

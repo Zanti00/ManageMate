@@ -39,40 +39,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const eventStatusOverviewData: ChartData<'doughnut'> = {
-    labels: ['Pending', 'Approved', 'Rejected', 'Closed'],
-    datasets: [
-        {
-            label: 'Event Status Overview',
-            data: [24, 156, 8, 89],
-            backgroundColor: [
-                'rgb(255, 205, 86)',
-                'rgb(54, 162, 235)',
-                'rgb(255, 99, 132)',
-                'gray',
-            ],
-        },
-    ],
-};
-
-const platformGrowthTrendData: ChartData<'line'> = {
-    labels: ['Jan', 'Feb', 'Mar'],
-    datasets: [
-        {
-            data: [1, 3, 2],
-            backgroundColor: ['pink'],
-            borderColor: ['pink'],
-            pointBackgroundColor: ['pink'],
-        },
-        {
-            data: [4, 1, 5],
-            backgroundColor: ['rgb(255, 205, 86)'],
-            borderColor: ['rgb(255, 205, 86)'],
-            pointBackgroundColor: ['rgb(255, 205, 86)'],
-        },
-    ],
-};
-
 const organizationActivityData: ChartData<'bar'> = {
     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
     datasets: [
@@ -100,17 +66,76 @@ const organizationActivityData: ChartData<'bar'> = {
     ],
 };
 
+type PlatformGrowthData = {
+    month_number: number;
+    month_name: string;
+    total_admins: number;
+    total_events: number;
+};
+
 interface Props {
     active_admins: string;
     pending_events: string;
     active_events: string;
+    pending_events_status: number;
+    active_events_status: number;
+    rejected_events_status: number;
+    closed_events_status: number;
+    platform_growth_data: PlatformGrowthData[];
 }
 
 export default function SuperAdminDashboard({
     active_admins,
     pending_events,
     active_events,
+    pending_events_status,
+    active_events_status,
+    rejected_events_status,
+    closed_events_status,
+    platform_growth_data = [],
 }: Props) {
+    const eventStatusOverviewData: ChartData<'doughnut'> = {
+        labels: ['Pending', 'Active', 'Rejected', 'Closed'],
+        datasets: [
+            {
+                label: 'Event Status Overview',
+                data: [
+                    pending_events_status,
+                    active_events_status,
+                    rejected_events_status,
+                    closed_events_status,
+                ],
+                backgroundColor: [
+                    'rgb(255, 205, 86)',
+                    'rgb(75, 192, 75)',
+                    'rgb(255, 99, 132)',
+                    'gray',
+                ],
+            },
+        ],
+    };
+
+    const platformGrowthTrendData: ChartData<'line'> = {
+        labels: platform_growth_data.map((item) => item.month_name),
+        datasets: [
+            {
+                label: 'Admins',
+                data: platform_growth_data.map((item) => item.total_admins),
+                backgroundColor: ['pink'],
+                borderColor: ['pink'],
+                pointBackgroundColor: ['pink'],
+                tension: 0.4,
+            },
+            {
+                label: 'Events',
+                data: platform_growth_data.map((item) => item.total_events),
+                backgroundColor: ['rgb(255, 205, 86)'],
+                borderColor: ['rgb(255, 205, 86)'],
+                pointBackgroundColor: ['rgb(255, 205, 86)'],
+                tension: 0.4,
+            },
+        ],
+    };
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-8 p-6">
@@ -167,7 +192,29 @@ export default function SuperAdminDashboard({
                             <div className="flex flex-row">
                                 <Label>Platform Growth Trends</Label>
                             </div>
-                            <Line data={platformGrowthTrendData}></Line>
+                            <div className="flex flex-col">
+                                <Line
+                                    data={platformGrowthTrendData}
+                                    options={{
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        scales: {
+                                            y: {
+                                                ticks: {
+                                                    stepSize: 1,
+                                                    callback: function (value) {
+                                                        return Number.isInteger(
+                                                            value,
+                                                        )
+                                                            ? value
+                                                            : '';
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    }}
+                                ></Line>
+                            </div>
                         </div>
                     </Card>
                 </div>

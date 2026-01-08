@@ -67,4 +67,21 @@ class AdminRepository
 
         return $result[0] ?? null;
     }
+
+    public function getMonthlyPerformanceById(int $userId, int $year): array
+    {
+        return DB::select('EXEC SP_GET_ATTENDEES_EVENTS_TOTAL_COUNT_BY_ADMIN @p_user_id = :p_user_id, @p_year = :p_year', ['p_user_id' => $userId, 'p_year' => $year]);
+    }
+
+    public function getTotalEventStatusById(int $userId): ?object
+    {
+        $result = DB::select('EXEC GetTotalEventStatusByAdmin @user_id = :user_id', ['user_id' => $userId]);
+
+        return $result[0] ?? null;
+    }
+
+    public function getEvents(int $userId): array
+    {
+        return DB::select('EXEC GetEventsByAdmin @user_id = :user_id', ['user_id' => $userId]);
+    }
 }

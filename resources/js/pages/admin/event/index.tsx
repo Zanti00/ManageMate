@@ -6,6 +6,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import admin from '@/routes/admin';
 import { type BreadcrumbItem } from '@/types';
+import { getEventStatus } from '@/utils/event-status';
 import { Link } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
@@ -41,7 +42,7 @@ interface Props {
 export default function AdminEvent({ events = [] }: Props) {
     const eventsWithStatus = events.map((event) => ({
         ...event,
-        status: getStatus(event),
+        status: getEventStatus(event),
     }));
 
     const [statusFilter, setStatusFilter] = useState<'all' | FilterValues>(
@@ -136,18 +137,4 @@ export default function AdminEvent({ events = [] }: Props) {
             </div>
         </AppLayout>
     );
-}
-
-function getStatus(event: any): FilterValues {
-    if (event.status === 'pending') {
-        return 'Pending' as FilterValues;
-    } else if (event.status === 'approved') {
-        return 'Approved' as FilterValues;
-    } else if (event.status === 'rejected') {
-        return 'Rejected' as FilterValues;
-    } else if (event.status === 'closed') {
-        return 'Closed' as FilterValues;
-    } else {
-        return 'Pending' as FilterValues;
-    }
 }
