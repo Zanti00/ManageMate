@@ -29,16 +29,16 @@ class EventService
         $this->eventRepo->reject($id);
     }
 
-    public function getMonthlyPerformanceData(int $id): array
-    {
-        $year = (int) now()->year;
+    // public function getMonthlyPerformanceData(int $id): array
+    // {
+    //     $year = (int) now()->year;
 
-        $result = $this->eventRepo->getMonthlyPerformanceById($id, $year);
+    //     $result = $this->eventRepo->getMonthlyPerformanceById($id, $year);
 
-        Log::info('query result', [
-            'result' => $result,
-        ]);
+    //     Log::info('query result', [
+    //         'result' => $result,
+    //     ]);
 
-        return $result;
-    }
+    //     return $result;
+    // }
 }

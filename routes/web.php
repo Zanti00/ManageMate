@@ -7,8 +7,10 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SuperAdmin\AdminController;
 use App\Http\Controllers\SuperAdmin\DashboardController as SuperadminDashboardController;
 use App\Http\Controllers\SuperAdmin\EventController as SuperAdminEventController;
+use App\Http\Controllers\SuperAdmin\OrganizationController;
 use App\Http\Controllers\User\DashboardController as UserDashboardController;
 use App\Http\Controllers\User\EventController as UserEventController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -20,6 +22,10 @@ use Inertia\Inertia;
 */
 
 Route::get('/', function () {
+    if (Auth::check()) {
+        return redirect()->route('dashboard');
+    }
+
     return Inertia::render('auth/login');
 })->name('home');
 
@@ -72,6 +78,7 @@ Route::middleware(['auth', 'verified', 'can:superadmin'])->prefix('superadmin')-
     Route::patch('/event/{event}/reject-event', [SuperAdminEventController::class, 'reject_event'])->name('event.reject');
     Route::resource('admin', AdminController::class);
     Route::patch('/admin/{admin}/restore', [AdminController::class, 'restore'])->name('admin.restore');
+    Route::resource('organization', OrganizationController::class);
 });
 
 require __DIR__.'/settings.php';

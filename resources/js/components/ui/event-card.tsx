@@ -1,11 +1,12 @@
 import { Card, CardDescription } from './card'
 import { Button } from './button'
-import { Eye, Calendar, Clock3, MapPin, UsersRound } from 'lucide-react'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './dropdown-menu'
+import { Eye, Calendar, Clock3, MapPin, MoreVertical, UsersRound } from 'lucide-react'
 import admin from '@/routes/admin';
 
 import {cn} from '@/lib/utils';
 import { Badge } from './badge';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { formatDateRange, formatTimeRange } from '@/utils/date-format';
 
 type EventStatus = 'Pending' | 'Active' | 'Rejected' | 'Closed' | 'Upcoming' | 'Ongoing';
@@ -33,6 +34,16 @@ type Props = Event & {
 function EventCard({ hideStatus = false, viewDetailsHref, className, ...event }: Props) {
     // Use custom href if provided, otherwise default to admin route
     const detailsLink = viewDetailsHref || admin.event.show(event.id).url;
+
+    const handleEdit = () => {
+        router.visit(admin.event.edit(event.id).url);
+    };
+
+    const handleDelete = () => {
+        router.delete(admin.event.destroy(event.id).url, {
+            preserveScroll: true,
+        });
+    };
     
     return (
         <Card className={cn("flex-col pt-0", className)}
@@ -94,12 +105,30 @@ function EventCard({ hideStatus = false, viewDetailsHref, className, ...event }:
                                     <p className='text-xs text-gray-800'>{event.attendees || '0'}</p>
                                 </div>
                             </div>
-                            <Link href={detailsLink}>
-                                <Button className="border border-foreground w-full">
-                                    <Eye />
-                                    View Details
-                                </Button>
-                            </Link>
+                            <div className="flex items-center gap-2">
+                                <Link href={detailsLink} className="flex-1">
+                                    <Button className="border border-foreground w-full">
+                                        <Eye />
+                                        View Details
+                                    </Button>
+                                </Link>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button className="border border-foreground bg-white px-3" aria-label="More options">
+                                            <MoreVertical className='stroke-foreground' />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onSelect={handleEdit}>Edit</DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            variant="destructive"
+                                            onSelect={handleDelete}
+                                        >
+                                            Delete
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
                         </div>
                     </Card>
     )

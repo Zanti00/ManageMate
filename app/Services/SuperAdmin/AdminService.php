@@ -16,16 +16,17 @@ class AdminService
         if (empty($admins)) {
             return [
                 'admins' => [],
-                'stats' => $this->getDefaultStats(),
             ];
         }
 
-        $userId = $admins[0]->id;
-        $stats = $this->adminRepo->getEventStats($userId);
+        $adminsWithStats = array_map(function ($admin) {
+            $stats = $this->formatEventStats($this->adminRepo->getEventStats($admin->id));
+
+            return (object) array_merge((array) $admin, $stats);
+        }, $admins);
 
         return [
-            'admins' => $admins,
-            'stats' => $this->formatEventStats($stats),
+            'admins' => $adminsWithStats,
         ];
     }
 

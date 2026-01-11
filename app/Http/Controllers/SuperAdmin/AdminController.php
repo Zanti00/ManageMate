@@ -21,10 +21,6 @@ class AdminController extends Controller
 
         return Inertia::render('superadmin/admin/index', [
             'admins' => $data['admins'],
-            'total_events' => $data['stats']['total_events'],
-            'pending_events' => $data['stats']['pending_events'],
-            'active_events' => $data['stats']['active_events'],
-            'rejected_events' => $data['stats']['rejected_events'],
         ]);
     }
 

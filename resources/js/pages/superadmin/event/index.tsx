@@ -18,7 +18,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-type EventStatus = 'Pending' | 'Active' | 'Rejected' | 'Closed';
+type EventStatus = 'Pending' | 'Active' | 'Rejected' | 'Closed' | 'Deleted';
 
 type Event = {
     id: number;
@@ -35,6 +35,7 @@ type Event = {
     registration_start_time: string;
     registration_end_time: string;
     created_at: string;
+    is_deleted?: number;
     status: EventStatus;
 };
 
@@ -43,10 +44,14 @@ interface Props {
 }
 
 export default function SuperAdminEvent({ events = [] }: Props) {
-    const eventsWithStatus = events.map((event) => ({
-        ...event,
-        status: getEventStatus(event),
-    }));
+    const eventsWithStatus = events.map((event) => {
+        const isDeleted = Number(event.is_deleted) === 1;
+
+        return {
+            ...event,
+            status: isDeleted ? 'Deleted' : getEventStatus(event),
+        };
+    });
 
     const [statusFilter, setStatusFilter] = useState<'all' | EventStatus>(
         'all',
@@ -105,6 +110,15 @@ export default function SuperAdminEvent({ events = [] }: Props) {
                                 {
                                     eventsWithStatus.filter(
                                         (e) => e.status === 'Closed',
+                                    ).length
+                                }
+                                )
+                            </TabsTrigger>
+                            <TabsTrigger value="Deleted">
+                                Deleted (
+                                {
+                                    eventsWithStatus.filter(
+                                        (e) => e.status === 'Deleted',
                                     ).length
                                 }
                                 )

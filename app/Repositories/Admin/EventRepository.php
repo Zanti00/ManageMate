@@ -11,11 +11,45 @@ class EventRepository
         return DB::select('EXEC GetEventsByAdmin @user_id = :user_id', ['user_id' => $userId]);
     }
 
-    public function getEventById(int $eventId): ?object
+    public function getEventById(int $eventId, ?int $userId = null): ?object
     {
-        $result = DB::select('EXEC GetEventById @id = :id, @user_id = NULL', ['id' => $eventId]);
+        $result = DB::select(
+            'EXEC GetEventById @id = :id, @user_id = NULL',
+            [
+                'id' => $eventId,
+            ],
+        );
 
         return ! empty($result) ? $result[0] : null;
+    }
+
+    public function updateEvent(int $eventId, int $userId, array $eventData): void
+    {
+        DB::statement(
+            'EXEC UpdateEventById
+            @event_id = :event_id,
+            @user_id = :user_id,
+            @title = :title,
+            @description = :description,
+            @start_date = :start_date,
+            @end_date = :end_date,
+            @start_time = :start_time,
+            @end_time = :end_time,
+            @registration_start_date = :registration_start_date,
+            @registration_end_date = :registration_end_date,
+            @registration_start_time = :registration_start_time,
+            @registration_end_time = :registration_end_time,
+            @location = :location,
+            @price = :price',
+            array_merge(
+                [
+                    'event_id' => $eventId,
+                    'user_id' => $userId,
+                    'price' => (float) $eventData['price'],
+                ],
+                $eventData,
+            ),
+        );
     }
 
     public function insertEvent(int $userId, array $eventData): void
@@ -67,5 +101,10 @@ class EventRepository
     public function getTopFiveEventsByAdmin(int $userId): array
     {
         return DB::select('EXEC GetTopFiveEventsByAdmin @user_id = :user_id', ['user_id' => $userId]);
+    }
+
+    public function deleteEventById(int $eventId): void
+    {
+        DB::statement('EXEC DeleteEventById @event_id = :event_id', ['event_id' => $eventId]);
     }
 }

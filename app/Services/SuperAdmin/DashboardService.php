@@ -16,6 +16,9 @@ class DashboardService
         $eventOverviewData = $this->dashboardRepo->getEventStatusOverview();
         $platformGrowthData = $this->dashboardRepo->getPlatformGrowthTrends($year);
 
+        // $stats = $stats ?? (object) [];
+        // $eventOverviewData = $eventOverviewData ?? (object) [];
+
         return [
             'active_admins' => (string) ($stats->active_admins ?? 0),
             'pending_events' => (string) ($stats->pending_events ?? 0),

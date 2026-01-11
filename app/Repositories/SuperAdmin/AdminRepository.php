@@ -38,7 +38,7 @@ class AdminRepository
     public function update(int $id, array $data): void
     {
         DB::statement(
-            'EXEC EditAdmin
+            'EXEC UpdateAdminById
             @id = :id,
             @username = :username,
             @first_name = :first_name,
@@ -70,7 +70,7 @@ class AdminRepository
 
     public function getMonthlyPerformanceById(int $userId, int $year): array
     {
-        return DB::select('EXEC SP_GET_ATTENDEES_EVENTS_TOTAL_COUNT_BY_ADMIN @p_user_id = :p_user_id, @p_year = :p_year', ['p_user_id' => $userId, 'p_year' => $year]);
+        return DB::select('EXEC GetAttendeesEventsTotalCountByAdmin @user_id = :user_id, @year = :year', ['user_id' => $userId, 'year' => $year]);
     }
 
     public function getTotalEventStatusById(int $userId): ?object

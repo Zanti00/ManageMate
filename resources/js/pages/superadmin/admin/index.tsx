@@ -28,23 +28,17 @@ type Admin = {
     is_deleted: string;
     attendees?: string;
     status?: FilterValues;
+    total_events?: string;
+    pending_events?: string;
+    active_events?: string;
+    rejected_events?: string;
 };
 
 interface Props {
     admins?: Admin[];
-    total_events: string;
-    pending_events: string;
-    active_events: string;
-    rejected_events: string;
 }
 
-export default function AdminsManagement({
-    admins = [],
-    total_events,
-    pending_events,
-    active_events,
-    rejected_events,
-}: Props) {
+export default function AdminsManagement({ admins = [] }: Props) {
     const adminsWithStatus = admins.map((admin) => ({
         ...admin,
         status:
@@ -104,14 +98,7 @@ export default function AdminsManagement({
                 </Tabs>
                 <div className="grid grid-cols-2 gap-8">
                     {filteredStatus.map((admin) => (
-                        <AdminCard
-                            key={admin.id}
-                            {...admin}
-                            total_events={total_events}
-                            pending_events={pending_events}
-                            active_events={active_events}
-                            rejected_events={rejected_events}
-                        />
+                        <AdminCard key={admin.id} {...admin} />
                     ))}
                 </div>
             </div>

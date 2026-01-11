@@ -19,6 +19,7 @@ import { Link, usePage } from '@inertiajs/react';
 import {
     Bell,
     BookOpen,
+    Building2,
     Calendar,
     CalendarHeart,
     Folder,
@@ -103,6 +104,11 @@ export function AppSidebar() {
             title: 'Admins',
             href: superadmin.admin.index(),
             icon: UserRoundCog,
+        });
+        mainNavItems.push({
+            title: 'Organizations',
+            href: superadmin.organization.index(),
+            icon: Building2,
         });
     }
 

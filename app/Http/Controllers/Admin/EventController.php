@@ -68,7 +68,7 @@ class EventController extends Controller
      */
     public function show(string $id)
     {
-        $event = $this->eventRepo->getEventById((int) $id);
+        $event = $this->eventRepo->getEventById((int) $id, Auth::id());
         $registrationTrendData = $this->eventRepo->getRegistrationTrend((int) $id);
         $studentYearLevelData = $this->eventRepo->getStudentYearLevelData((int) $id);
         $programDistributionData = $this->eventRepo->getProgramDistributionData((int) $id);
@@ -91,7 +91,17 @@ class EventController extends Controller
      */
     public function edit(string $id)
     {
-        // return Inertia::render('admin/event/edit');
+        $event = $this->eventRepo->getEventById((int) $id, Auth::id());
+
+        if (! $event) {
+            return redirect()
+                ->route('admin.event.index')
+                ->withErrors(['error' => 'Event not found.']);
+        }
+
+        return Inertia::render('admin/event/edit', [
+            'event' => $event,
+        ]);
     }
 
     /**
@@ -99,7 +109,32 @@ class EventController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $validated = $request->validate([
+            'title' => 'required|string|max:100',
+            'description' => 'required|string',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'start_time' => 'required|date_format:H:i:s',
+            'end_time' => 'required|date_format:H:i:s|after_or_equal:start_time',
+            'registration_start_date' => 'required|date|before_or_equal:end_date',
+            'registration_end_date' => 'required|date|after_or_equal:registration_start_date|before_or_equal:end_date',
+            'registration_start_time' => 'required|date_format:H:i:s',
+            'registration_end_time' => 'required|date_format:H:i:s|after_or_equal:registration_start_time',
+            'location' => 'required|string|max:100',
+            'price' => 'required|numeric|min:0',
+        ]);
+
+        try {
+            $this->eventRepo->updateEvent((int) $id, Auth::id(), $validated);
+
+            return redirect()
+                ->route('admin.event.index')
+                ->with('success', 'Event updated successfully!');
+        } catch (\Exception $e) {
+            return back()
+                ->withErrors(['error' => 'Failed to update event: '.$e->getMessage()])
+                ->withInput();
+        }
     }
 
     /**
@@ -107,6 +142,16 @@ class EventController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        try {
+            $this->eventRepo->deleteEventById((int) $id);
+
+            return redirect()
+                ->route('admin.event.index')
+                ->with('success', 'Event deleted successfully.');
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('admin.event.index')
+                ->withErrors(['error' => 'Failed to delete event: '.$e->getMessage()]);
+        }
     }
 }
