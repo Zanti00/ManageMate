@@ -24,6 +24,51 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+type EventFormData = {
+    title: string;
+    description: string;
+    start_date: string;
+    end_date: string;
+    start_time: string;
+    end_time: string;
+    registration_start_date: string;
+    registration_end_date: string;
+    registration_start_time: string;
+    registration_end_time: string;
+    location: string;
+    price: string;
+    images: (File | null)[];
+};
+
+const imageSlots = [
+    {
+        id: 0,
+        colSpan: 3,
+        label: 'Cover image',
+        helper: 'Click to upload (max 1MB)',
+    },
+    {
+        id: 1,
+        colSpan: 1,
+        label: 'Gallery 1',
+        helper: 'Click to upload (max 1MB)',
+    },
+    {
+        id: 2,
+        colSpan: 1,
+        label: 'Gallery 2',
+        helper: 'Click to upload (max 1MB)',
+    },
+    {
+        id: 3,
+        colSpan: 1,
+        label: 'Gallery 3',
+        helper: 'Click to upload (max 1MB)',
+    },
+];
+
+const MAX_IMAGE_SIZE = 1024 * 1024; // 1MB
+
 export default function AdminCreateEvent() {
     // Event Info
     const [startOpen, setStartOpen] = React.useState(false);
@@ -44,22 +89,72 @@ export default function AdminCreateEvent() {
         Date | undefined
     >(undefined);
 
-    const { data, setData, post, processing, errors } = useForm({
-        title: '',
-        description: '',
-        start_date: '',
-        end_date: '',
-        start_time: '10:30:00',
-        end_time: '11:00:00',
-        registration_start_date: '',
-        registration_end_date: '',
-        registration_start_time: '10:30:00',
-        registration_end_time: '11:00:00',
-        location: '',
-        price: '0',
-    });
+    const fileInputs = React.useRef<(HTMLInputElement | null)[]>([]);
+    const [imagePreviews, setImagePreviews] = React.useState<(string | null)[]>(
+        Array(imageSlots.length).fill(null),
+    );
+    const [imageError, setImageError] = React.useState<string | null>(null);
+
+    const { data, setData, post, processing, errors, transform } =
+        useForm<EventFormData>({
+            title: '',
+            description: '',
+            start_date: '',
+            end_date: '',
+            start_time: '10:30:00',
+            end_time: '11:00:00',
+            registration_start_date: '',
+            registration_end_date: '',
+            registration_start_time: '10:30:00',
+            registration_end_time: '11:00:00',
+            location: '',
+            price: '0',
+            images: [],
+        });
+
+    const handleCardClick = (index: number) => {
+        fileInputs.current[index]?.click();
+    };
+
+    const handleImageChange = (index: number, files: FileList | null) => {
+        const file = files?.[0];
+        if (!file) return;
+
+        if (file.size > MAX_IMAGE_SIZE) {
+            setImageError('Images must be 1MB or smaller.');
+            return;
+        }
+
+        setImageError(null);
+
+        const updatedImages = [...data.images];
+        updatedImages[index] = file;
+        setData('images', updatedImages);
+
+        setImagePreviews((prev) => {
+            const next = [...prev];
+            if (next[index]) {
+                URL.revokeObjectURL(next[index] as string);
+            }
+            next[index] = URL.createObjectURL(file);
+            return next;
+        });
+    };
+
+    React.useEffect(() => {
+        return () => {
+            imagePreviews.forEach((preview) => {
+                if (preview) URL.revokeObjectURL(preview);
+            });
+        };
+    }, [imagePreviews]);
 
     const handleSubmit = () => {
+        transform((formData) => ({
+            ...formData,
+            images: formData.images.filter(Boolean),
+        }));
+
         post(admin.event.store.url(), {
             preserveScroll: true,
             preserveState: true,
@@ -73,10 +168,58 @@ export default function AdminCreateEvent() {
                     <CardTitle>Basic Information</CardTitle>
                     <div className="flex flex-row justify-between gap-x-3">
                         <div className="grid w-[50%] grid-cols-3 gap-4">
-                            <Card className="col-span-3 bg-gray-100"></Card>
-                            <Card className="col-span-1 bg-gray-100"></Card>
-                            <Card className="col-span-1 bg-gray-100"></Card>
-                            <Card className="col-span-1 bg-gray-100"></Card>
+                            {imageSlots.map((slot) => (
+                                <React.Fragment key={slot.id}>
+                                    <input
+                                        ref={(el) => {
+                                            fileInputs.current[slot.id] = el;
+                                        }}
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) =>
+                                            handleImageChange(
+                                                slot.id,
+                                                e.target.files,
+                                            )
+                                        }
+                                    />
+                                    <Card
+                                        role="button"
+                                        tabIndex={0}
+                                        onClick={() => handleCardClick(slot.id)}
+                                        onKeyDown={(e) => {
+                                            if (
+                                                e.key === 'Enter' ||
+                                                e.key === ' '
+                                            ) {
+                                                e.preventDefault();
+                                                handleCardClick(slot.id);
+                                            }
+                                        }}
+                                        className={`${slot.colSpan === 3 ? 'col-span-3' : 'col-span-1'} aspect-square w-full cursor-pointer overflow-hidden border border-dashed border-gray-300 bg-gray-50 p-0 hover:border-gray-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2`}
+                                    >
+                                        {imagePreviews[slot.id] ? (
+                                            <img
+                                                src={
+                                                    imagePreviews[
+                                                        slot.id
+                                                    ] as string
+                                                }
+                                                alt={slot.label}
+                                                className="h-full w-full object-contain"
+                                            />
+                                        ) : (
+                                            <div className="flex h-full flex-col items-center justify-center gap-1 p-2 text-sm text-gray-500">
+                                                <span className="font-medium text-gray-700">
+                                                    {slot.label}
+                                                </span>
+                                                <span>{slot.helper}</span>
+                                            </div>
+                                        )}
+                                    </Card>
+                                </React.Fragment>
+                            ))}
                         </div>
                         <div className="flex w-full flex-col gap-y-3">
                             <Label>Event Title *</Label>
@@ -106,6 +249,11 @@ export default function AdminCreateEvent() {
                             {errors.description && (
                                 <span className="text-sm text-red-500">
                                     {errors.description}
+                                </span>
+                            )}
+                            {imageError && (
+                                <span className="text-sm text-red-500">
+                                    {imageError}
                                 </span>
                             )}
                         </div>

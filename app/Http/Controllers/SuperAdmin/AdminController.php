@@ -29,7 +29,11 @@ class AdminController extends Controller
      */
     public function create()
     {
-        return Inertia::render('superadmin/admin/create');
+        $organizations = $this->adminService->getOrganizationOptions();
+
+        return Inertia::render('superadmin/admin/create', [
+            'organizations' => $organizations,
+        ]);
     }
 
     /**
@@ -46,6 +50,7 @@ class AdminController extends Controller
             'email' => 'required|string|email|max:50|unique:users,email',
             'phone_number' => 'required|string|size:11',
             'password' => 'required|string|min:8|max:255',
+            'organization_id' => 'required|integer',
         ]);
 
         try {

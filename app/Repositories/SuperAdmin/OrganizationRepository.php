@@ -12,7 +12,7 @@ class OrganizationRepository
     public function insert(array $data): void
     {
         DB::statement(
-            'EXEC InsertOrganization
+            'EXEC usp_Organization_Insert
             @name = :name,
             @abbreviation = :abbreviation,
             @email = :email,
@@ -24,12 +24,12 @@ class OrganizationRepository
 
     public function getAll(): array
     {
-        return DB::select('EXEC GetAllOrganizations');
+        return DB::select('EXEC usp_Organization_GetAll');
     }
 
     public function findById(int $id): ?object
     {
-        $result = DB::select('EXEC GetOrganizationById @id = :id', ['id' => $id]);
+        $result = DB::select('EXEC usp_Organization_GetById @organization_id = :organization_id', ['organization_id' => $id]);
 
         return $result[0] ?? null;
     }
@@ -37,7 +37,7 @@ class OrganizationRepository
     public function update(int $id, array $data): void
     {
         DB::statement(
-            'EXEC UpdateOrganizationById
+            'EXEC usp_Organization_Update
             @id = :id,
             @name = :name,
             @abbreviation = :abbreviation,
@@ -50,6 +50,6 @@ class OrganizationRepository
 
     public function delete(int $id): void
     {
-        DB::statement('EXEC DeleteOrganizationById @id = :id', ['id' => $id]);
+        DB::statement('EXEC usp_Organization_Update @organization_id = :organization_id', ['organization_id' => $id]);
     }
 }

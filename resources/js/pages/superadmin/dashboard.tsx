@@ -3,7 +3,9 @@ import { Label } from '@/components/ui/label';
 import { SummaryCard } from '@/components/ui/summary-card';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
+import superadmin from '@/routes/superadmin';
 import { type BreadcrumbItem } from '@/types';
+import { Link } from '@inertiajs/react';
 import {
     ArcElement,
     BarElement,
@@ -18,7 +20,7 @@ import {
     Tooltip,
 } from 'chart.js';
 import { Building2, CalendarDays, Clock, User } from 'lucide-react';
-import { Bar, Doughnut, Line } from 'react-chartjs-2';
+import { Doughnut, Line } from 'react-chartjs-2';
 
 ChartJS.register(
     CategoryScale,
@@ -39,33 +41,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const organizationActivityData: ChartData<'bar'> = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-    datasets: [
-        {
-            data: [65, 59, 80, 81, 56, 55, 40],
-            backgroundColor: [
-                'rgba(255, 99, 132, 0.2)',
-                'rgba(255, 159, 64, 0.2)',
-                'rgba(255, 205, 86, 0.2)',
-                'rgba(75, 192, 192, 0.2)',
-                'rgba(54, 162, 235, 0.2)',
-                'rgba(153, 102, 255, 0.2)',
-                'rgba(201, 203, 207, 0.2)',
-            ],
-            borderColor: [
-                'rgb(255, 99, 132)',
-                'rgb(255, 159, 64)',
-                'rgb(255, 205, 86)',
-                'rgb(75, 192, 192)',
-                'rgb(54, 162, 235)',
-                'rgb(153, 102, 255)',
-                'rgb(201, 203, 207)',
-            ],
-        },
-    ],
-};
-
 type PlatformGrowthData = {
     month_number: number;
     month_name: string;
@@ -73,7 +48,22 @@ type PlatformGrowthData = {
     total_events: number;
 };
 
+type TopOrganization = {
+    id?: number;
+    name: string;
+    total_events?: number;
+    total_attendees?: number;
+};
+
+type TopEvent = {
+    id: number;
+    title: string;
+    organization_name?: string;
+    attendee_count?: number;
+};
+
 interface Props {
+    total_organizations: string;
     active_admins: string;
     pending_events: string;
     active_events: string;
@@ -82,9 +72,12 @@ interface Props {
     rejected_events_status: number;
     closed_events_status: number;
     platform_growth_data: PlatformGrowthData[];
+    top_performing_organizations?: TopOrganization[];
+    top_performing_events?: TopEvent[];
 }
 
 export default function SuperAdminDashboard({
+    total_organizations,
     active_admins,
     pending_events,
     active_events,
@@ -93,6 +86,8 @@ export default function SuperAdminDashboard({
     rejected_events_status,
     closed_events_status,
     platform_growth_data = [],
+    top_performing_organizations = [],
+    top_performing_events = [],
 }: Props) {
     const eventStatusOverviewData: ChartData<'doughnut'> = {
         labels: ['Pending', 'Active', 'Rejected', 'Closed'],
@@ -141,7 +136,7 @@ export default function SuperAdminDashboard({
             <div className="flex flex-col gap-8 p-6">
                 <div className="grid grid-cols-4 gap-4">
                     <SummaryCard
-                        value={'1'}
+                        value={total_organizations}
                         label={'Total Organizations'}
                         icon={Building2}
                         iconBg="bg-gradient-to-br from-purple-400 to-purple-600"
@@ -187,7 +182,7 @@ export default function SuperAdminDashboard({
                             }}
                         />
                     </Card>
-                    <Card className="col-span-2 px-12 py-8">
+                    <Card className="col-span-2 px-6 py-6">
                         <div className="flex flex-col gap-4">
                             <div className="flex flex-row">
                                 <Label>Platform Growth Trends</Label>
@@ -220,39 +215,102 @@ export default function SuperAdminDashboard({
                 </div>
                 <div className="grid grid-cols-4 gap-4">
                     <Card className="col-span-2 p-6">
-                        <div className="flex flex-col">
-                            <Label>Organization Activity</Label>
+                        <div className="flex flex-col gap-4">
+                            <div className="flex flex-row justify-between">
+                                <Label>Top Performing Organizations</Label>
+                            </div>
+                            <div className="flex flex-col gap-3">
+                                {top_performing_organizations.length === 0 ? (
+                                    <Card className="bg-gray-50 py-3 text-center text-sm text-gray-500">
+                                        No data available
+                                    </Card>
+                                ) : (
+                                    top_performing_organizations.map((org) => (
+                                        <Card
+                                            key={org.id ?? org.name}
+                                            className="w-full bg-gray-50 py-3"
+                                        >
+                                            <div className="flex flex-row items-center gap-4 px-4">
+                                                <img className="h-12 w-12 rounded-full bg-amber-100" />
+                                                <div className="flex flex-1 flex-col gap-1">
+                                                    <Label className="text-base font-semibold">
+                                                        {org.name}
+                                                    </Label>
+                                                    <div className="flex flex-row gap-3 text-sm text-gray-600">
+                                                        <span>
+                                                            {org.total_events ??
+                                                                0}{' '}
+                                                            events
+                                                        </span>
+                                                        <span>•</span>
+                                                        <span>
+                                                            {org.total_attendees ??
+                                                                0}{' '}
+                                                            attendees
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </Card>
+                                    ))
+                                )}
+                            </div>
                         </div>
-                        <Bar data={organizationActivityData}></Bar>
                     </Card>
                     <Card className="col-span-2 p-6">
                         <div className="flex flex-col gap-4">
                             <div className="flex flex-row justify-between">
-                                <Label>Top Performing Organizations</Label>
-                                <Label>View All</Label>
+                                <Label>Top Performing Events</Label>
                             </div>
-                            <Card className="bg-gray-100 py-3">
-                                <div className="flex flex-row gap-4 px-4">
-                                    <div className="">
-                                        <img
-                                            src="https://lh3.googleusercontent.com/BKN1q6592B6RRjUCzycpYLMsRXezlbNW7lbJ3Y1xDUuzdJ_D9tbhr9GHk2_STmHBcIZYu4mNpu1cGgTU=w544-h544-l90-rj"
-                                            alt="Profile"
-                                            className="h-10 w-10 rounded-full border-white bg-gray-200"
-                                        />
-                                    </div>
-                                    <div className="flex flex-2 flex-col gap-2">
-                                        <Label>Engineering Dept</Label>
-                                        <div className="flex flex-row gap-2">
-                                            <Label>45 events</Label>
-                                            <Label>*</Label>
-                                            <Label>2,340 attendees</Label>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center justify-center">
-                                        4.7
-                                    </div>
-                                </div>
-                            </Card>
+                            <div className="flex flex-col gap-3">
+                                {top_performing_events.length === 0 ? (
+                                    <Card className="bg-gray-50 py-3 text-center text-sm text-gray-500">
+                                        No data available
+                                    </Card>
+                                ) : (
+                                    top_performing_events.map((event) => (
+                                        <Link
+                                            href={
+                                                superadmin.event.show(event.id)
+                                                    .url
+                                            }
+                                        >
+                                            <Card
+                                                key={event.id ?? event.title}
+                                                className="w-full bg-gray-50 py-3"
+                                            >
+                                                <div className="flex flex-row items-center gap-4 px-4">
+                                                    <img className="h-12 w-12 rounded-full bg-amber-100" />
+                                                    <div className="flex flex-1 flex-col gap-1">
+                                                        <Label className="text-base font-semibold">
+                                                            {event.title}
+                                                        </Label>
+                                                        <div className="flex flex-row gap-3 text-sm text-gray-600">
+                                                            <span>
+                                                                {event.attendee_count ??
+                                                                    0}{' '}
+                                                                attendees
+                                                            </span>
+                                                            {event.organization_name ? (
+                                                                <>
+                                                                    <span>
+                                                                        •
+                                                                    </span>
+                                                                    <span>
+                                                                        {
+                                                                            event.organization_name
+                                                                        }
+                                                                    </span>
+                                                                </>
+                                                            ) : null}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </Card>
+                                        </Link>
+                                    ))
+                                )}
+                            </div>
                         </div>
                     </Card>
                 </div>

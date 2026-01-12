@@ -26,9 +26,9 @@ class DashboardService
 
         $statusRow = $eventStatusData[0] ?? null;
         $formattedStatusData = [
-            $statusRow->total_pending ?? 0,
-            $statusRow->total_approved ?? 0,
-            $statusRow->total_rejected ?? 0,
+            $statusRow->pending_events ?? 0,
+            $statusRow->active_events ?? 0,
+            $statusRow->rejected_events ?? 0,
         ];
 
         return [

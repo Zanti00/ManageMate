@@ -70,7 +70,7 @@ export default function ViewEvent({ event }: Props) {
                                             </Badge>
                                         )}
                                         {eventStatus === 'Upcoming' && (
-                                            <Badge variant="approved">
+                                            <Badge variant="active">
                                                 Upcoming
                                             </Badge>
                                         )}

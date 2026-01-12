@@ -107,7 +107,7 @@ export default function AdminDashboard({
     };
 
     const eventStatusData: ChartData<'pie'> = {
-        labels: ['Pending', 'Approved', 'Rejected'],
+        labels: ['Pending', 'Active', 'Rejected'],
         datasets: [
             {
                 label: 'Event Status',

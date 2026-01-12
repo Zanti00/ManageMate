@@ -6,7 +6,7 @@ import admin from '@/routes/admin';
 
 import {cn} from '@/lib/utils';
 import { Badge } from './badge';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { formatDateRange, formatTimeRange } from '@/utils/date-format';
 
 type EventStatus = 'Pending' | 'Active' | 'Rejected' | 'Closed' | 'Upcoming' | 'Ongoing';
@@ -24,6 +24,7 @@ type Event = {
     attendees?: number;
     status?: EventStatus;
     hideStatus?: boolean;
+    image_path?: string | null;
 };
 
 type Props = Event & {
@@ -32,6 +33,10 @@ type Props = Event & {
 };
 
 function EventCard({ hideStatus = false, viewDetailsHref, className, ...event }: Props) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { auth } = usePage().props as any;
+    const showActions = !auth?.user?.isUser;
+
     // Use custom href if provided, otherwise default to admin route
     const detailsLink = viewDetailsHref || admin.event.show(event.id).url;
 
@@ -44,14 +49,18 @@ function EventCard({ hideStatus = false, viewDetailsHref, className, ...event }:
             preserveScroll: true,
         });
     };
+
+    const imageUrl = event.image_path
+        ? `/storage/${event.image_path}`
+        : '/images/event-placeholder.png';
     
     return (
-        <Card className={cn("flex-col pt-0", className)}
+        <Card className={cn("flex-col pt-0 hover:shadow-xl", className)}
             >
                         <div className="relative h-48 w-full overflow-hidden rounded-t-2xl">
                             <img
-                                src="https://i.pinimg.com/736x/49/b8/18/49b818123608412cca0ed827b89cb632.jpg"
-                                alt="Description of image"
+                                src={imageUrl}
+                                alt={event.title}
                                 className="h-full w-full object-cover hover:scale-105 transition-transform duration-300"
                             />
                             {!hideStatus && event.status && (
@@ -112,22 +121,24 @@ function EventCard({ hideStatus = false, viewDetailsHref, className, ...event }:
                                         View Details
                                     </Button>
                                 </Link>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button className="border border-foreground bg-white px-3" aria-label="More options">
-                                            <MoreVertical className='stroke-foreground' />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onSelect={handleEdit}>Edit</DropdownMenuItem>
-                                        <DropdownMenuItem
-                                            variant="destructive"
-                                            onSelect={handleDelete}
-                                        >
-                                            Delete
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                {showActions && (
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button className="border border-foreground bg-white px-3" aria-label="More options">
+                                                <MoreVertical className='stroke-foreground' />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem onSelect={handleEdit}>Edit</DropdownMenuItem>
+                                            <DropdownMenuItem
+                                                variant="destructive"
+                                                onSelect={handleDelete}
+                                            >
+                                                Delete
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                )}
                             </div>
                         </div>
                     </Card>

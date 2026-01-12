@@ -8,12 +8,12 @@ class AdminRepository
 {
     public function getAll(): array
     {
-        return DB::select('EXEC GetAdmins');
+        return DB::select('EXEC usp_User_GetAdmins');
     }
 
     public function findById(int $id): ?object
     {
-        $result = DB::select('EXEC GetAdminById :id', ['id' => $id]);
+        $result = DB::select('EXEC usp_User_GetAdminById @user_id = :user_id', ['user_id' => $id]);
 
         return $result ? $result[0] : null;
     }
@@ -21,7 +21,7 @@ class AdminRepository
     public function insert(array $data): void
     {
         DB::statement(
-            'EXEC InsertAdmins
+            'EXEC usp_InsertAdmin
             @username = :username,
             @first_name = :first_name,
             @middle_name = :middle_name,
@@ -30,7 +30,8 @@ class AdminRepository
             @email = :email,
             @phone_number = :phone_number,
             @password = :password,
-            @role = :role',
+            @role = :role,
+            @organization_id = :organization_id',
             $data
         );
     }
@@ -38,8 +39,8 @@ class AdminRepository
     public function update(int $id, array $data): void
     {
         DB::statement(
-            'EXEC UpdateAdminById
-            @id = :id,
+            'EXEC usp_User_UpdateAdminById
+            @user_id = :user_id,
             @username = :username,
             @first_name = :first_name,
             @middle_name = :middle_name,
@@ -47,41 +48,34 @@ class AdminRepository
             @position_title = :position_title,
             @email = :email,
             @phone_number = :phone_number',
-            array_merge(['id' => $id], $data)
+            array_merge(['user_id' => $id], $data)
         );
     }
 
     public function delete(int $id): void
     {
-        DB::statement('EXEC DeleteAdmin @id = :id', ['id' => $id]);
+        DB::statement('EXEC usp_User_DeleteAdmin @user_id = :user_id', ['user_id' => $id]);
     }
 
     public function restore(int $id): void
     {
-        DB::statement('EXEC RestoreAdmin @id = :id', ['id' => $id]);
+        DB::statement('EXEC usp_User_RestoreAdmin @user_id = :user_id', ['user_id' => $id]);
     }
 
     public function getEventStats(int $userId): ?object
     {
-        $result = DB::select('EXEC CountEventStatsByAdmin @user_id = :user_id', ['user_id' => $userId]);
+        $result = DB::select('EXEC usp_Event_StatsByAdmin @user_id = :user_id', ['user_id' => $userId]);
 
         return $result[0] ?? null;
     }
 
     public function getMonthlyPerformanceById(int $userId, int $year): array
     {
-        return DB::select('EXEC GetAttendeesEventsTotalCountByAdmin @user_id = :user_id, @year = :year', ['user_id' => $userId, 'year' => $year]);
-    }
-
-    public function getTotalEventStatusById(int $userId): ?object
-    {
-        $result = DB::select('EXEC GetTotalEventStatusByAdmin @user_id = :user_id', ['user_id' => $userId]);
-
-        return $result[0] ?? null;
+        return DB::select('EXEC usp_Event_MonthlyStatsByAdmin @user_id = :user_id, @year = :year', ['user_id' => $userId, 'year' => $year]);
     }
 
     public function getEvents(int $userId): array
     {
-        return DB::select('EXEC GetEventsByAdmin @user_id = :user_id', ['user_id' => $userId]);
+        return DB::select('EXEC usp_Event_GetByAdmin @user_id = :user_id', ['user_id' => $userId]);
     }
 }

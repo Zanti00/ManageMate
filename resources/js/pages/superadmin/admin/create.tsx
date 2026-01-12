@@ -2,6 +2,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import superadmin from '@/routes/superadmin';
 import { BreadcrumbItem } from '@/types';
@@ -14,7 +21,16 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function CreateAdmin() {
+type OrganizationOption = {
+    id: number;
+    name: string;
+};
+
+interface Props {
+    organizations?: OrganizationOption[];
+}
+
+export default function CreateAdmin({ organizations = [] }: Props) {
     const { data, setData, post, processing, errors } = useForm({
         username: '',
         first_name: '',
@@ -24,6 +40,7 @@ export default function CreateAdmin() {
         email: '',
         phone_number: '',
         password: '',
+        organization_id: '',
     });
 
     const handleSubmit = () => {
@@ -37,35 +54,36 @@ export default function CreateAdmin() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Card className="my-8 mr-52 ml-8 flex flex-col p-8">
                 <Form className="space-y-6">
-                    {/* <div className="flex flex-row gap-8">
+                    <div className="flex flex-row gap-8">
                         <div className="gap flex flex-col gap-2">
-                            <Label>Organization Type *</Label>
+                            <Label>Organization *</Label>
                             <Select
-                                value={data.organization_type}
+                                value={data.organization_id}
                                 onValueChange={(value) =>
-                                    setData('organization_type', value)
+                                    setData('organization_id', value)
                                 }
-                                required
                             >
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Select organization type" />
+                                    <SelectValue placeholder="Select organization" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="academic">
-                                        Academic
-                                    </SelectItem>
-                                    <SelectItem value="non-academic">
-                                        Non-Academic
-                                    </SelectItem>
+                                    {organizations.map((org) => (
+                                        <SelectItem
+                                            key={org.id}
+                                            value={org.id.toString()}
+                                        >
+                                            {org.name}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
-                            {errors.organization_type && (
+                            {errors.organization_id && (
                                 <span className="text-sm text-red-500">
-                                    {errors.organization_type}
+                                    {errors.organization_id}
                                 </span>
                             )}
                         </div>
-                    </div> */}
+                    </div>
                     <CardTitle>Admin Contact Information</CardTitle>
                     <div className="flex flex-row gap-8">
                         <div className="gap flex flex-col gap-2">

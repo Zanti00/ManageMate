@@ -4,10 +4,11 @@ namespace App\Services\SuperAdmin;
 
 use App\Models\User;
 use App\Repositories\SuperAdmin\AdminRepository;
+use App\Repositories\SuperAdmin\OrganizationRepository;
 
 class AdminService
 {
-    public function __construct(private AdminRepository $adminRepo) {}
+    public function __construct(private AdminRepository $adminRepo, private OrganizationRepository $organizationRepo) {}
 
     public function getAllAdminsWithStats(): array
     {
@@ -28,6 +29,18 @@ class AdminService
         return [
             'admins' => $adminsWithStats,
         ];
+    }
+
+    public function getOrganizationOptions(): array
+    {
+        $organizations = $this->organizationRepo->getAll();
+
+        return array_map(function ($org) {
+            return [
+                'id' => $org->id,
+                'name' => $org->name,
+            ];
+        }, $organizations ?: []);
     }
 
     public function getAdminWithStats(int $id): array
@@ -54,6 +67,7 @@ class AdminService
             'phone_number' => $validatedData['phone_number'],
             'password' => 'temporary',
             'role' => 'admin',
+            'organization_id' => $validatedData['organization_id'] ?? null,
         ]);
 
         // Update password using Eloquent to properly hash it

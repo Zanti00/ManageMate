@@ -8,7 +8,7 @@ class DashboardRepository
 {
     public function getDashboardStats(int $userId): ?object
     {
-        $result = DB::select('EXEC GetUserDashboardStats @user_id = :user_id', ['user_id' => $userId]);
+        $result = DB::select('EXEC usp_UserDashboardStats @user_id = :user_id', ['user_id' => $userId]);
 
         return $result[0] ?? null;
     }

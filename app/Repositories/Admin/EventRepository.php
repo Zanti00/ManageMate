@@ -8,15 +8,15 @@ class EventRepository
 {
     public function getEventsByAdmin(int $userId): array
     {
-        return DB::select('EXEC GetEventsByAdmin @user_id = :user_id', ['user_id' => $userId]);
+        return DB::select('EXEC usp_Event_GetByAdmin @user_id = :user_id', ['user_id' => $userId]);
     }
 
     public function getEventById(int $eventId, ?int $userId = null): ?object
     {
         $result = DB::select(
-            'EXEC GetEventById @id = :id, @user_id = NULL',
+            'EXEC usp_Event_GetById @event_id = :event_id, @user_id = NULL',
             [
-                'id' => $eventId,
+                'event_id' => $eventId,
             ],
         );
 
@@ -26,7 +26,7 @@ class EventRepository
     public function updateEvent(int $eventId, int $userId, array $eventData): void
     {
         DB::statement(
-            'EXEC UpdateEventById
+            'EXEC usp_Event_Update
             @event_id = :event_id,
             @user_id = :user_id,
             @title = :title,
@@ -52,10 +52,10 @@ class EventRepository
         );
     }
 
-    public function insertEvent(int $userId, array $eventData): void
+    public function insertEvent(int $userId, array $eventData): int
     {
         DB::statement(
-            'EXEC InsertEvents
+            'EXEC usp_Event_Insert
             @user_id = :user_id,
             @title = :title,
             @description = :description,
@@ -71,40 +71,57 @@ class EventRepository
             @price = :price',
             array_merge(['user_id' => $userId], $eventData)
         );
+
+        $eventId = (int) DB::getPdo()->lastInsertId();
+
+        return $eventId;
+    }
+
+    public function insertEventImages(int $eventId, array $imagePaths): void
+    {
+        foreach ($imagePaths as $path) {
+            DB::statement(
+                'EXEC usp_EventImages_Insert @event_id = :event_id, @image_path = :image_path',
+                [
+                    'event_id' => $eventId,
+                    'image_path' => $path,
+                ]
+            );
+        }
     }
 
     public function getRegistrationTrend(int $eventId): array
     {
-        return DB::select('EXEC GetRegistrationTrendByEvent @id = :id', ['id' => $eventId]);
+        return DB::select('EXEC usp_Event_RegistrationTrend @event_id = :event_id', ['event_id' => $eventId]);
     }
 
     public function getStudentYearLevelData(int $eventId): array
     {
-        return DB::select('EXEC GetStudentYearLevelDataByEvent @event_id = :event_id', ['event_id' => $eventId]);
+        return DB::select('EXEC usp_Event_StudentYearLevelData @event_id = :event_id', ['event_id' => $eventId]);
     }
 
     public function getProgramDistributionData(int $eventId): array
     {
-        return DB::select('EXEC GetProgramDistributionDataByEvent @event_id = :event_id', ['event_id' => $eventId]);
+        return DB::select('EXEC usp_Event_ProgramDistributionData @event_id = :event_id', ['event_id' => $eventId]);
     }
 
     public function getCheckInTimelineData(int $eventId): array
     {
-        return DB::select('EXEC GetCheckInTimelineDataByEvent @event_id = :event_id', ['event_id' => $eventId]);
+        return DB::select('EXEC usp_Event_CheckInTimelineData @event_id = :event_id', ['event_id' => $eventId]);
     }
 
     public function getAttendeesByEvent(int $eventId): array
     {
-        return DB::select('EXEC GetAttendeesByEvent @event_id = :event_id', ['event_id' => $eventId]);
+        return DB::select('EXEC usp_Event_GetAttendees @event_id = :event_id', ['event_id' => $eventId]);
     }
 
     public function getTopFiveEventsByAdmin(int $userId): array
     {
-        return DB::select('EXEC GetTopFiveEventsByAdmin @user_id = :user_id', ['user_id' => $userId]);
+        return DB::select('EXEC usp_Event_Top5ByAttendees @user_id = :user_id', ['user_id' => $userId]);
     }
 
     public function deleteEventById(int $eventId): void
     {
-        DB::statement('EXEC DeleteEventById @event_id = :event_id', ['event_id' => $eventId]);
+        DB::statement('EXEC usp_Event_Delete @event_id = :event_id', ['event_id' => $eventId]);
     }
 }

@@ -8,14 +8,14 @@ class EventRepository
 {
     public function getEventsByUser(int $userId): array
     {
-        return DB::select('EXEC GetEvents @user_id = :user_id', ['user_id' => $userId]);
+        return DB::select('EXEC usp_Event_Get @user_id = :user_id', ['user_id' => $userId]);
     }
 
     public function getEventById(int $eventId, int $userId): ?object
     {
         $result = DB::select(
-            'EXEC GetEventById @id = :id, @user_id = :user_id',
-            ['id' => $eventId, 'user_id' => $userId]
+            'EXEC usp_Event_GetById @event_id = :event_id, @user_id = :user_id',
+            ['event_id' => $eventId, 'user_id' => $userId]
         );
 
         return $result ? $result[0] : null;
@@ -23,24 +23,24 @@ class EventRepository
 
     public function getRegisteredEvents(int $userId): array
     {
-        return DB::select('EXEC GetRegisteredEventsById @user_id = :user_id', ['user_id' => $userId]);
+        return DB::select('EXEC usp_RegisteredEvent_GetById @user_id = :user_id', ['user_id' => $userId]);
     }
 
     public function registerUserToEvent(int $userId, int $eventId): void
     {
         DB::statement(
-            'EXEC InsertEventById @user_id = :user_id, @event_id = :event_id',
+            'EXEC usp_RegisterEvent_Insert @user_id = :user_id, @event_id = :event_id',
             ['user_id' => $userId, 'event_id' => $eventId]
         );
     }
 
     public function getEventsToday(): array
     {
-        return DB::select('EXEC GetEventsToday');
+        return DB::select('EXEC usp_Event_Today');
     }
 
     public function getUpcomingEvents(): array
     {
-        return DB::select('EXEC GetUpcomingEvents');
+        return DB::select('EXEC usp_Event_Upcoming');
     }
 }

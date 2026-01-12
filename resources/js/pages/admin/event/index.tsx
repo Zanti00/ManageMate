@@ -32,7 +32,8 @@ type Event = {
     end_time: string;
     submit_date: number;
     attendees?: number;
-    status?: FilterValues; // for compatibility, but will be set below
+    status?: FilterValues;
+    image_path?: string | null;
 };
 
 interface Props {

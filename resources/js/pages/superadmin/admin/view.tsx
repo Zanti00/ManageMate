@@ -60,6 +60,7 @@ type Admin = {
     email: string;
     phone_number: string;
     created_at: string;
+    organization_id: string;
     is_deleted: string;
     totalEvent?: number;
     activeEvent?: number;

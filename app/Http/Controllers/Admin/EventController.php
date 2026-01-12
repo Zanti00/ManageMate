@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Repositories\Admin\EventRepository;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
@@ -50,10 +51,32 @@ class EventController extends Controller
             'registration_end_time' => 'required|date_format:H:i:s|after_or_equal:registration_start_time',
             'location' => 'required|string|max:100',
             'price' => 'required|numeric|min:0',
+            'images' => 'array|nullable',
+            'images.*' => 'image|max:1024', // 1MB limit
         ]);
 
         try {
-            $this->eventRepo->insertEvent(Auth::id(), $validated);
+            $eventPayload = Arr::except($validated, ['images']);
+
+            $eventId = $this->eventRepo->insertEvent(Auth::id(), $eventPayload);
+            if ($eventId === null) {
+                throw new \RuntimeException('Failed to create event.');
+            }
+
+            $images = $request->file('images', []);
+            if (! empty($images)) {
+                $storedPaths = [];
+
+                foreach ($images as $image) {
+                    if ($image) {
+                        $storedPaths[] = $image->store('events', 'public');
+                    }
+                }
+
+                if (! empty($storedPaths)) {
+                    $this->eventRepo->insertEventImages((int) $eventId, $storedPaths);
+                }
+            }
 
             return redirect()->route('admin.event.index')
                 ->with('success', 'Event created successfully!');

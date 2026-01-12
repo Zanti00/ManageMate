@@ -8,23 +8,23 @@ class EventRepository
 {
     public function getAll(): array
     {
-        return DB::select('EXEC GetAllEvents');
+        return DB::select('EXEC usp_Event_GetAll');
     }
 
     public function findById(int $id): ?object
     {
-        $result = DB::select('EXEC GetEventById @id = :id, @user_id = NULL', ['id' => $id]);
+        $result = DB::select('EXEC usp_Event_GetById @event_id = :event_id, @user_id = NULL', ['event_id' => $id]);
 
         return $result ? $result[0] : null;
     }
 
     public function approve(int $id): void
     {
-        DB::statement('EXEC ApproveEvent @id = :id', ['id' => $id]);
+        DB::statement('EXEC usp_Event_Approve @event_id = :event_id', ['event_id' => $id]);
     }
 
     public function reject(int $id): void
     {
-        DB::statement('EXEC RejectEvent @id = :id', ['id' => $id]);
+        DB::statement('EXEC usp_Event_Reject @event_id = :event_id', ['event_id' => $id]);
     }
 }

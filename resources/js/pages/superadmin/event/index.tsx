@@ -28,12 +28,8 @@ type Event = {
     price: number;
     start_date: string;
     end_date: string;
-    start_time: string;
-    end_time: string;
     registration_start_date: string;
     registration_end_date: string;
-    registration_start_time: string;
-    registration_end_time: string;
     created_at: string;
     is_deleted?: number;
     status: EventStatus;

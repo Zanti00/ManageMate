@@ -15,6 +15,8 @@ class DashboardService
         $stats = $this->dashboardRepo->getDashboardStats();
         $eventOverviewData = $this->dashboardRepo->getEventStatusOverview();
         $platformGrowthData = $this->dashboardRepo->getPlatformGrowthTrends($year);
+        $topPerformingOrganizations = $this->dashboardRepo->getTopPerformingOrganizations();
+        $topPerformingEvents = $this->dashboardRepo->getTopPerformingEvents();
 
         // $stats = $stats ?? (object) [];
         // $eventOverviewData = $eventOverviewData ?? (object) [];
@@ -28,6 +30,8 @@ class DashboardService
             'rejected_events_status' => (int) ($eventOverviewData->rejected_events ?? 0),
             'closed_events_status' => (int) ($eventOverviewData->closed_events ?? 0),
             'platform_growth_data' => $platformGrowthData,
+            'top_performing_organizations' => $topPerformingOrganizations,
+            'top_performing_events' => $topPerformingEvents,
         ];
     }
 }
