@@ -9,6 +9,7 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
+import useImageSlots from '@/hooks/use-image-slots';
 import AppLayout from '@/layouts/app-layout';
 import admin from '@/routes/admin';
 import { BreadcrumbItem } from '@/types';
@@ -89,11 +90,18 @@ export default function AdminCreateEvent() {
         Date | undefined
     >(undefined);
 
-    const fileInputs = React.useRef<(HTMLInputElement | null)[]>([]);
-    const [imagePreviews, setImagePreviews] = React.useState<(string | null)[]>(
-        Array(imageSlots.length).fill(null),
-    );
-    const [imageError, setImageError] = React.useState<string | null>(null);
+    const {
+        files,
+        imagePreviews,
+        imageError,
+        fileInputs,
+        handleCardClick,
+        handleImageChange,
+        handleRemoveImage,
+    } = useImageSlots({
+        slotCount: imageSlots.length,
+        maxFileSizeBytes: MAX_IMAGE_SIZE,
+    });
 
     const { data, setData, post, processing, errors, transform } =
         useForm<EventFormData>({
@@ -112,42 +120,9 @@ export default function AdminCreateEvent() {
             images: [],
         });
 
-    const handleCardClick = (index: number) => {
-        fileInputs.current[index]?.click();
-    };
-
-    const handleImageChange = (index: number, files: FileList | null) => {
-        const file = files?.[0];
-        if (!file) return;
-
-        if (file.size > MAX_IMAGE_SIZE) {
-            setImageError('Images must be 1MB or smaller.');
-            return;
-        }
-
-        setImageError(null);
-
-        const updatedImages = [...data.images];
-        updatedImages[index] = file;
-        setData('images', updatedImages);
-
-        setImagePreviews((prev) => {
-            const next = [...prev];
-            if (next[index]) {
-                URL.revokeObjectURL(next[index] as string);
-            }
-            next[index] = URL.createObjectURL(file);
-            return next;
-        });
-    };
-
     React.useEffect(() => {
-        return () => {
-            imagePreviews.forEach((preview) => {
-                if (preview) URL.revokeObjectURL(preview);
-            });
-        };
-    }, [imagePreviews]);
+        setData('images', files);
+    }, [files, setData]);
 
     const handleSubmit = () => {
         transform((formData) => ({
@@ -197,18 +172,34 @@ export default function AdminCreateEvent() {
                                                 handleCardClick(slot.id);
                                             }
                                         }}
-                                        className={`${slot.colSpan === 3 ? 'col-span-3' : 'col-span-1'} aspect-square w-full cursor-pointer overflow-hidden border border-dashed border-gray-300 bg-gray-50 p-0 hover:border-gray-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2`}
+                                        className={`${slot.colSpan === 3 ? 'col-span-3' : 'col-span-1'} relative aspect-square w-full cursor-pointer overflow-hidden border border-dashed border-gray-300 bg-gray-50 p-0 hover:border-gray-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2`}
                                     >
                                         {imagePreviews[slot.id] ? (
-                                            <img
-                                                src={
-                                                    imagePreviews[
-                                                        slot.id
-                                                    ] as string
-                                                }
-                                                alt={slot.label}
-                                                className="h-full w-full object-contain"
-                                            />
+                                            <div className="h-full w-full">
+                                                <img
+                                                    src={
+                                                        imagePreviews[
+                                                            slot.id
+                                                        ] as string
+                                                    }
+                                                    alt={slot.label}
+                                                    className="h-full w-full object-contain"
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="absolute top-2 right-2 bg-white/80 text-xs"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleRemoveImage(
+                                                            slot.id,
+                                                        );
+                                                    }}
+                                                >
+                                                    Remove
+                                                </Button>
+                                            </div>
                                         ) : (
                                             <div className="flex h-full flex-col items-center justify-center gap-1 p-2 text-sm text-gray-500">
                                                 <span className="font-medium text-gray-700">
@@ -254,6 +245,11 @@ export default function AdminCreateEvent() {
                             {imageError && (
                                 <span className="text-sm text-red-500">
                                     {imageError}
+                                </span>
+                            )}
+                            {errors.images && (
+                                <span className="text-sm text-red-500">
+                                    {errors.images}
                                 </span>
                             )}
                         </div>

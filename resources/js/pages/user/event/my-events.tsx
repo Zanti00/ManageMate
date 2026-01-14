@@ -28,6 +28,8 @@ type Event = {
     submit_date: number;
     attendees?: number;
     status: FilterValues;
+    images?: string[];
+    image_path?: string | null;
 };
 
 interface Props {
@@ -48,9 +50,10 @@ export default function MyEvents({ events = [] }: Props) {
         statusFilter === 'all'
             ? eventsWithStatus
             : eventsWithStatus.filter((e) => e.status === statusFilter);
-    console.log('Events received:', events);
-    console.log('Events type:', typeof events);
-    console.log('Is array?:', Array.isArray(events));
+    const resolveImageUrl = (path?: string | null) => {
+        if (!path) return '/images/event-placeholder.png';
+        return path.startsWith('http') ? path : `/storage/${path}`;
+    };
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-8 p-8">
@@ -116,11 +119,14 @@ export default function MyEvents({ events = [] }: Props) {
                 ) : (
                     <div className="grid grid-cols-3 gap-6">
                         {filteredStatus.map((event) => (
-                            <EventCard
-                                key={event.id}
-                                {...event}
-                                viewDetailsHref={user.event.show(event.id).url}
-                            />
+                            <div key={event.id} className="flex flex-col gap-2">
+                                <EventCard
+                                    {...event}
+                                    viewDetailsHref={
+                                        user.event.show(event.id).url
+                                    }
+                                />
+                            </div>
                         ))}
                     </div>
                 )}

@@ -90,6 +90,20 @@ class EventRepository
         }
     }
 
+    public function deleteEventImages(int $eventId): void
+    {
+        DB::statement('EXEC usp_EventImages_DeleteByEvent @event_id = :event_id', [
+            'event_id' => $eventId,
+        ]);
+    }
+
+    public function getEventImages(int $eventId): array
+    {
+        return DB::select('EXEC usp_EventImages_GetByEvent @event_id = :event_id', [
+            'event_id' => $eventId,
+        ]);
+    }
+
     public function getRegistrationTrend(int $eventId): array
     {
         return DB::select('EXEC usp_Event_RegistrationTrend @event_id = :event_id', ['event_id' => $eventId]);

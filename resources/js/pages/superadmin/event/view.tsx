@@ -87,7 +87,7 @@ export default function ViewEvent({ event }: Props) {
                                     </div>
                                 )}
                                 <div className="flex flex-row">
-                                    <Label className="text-4xl font-extrabold">
+                                    <Label className="truncate text-4xl font-extrabold">
                                         {event.title}
                                     </Label>
                                 </div>

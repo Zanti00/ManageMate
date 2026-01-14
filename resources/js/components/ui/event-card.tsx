@@ -25,6 +25,7 @@ type Event = {
     status?: EventStatus;
     hideStatus?: boolean;
     image_path?: string | null;
+    images?: string[];
 };
 
 type Props = Event & {
@@ -50,8 +51,11 @@ function EventCard({ hideStatus = false, viewDetailsHref, className, ...event }:
         });
     };
 
-    const imageUrl = event.image_path
-        ? `/storage/${event.image_path}`
+    const primaryImage = event.images?.find((image) => !!image) ?? event.image_path ?? null;
+    const imageUrl = primaryImage
+        ? primaryImage.startsWith('http')
+            ? primaryImage
+            : `/storage/${primaryImage}`
         : '/images/event-placeholder.png';
     
     return (

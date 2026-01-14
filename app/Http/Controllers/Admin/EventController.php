@@ -7,6 +7,7 @@ use App\Repositories\Admin\EventRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 
 class EventController extends Controller
@@ -51,8 +52,11 @@ class EventController extends Controller
             'registration_end_time' => 'required|date_format:H:i:s|after_or_equal:registration_start_time',
             'location' => 'required|string|max:100',
             'price' => 'required|numeric|min:0',
-            'images' => 'array|nullable',
+            'images' => 'required|array|min:1',
             'images.*' => 'image|max:1024', // 1MB limit
+        ], [
+            'images.required' => 'Please upload at least one image.',
+            'images.min' => 'Please upload at least one image.',
         ]);
 
         try {
@@ -92,6 +96,20 @@ class EventController extends Controller
     public function show(string $id)
     {
         $event = $this->eventRepo->getEventById((int) $id, Auth::id());
+
+        if (! $event) {
+            return redirect()
+                ->route('admin.event.index')
+                ->withErrors(['error' => 'Event not found.']);
+        }
+
+        $eventImages = $this->eventRepo->getEventImages((int) $id);
+        $event->images = array_column($eventImages, 'image_path');
+
+        if (! empty($event->images) && empty($event->image_path)) {
+            $event->image_path = $event->images[0];
+        }
+
         $registrationTrendData = $this->eventRepo->getRegistrationTrend((int) $id);
         $studentYearLevelData = $this->eventRepo->getStudentYearLevelData((int) $id);
         $programDistributionData = $this->eventRepo->getProgramDistributionData((int) $id);
@@ -122,6 +140,9 @@ class EventController extends Controller
                 ->withErrors(['error' => 'Event not found.']);
         }
 
+        $eventImages = $this->eventRepo->getEventImages((int) $id);
+        $event->images = array_column($eventImages, 'image_path');
+
         return Inertia::render('admin/event/edit', [
             'event' => $event,
         ]);
@@ -132,7 +153,7 @@ class EventController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:100',
             'description' => 'required|string',
             'start_date' => 'required|date',
@@ -145,10 +166,77 @@ class EventController extends Controller
             'registration_end_time' => 'required|date_format:H:i:s|after_or_equal:registration_start_time',
             'location' => 'required|string|max:100',
             'price' => 'required|numeric|min:0',
+            'images' => 'array|nullable',
+            'images.*' => 'image|max:1024|nullable',
+            'existing_images' => 'array|nullable',
+            'existing_images.*' => 'nullable|string',
         ]);
 
+        $validator->after(function ($validator) use ($request) {
+            $existingImages = array_filter($request->input('existing_images', []));
+            $newImages = array_filter($request->file('images', []));
+
+            if (empty($existingImages) && empty($newImages)) {
+                $validator->errors()->add('images', 'Please retain or upload at least one image.');
+            }
+        });
+
+        $validated = $validator->validate();
+
         try {
-            $this->eventRepo->updateEvent((int) $id, Auth::id(), $validated);
+            $event = $this->eventRepo->getEventById((int) $id, Auth::id());
+
+            if (! $event) {
+                return redirect()
+                    ->route('admin.event.index')
+                    ->withErrors(['error' => 'Event not found.']);
+            }
+
+            $eventPayload = Arr::except($validated, ['images', 'existing_images']);
+
+            $this->eventRepo->updateEvent((int) $id, Auth::id(), $eventPayload);
+
+            $existingImagesPayload = $request->input('existing_images', []);
+            $existingImages = [];
+
+            foreach ($existingImagesPayload as $index => $path) {
+                $existingImages[(int) $index] = is_string($path) && $path !== ''
+                    ? $path
+                    : null;
+            }
+
+            $newImages = $request->file('images', []);
+            $storedPaths = [];
+
+            foreach ($newImages as $index => $image) {
+                if ($image) {
+                    $storedPaths[(int) $index] = $image->store('events', 'public');
+                }
+            }
+
+            $hasImagePayload = ! empty(array_filter($existingImages)) || ! empty($storedPaths);
+
+            if ($hasImagePayload) {
+                $finalPaths = [];
+                $maxSlots = max(count($existingImages), count($storedPaths));
+
+                for ($slot = 0; $slot < $maxSlots; $slot++) {
+                    $newPath = $storedPaths[$slot] ?? null;
+                    $existingPath = $existingImages[$slot] ?? null;
+
+                    if ($newPath) {
+                        $finalPaths[] = $newPath;
+                    } elseif ($existingPath) {
+                        $finalPaths[] = $existingPath;
+                    }
+                }
+
+                $this->eventRepo->deleteEventImages((int) $id);
+
+                if (! empty($finalPaths)) {
+                    $this->eventRepo->insertEventImages((int) $id, $finalPaths);
+                }
+            }
 
             return redirect()
                 ->route('admin.event.index')

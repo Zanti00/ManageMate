@@ -31,6 +31,7 @@ type Event = {
     registration_start_date: string;
     registration_end_date: string;
     created_at: string;
+    updated_at?: string | null;
     is_deleted?: number;
     status: EventStatus;
 };
@@ -154,101 +155,107 @@ export default function SuperAdminEvent({ events = [] }: Props) {
                                     </td>
                                 </tr>
                             ) : (
-                                filteredEvents.map((event) => (
-                                    <tr
-                                        key={event.id}
-                                        className="hover:bg-gray-100"
-                                    >
-                                        <td className="truncate p-4 font-medium">
-                                            {event.title}
-                                        </td>
-                                        <td className="p-4 font-medium">
-                                            {event.organization}
-                                        </td>
-                                        <td className="p-4 font-medium">
-                                            {formatDateRange(
-                                                event.start_date,
-                                                event.end_date,
-                                            )}
-                                        </td>
-                                        <td className="p-4 font-medium">
-                                            {formatDateRange(
-                                                event.registration_start_date,
-                                                event.registration_end_date,
-                                            )}
-                                        </td>
-                                        <td className="truncate p-4 font-medium">
-                                            {event.location}
-                                        </td>
-                                        <td className="p-4 font-medium">
-                                            {formatPrice(event.price)}
-                                        </td>
-                                        <td className="items-start self-start p-4 font-medium">
-                                            <span
-                                                className={`rounded-full px-3 py-1 text-xs ${
-                                                    event.status === 'Pending'
-                                                        ? 'bg-yellow-100 text-yellow-700'
-                                                        : event.status ===
-                                                            'Active'
-                                                          ? 'bg-green-100 text-green-700'
-                                                          : event.status ===
-                                                              'Rejected'
-                                                            ? 'bg-red-100 text-red-700'
-                                                            : 'bg-gray-100 text-gray-700'
-                                                }`}
-                                            >
-                                                {event.status}
-                                            </span>
-                                        </td>
-                                        <td className="p-4 font-medium">
-                                            {formatDate(event.created_at)}
-                                        </td>
-                                        <td className="p-4">
-                                            <div className="flex flex-row gap-2">
-                                                <Button
-                                                    onClick={() =>
-                                                        router.patch(
-                                                            `/superadmin/event/${event.id}/approve-event`,
-                                                        )
-                                                    }
-                                                    className="bg-green-600"
-                                                    disabled={
-                                                        event.status ===
-                                                        'Active'
-                                                    }
-                                                >
-                                                    <Check />
-                                                </Button>
+                                filteredEvents.map((event) => {
+                                    const submitDate =
+                                        event.updated_at || event.created_at;
 
-                                                <Button
-                                                    onClick={() =>
-                                                        router.patch(
-                                                            `/superadmin/event/${event.id}/reject-event`,
-                                                        )
-                                                    }
-                                                    className="bg-red-600"
-                                                    disabled={
+                                    return (
+                                        <tr
+                                            key={event.id}
+                                            className="hover:bg-gray-100"
+                                        >
+                                            <td className="truncate p-4 font-medium">
+                                                {event.title}
+                                            </td>
+                                            <td className="p-4 font-medium">
+                                                {event.organization}
+                                            </td>
+                                            <td className="p-4 font-medium">
+                                                {formatDateRange(
+                                                    event.start_date,
+                                                    event.end_date,
+                                                )}
+                                            </td>
+                                            <td className="p-4 font-medium">
+                                                {formatDateRange(
+                                                    event.registration_start_date,
+                                                    event.registration_end_date,
+                                                )}
+                                            </td>
+                                            <td className="truncate p-4 font-medium">
+                                                {event.location}
+                                            </td>
+                                            <td className="p-4 font-medium">
+                                                {formatPrice(event.price)}
+                                            </td>
+                                            <td className="items-start self-start p-4 font-medium">
+                                                <span
+                                                    className={`rounded-full px-3 py-1 text-xs ${
                                                         event.status ===
-                                                        'Rejected'
-                                                    }
+                                                        'Pending'
+                                                            ? 'bg-yellow-100 text-yellow-700'
+                                                            : event.status ===
+                                                                'Active'
+                                                              ? 'bg-green-100 text-green-700'
+                                                              : event.status ===
+                                                                  'Rejected'
+                                                                ? 'bg-red-100 text-red-700'
+                                                                : 'bg-gray-100 text-gray-700'
+                                                    }`}
                                                 >
-                                                    <X />
-                                                </Button>
-                                                <Link
-                                                    href={
-                                                        superadmin.event.show(
-                                                            event.id,
-                                                        ).url
-                                                    }
-                                                >
-                                                    <Button>
-                                                        <Eye />
+                                                    {event.status}
+                                                </span>
+                                            </td>
+                                            <td className="p-4 font-medium">
+                                                {formatDate(submitDate)}
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="flex flex-row gap-2">
+                                                    <Button
+                                                        onClick={() =>
+                                                            router.patch(
+                                                                `/superadmin/event/${event.id}/approve-event`,
+                                                            )
+                                                        }
+                                                        className="bg-green-600"
+                                                        disabled={
+                                                            event.status ===
+                                                            'Active'
+                                                        }
+                                                    >
+                                                        <Check />
                                                     </Button>
-                                                </Link>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
+
+                                                    <Button
+                                                        onClick={() =>
+                                                            router.patch(
+                                                                `/superadmin/event/${event.id}/reject-event`,
+                                                            )
+                                                        }
+                                                        className="bg-red-600"
+                                                        disabled={
+                                                            event.status ===
+                                                            'Rejected'
+                                                        }
+                                                    >
+                                                        <X />
+                                                    </Button>
+                                                    <Link
+                                                        href={
+                                                            superadmin.event.show(
+                                                                event.id,
+                                                            ).url
+                                                        }
+                                                    >
+                                                        <Button>
+                                                            <Eye />
+                                                        </Button>
+                                                    </Link>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
                             )}
                         </tbody>
                     </table>

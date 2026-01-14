@@ -29,7 +29,7 @@ class EventRepository
     public function registerUserToEvent(int $userId, int $eventId): void
     {
         DB::statement(
-            'EXEC usp_RegisterEvent_Insert @user_id = :user_id, @event_id = :event_id',
+            'EXEC usp_RegisteredEvent_Insert @user_id = :user_id, @event_id = :event_id',
             ['user_id' => $userId, 'event_id' => $eventId]
         );
     }
@@ -42,5 +42,12 @@ class EventRepository
     public function getUpcomingEvents(): array
     {
         return DB::select('EXEC usp_Event_Upcoming');
+    }
+
+    public function getEventImages(int $eventId): array
+    {
+        return DB::select('EXEC usp_EventImages_GetByEvent @event_id = :event_id', [
+            'event_id' => $eventId,
+        ]);
     }
 }

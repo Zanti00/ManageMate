@@ -12,7 +12,8 @@ class EventService
     public function getPaginatedEvents(int $userId, int $perPage, int $currentPage, string $url, array $query): LengthAwarePaginator
     {
         $allEvents = $this->eventRepo->getEventsByUser($userId);
-        $eventsCollection = collect($allEvents);
+        $eventsWithImages = $this->attachImages($allEvents);
+        $eventsCollection = collect($eventsWithImages);
 
         // Slice the collection to get items for current page
         $currentPageItems = $eventsCollection
@@ -39,6 +40,7 @@ class EventService
         if ($event) {
             // Business logic: Convert is_registered to boolean
             $event->is_registered = (bool) $event->is_registered;
+            $this->attachImages([$event]);
         }
 
         return $event;
@@ -46,11 +48,34 @@ class EventService
 
     public function getRegisteredEvents(int $userId): array
     {
-        return $this->eventRepo->getRegisteredEvents($userId);
+        $events = $this->eventRepo->getRegisteredEvents($userId);
+
+        return $this->attachImages($events);
     }
 
     public function registerUserToEvent(int $userId, int $eventId): void
     {
         $this->eventRepo->registerUserToEvent($userId, $eventId);
+    }
+
+    private function attachImages(array $events): array
+    {
+        foreach ($events as $event) {
+            if (! isset($event->id)) {
+                continue;
+            }
+
+            $images = $this->eventRepo->getEventImages((int) $event->id);
+            $paths = array_values(array_filter(array_map(
+                static fn ($image) => $image->image_path ?? null,
+                $images,
+            )));
+            $event->images = $paths;
+            if (! empty($paths)) {
+                $event->image_path = $paths[0];
+            }
+        }
+
+        return $events;
     }
 }

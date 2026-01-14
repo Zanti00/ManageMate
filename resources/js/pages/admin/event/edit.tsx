@@ -9,6 +9,7 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
+import useImageSlots from '@/hooks/use-image-slots';
 import AppLayout from '@/layouts/app-layout';
 import admin from '@/routes/admin';
 import { type BreadcrumbItem } from '@/types';
@@ -31,11 +32,59 @@ interface EventPayload {
     registration_end_time: string;
     location: string;
     price: number | string;
+    images?: string[];
 }
 
 interface Props {
     event: EventPayload;
 }
+
+type EventFormData = {
+    title: string;
+    description: string;
+    start_date: string;
+    end_date: string;
+    start_time: string;
+    end_time: string;
+    registration_start_date: string;
+    registration_end_date: string;
+    registration_start_time: string;
+    registration_end_time: string;
+    location: string;
+    price: string;
+    images: (File | null)[];
+    existing_images: (string | null)[];
+    _method?: 'put';
+};
+
+const imageSlots = [
+    {
+        id: 0,
+        colSpan: 3,
+        label: 'Cover image',
+        helper: 'Click to upload (max 1MB)',
+    },
+    {
+        id: 1,
+        colSpan: 1,
+        label: 'Gallery 1',
+        helper: 'Click to upload (max 1MB)',
+    },
+    {
+        id: 2,
+        colSpan: 1,
+        label: 'Gallery 2',
+        helper: 'Click to upload (max 1MB)',
+    },
+    {
+        id: 3,
+        colSpan: 1,
+        label: 'Gallery 3',
+        helper: 'Click to upload (max 1MB)',
+    },
+];
+
+const MAX_IMAGE_SIZE = 1024 * 1024; // 1MB
 
 const sanitizeTime = (time?: string | null) => {
     if (!time) return '';
@@ -50,6 +99,39 @@ export default function AdminEditEvent({ event }: Props) {
             href: admin.event.edit(event.id).url,
         },
     ];
+
+    const normalizedExistingImages = React.useMemo(() => {
+        const filled = Array(imageSlots.length).fill(null) as Array<
+            string | null
+        >;
+        (event.images ?? [])
+            .slice(0, imageSlots.length)
+            .forEach((path, index) => {
+                filled[index] = path ?? null;
+            });
+
+        return filled;
+    }, [event.images]);
+
+    const {
+        files,
+        existingImages,
+        imagePreviews,
+        imageError,
+        fileInputs,
+        handleCardClick,
+        handleImageChange,
+        handleRemoveImage,
+        hasNewUploads,
+    } = useImageSlots({
+        slotCount: imageSlots.length,
+        initialExisting: normalizedExistingImages,
+        maxFileSizeBytes: MAX_IMAGE_SIZE,
+        existingPreviewResolver: (path) =>
+            path.startsWith('/') || path.startsWith('http')
+                ? path
+                : `/storage/${path}`,
+    });
 
     const [startOpen, setStartOpen] = React.useState(false);
     const [startDate, setStartDate] = React.useState<Date | undefined>(
@@ -78,28 +160,54 @@ export default function AdminEditEvent({ event }: Props) {
             : undefined,
     );
 
-    const { data, setData, put, processing, errors } = useForm({
-        title: event.title ?? '',
-        description: event.description ?? '',
-        start_date: event.start_date ?? '',
-        end_date: event.end_date ?? '',
-        start_time: sanitizeTime(event.start_time) || '10:30:00',
-        end_time: sanitizeTime(event.end_time) || '11:00:00',
-        registration_start_date: event.registration_start_date ?? '',
-        registration_end_date: event.registration_end_date ?? '',
-        registration_start_time:
-            sanitizeTime(event.registration_start_time) || '10:30:00',
-        registration_end_time:
-            sanitizeTime(event.registration_end_time) || '11:00:00',
-        location: event.location ?? '',
-        price: event.price !== undefined ? String(event.price) : '0',
-    });
-
-    const handleSubmit = () => {
-        put(admin.event.update(event.id).url, {
-            preserveScroll: true,
-            preserveState: true,
+    const { data, setData, put, processing, errors, transform } =
+        useForm<EventFormData>({
+            title: event.title ?? '',
+            description: event.description ?? '',
+            start_date: event.start_date ?? '',
+            end_date: event.end_date ?? '',
+            start_time: sanitizeTime(event.start_time) || '10:30:00',
+            end_time: sanitizeTime(event.end_time) || '11:00:00',
+            registration_start_date: event.registration_start_date ?? '',
+            registration_end_date: event.registration_end_date ?? '',
+            registration_start_time:
+                sanitizeTime(event.registration_start_time) || '10:30:00',
+            registration_end_time:
+                sanitizeTime(event.registration_end_time) || '11:00:00',
+            location: event.location ?? '',
+            price: event.price !== undefined ? String(event.price) : '0',
+            images: Array(imageSlots.length).fill(null),
+            existing_images: normalizedExistingImages,
+            _method: 'put',
         });
+
+    React.useEffect(() => {
+        setData('images', files);
+    }, [files, setData]);
+
+    React.useEffect(() => {
+        setData('existing_images', existingImages);
+    }, [existingImages, setData]);
+    const handleSubmit = () => {
+        transform((formData) => ({
+            ...formData,
+            images: formData.images.filter((file): file is File => !!file),
+            existing_images: existingImages,
+        }));
+
+        if (hasNewUploads) {
+            router.post(admin.event.update(event.id).url, data, {
+                preserveScroll: true,
+                preserveState: true,
+                forceFormData: true,
+                onBefore: () => setData('_method', 'put'),
+            });
+        } else {
+            put(admin.event.update(event.id).url, {
+                preserveScroll: true,
+                preserveState: true,
+            });
+        }
     };
 
     return (
@@ -109,10 +217,74 @@ export default function AdminEditEvent({ event }: Props) {
                     <CardTitle>Edit Event</CardTitle>
                     <div className="flex flex-row justify-between gap-x-3">
                         <div className="grid w-[50%] grid-cols-3 gap-4">
-                            <Card className="col-span-3 bg-gray-100"></Card>
-                            <Card className="col-span-1 bg-gray-100"></Card>
-                            <Card className="col-span-1 bg-gray-100"></Card>
-                            <Card className="col-span-1 bg-gray-100"></Card>
+                            {imageSlots.map((slot) => (
+                                <React.Fragment key={slot.id}>
+                                    <input
+                                        ref={(el) => {
+                                            fileInputs.current[slot.id] = el;
+                                        }}
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) =>
+                                            handleImageChange(
+                                                slot.id,
+                                                e.target.files,
+                                            )
+                                        }
+                                    />
+                                    <Card
+                                        role="button"
+                                        tabIndex={0}
+                                        onClick={() => handleCardClick(slot.id)}
+                                        onKeyDown={(e) => {
+                                            if (
+                                                e.key === 'Enter' ||
+                                                e.key === ' '
+                                            ) {
+                                                e.preventDefault();
+                                                handleCardClick(slot.id);
+                                            }
+                                        }}
+                                        className={`${slot.colSpan === 3 ? 'col-span-3' : 'col-span-1'} relative aspect-square w-full cursor-pointer overflow-hidden border border-dashed border-gray-300 bg-gray-50 p-0 hover:border-gray-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2`}
+                                    >
+                                        {imagePreviews[slot.id] ? (
+                                            <div className="h-full w-full">
+                                                <img
+                                                    src={
+                                                        imagePreviews[
+                                                            slot.id
+                                                        ] as string
+                                                    }
+                                                    alt={slot.label}
+                                                    className="h-full w-full object-contain"
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="absolute top-2 right-2 bg-white/80 text-xs"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleRemoveImage(
+                                                            slot.id,
+                                                        );
+                                                    }}
+                                                >
+                                                    Remove
+                                                </Button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex h-full flex-col items-center justify-center gap-1 p-2 text-sm text-gray-500">
+                                                <span className="font-medium text-gray-700">
+                                                    {slot.label}
+                                                </span>
+                                                <span>{slot.helper}</span>
+                                            </div>
+                                        )}
+                                    </Card>
+                                </React.Fragment>
+                            ))}
                         </div>
                         <div className="flex w-full flex-col gap-y-3">
                             <Label>Event Title *</Label>
@@ -142,6 +314,16 @@ export default function AdminEditEvent({ event }: Props) {
                             {errors.description && (
                                 <span className="text-sm text-red-500">
                                     {errors.description}
+                                </span>
+                            )}
+                            {imageError && (
+                                <span className="text-sm text-red-500">
+                                    {imageError}
+                                </span>
+                            )}
+                            {errors.images && (
+                                <span className="text-sm text-red-500">
+                                    {errors.images}
                                 </span>
                             )}
                         </div>

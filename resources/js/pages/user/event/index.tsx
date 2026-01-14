@@ -32,6 +32,8 @@ type Event = {
     submit_date: number;
     attendees?: number;
     status: FilterValues;
+    images?: string[];
+    image_path?: string | null;
 };
 
 type PaginationLink = {
@@ -76,6 +78,11 @@ export default function UserEvent({ events }: Props) {
         statusFilter === 'all'
             ? eventsWithStatus
             : eventsWithStatus.filter((e) => e.status === statusFilter);
+
+    const resolveImageUrl = (path?: string | null) => {
+        if (!path) return '/images/event-placeholder.png';
+        return path.startsWith('http') ? path : `/storage/${path}`;
+    };
 
     const handlePageChange = (url: string | null) => {
         if (!url) return;
@@ -201,14 +208,18 @@ export default function UserEvent({ events }: Props) {
                     <>
                         <div className="grid grid-cols-3 gap-6">
                             {filteredStatus.map((event) => (
-                                <EventCard
+                                <div
                                     key={event.id}
-                                    {...event}
-                                    viewDetailsHref={
-                                        user.event.show(event.id).url
-                                    }
-                                    className="hover:shadow-lg"
-                                />
+                                    className="flex flex-col gap-2"
+                                >
+                                    <EventCard
+                                        {...event}
+                                        viewDetailsHref={
+                                            user.event.show(event.id).url
+                                        }
+                                        className="hover:shadow-lg"
+                                    />
+                                </div>
                             ))}
                         </div>
 

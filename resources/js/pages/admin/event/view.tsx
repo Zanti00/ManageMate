@@ -27,7 +27,14 @@ import {
     Title,
     Tooltip,
 } from 'chart.js';
-import { PhilippinePeso, Star, Users } from 'lucide-react';
+import {
+    ChevronLeft,
+    ChevronRight,
+    PhilippinePeso,
+    Star,
+    Users,
+} from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { Bar, Line, Pie } from 'react-chartjs-2';
 
 ChartJS.register(
@@ -69,6 +76,8 @@ type Event = {
     status: EventStatus;
     price: number;
     earnings: number;
+    images?: string[];
+    image_path?: string | null;
 };
 
 type StudentYearLevelData = {
@@ -117,6 +126,46 @@ export default function EventView({
     if (!event) {
         return <div className="p-6">Event not found</div>;
     }
+
+    const [activeImageIndex, setActiveImageIndex] = useState(0);
+    const eventStatus = getEventStatus(event);
+    const galleryImages = useMemo(() => {
+        const images = event.images?.filter(Boolean) ?? [];
+        if (images.length > 0) {
+            return images;
+        }
+
+        if (event.image_path) {
+            return [event.image_path];
+        }
+
+        return [];
+    }, [event]);
+
+    const displayImages = galleryImages.length
+        ? galleryImages
+        : [
+              'https://readdy.ai/api/search-image?query=modern%20technology%20conference%20summit%20with%20large%20screens%20displaying%20innovative%20tech%20presentations%20students%20and%20professionals%20networking%20in%20bright%20spacious%20university%20auditorium%20with%20stage%20and%20seating&width=1200&height=400&seq=tech-summit-detail-001&orientation=landscape',
+          ];
+
+    const resolveImageUrl = (path: string) =>
+        path.startsWith('http') ? path : `/storage/${path}`;
+
+    const goToPreviousImage = () => {
+        setActiveImageIndex((prev) =>
+            prev === 0 ? displayImages.length - 1 : prev - 1,
+        );
+    };
+
+    const goToNextImage = () => {
+        setActiveImageIndex((prev) =>
+            prev === displayImages.length - 1 ? 0 : prev + 1,
+        );
+    };
+
+    useEffect(() => {
+        setActiveImageIndex(0);
+    }, [event.id]);
 
     const registrationTrendData: ChartData<'line'> = {
         labels: registration_trend_labels,
@@ -174,15 +223,49 @@ export default function EventView({
         ],
     };
 
-    const eventStatus = getEventStatus(event);
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col overflow-hidden rounded-lg p-8">
-                <img
-                    className="h-64 w-full rounded-t-md object-cover object-top"
-                    src="https://readdy.ai/api/search-image?query=modern%20technology%20conference%20summit%20with%20large%20screens%20displaying%20innovative%20tech%20presentations%20students%20and%20professionals%20networking%20in%20bright%20spacious%20university%20auditorium%20with%20stage%20and%20seating&width=1200&height=400&seq=tech-summit-detail-001&orientation=landscape"
-                />
+                <div className="relative h-64 w-full overflow-hidden rounded-t-md">
+                    <img
+                        className="h-full w-full object-cover object-center"
+                        src={resolveImageUrl(displayImages[activeImageIndex])}
+                        alt={`${event.title} image ${activeImageIndex + 1}`}
+                    />
+                    {displayImages.length > 1 && (
+                        <>
+                            <button
+                                className="absolute top-1/2 left-4 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white"
+                                type="button"
+                                onClick={goToPreviousImage}
+                                aria-label="Previous image"
+                            >
+                                <ChevronLeft className="h-5 w-5" />
+                            </button>
+                            <button
+                                className="absolute top-1/2 right-4 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white"
+                                type="button"
+                                onClick={goToNextImage}
+                                aria-label="Next image"
+                            >
+                                <ChevronRight className="h-5 w-5" />
+                            </button>
+                            <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-2">
+                                {displayImages.map((_, index) => (
+                                    <button
+                                        key={`${event.id}-indicator-${index}`}
+                                        type="button"
+                                        onClick={() =>
+                                            setActiveImageIndex(index)
+                                        }
+                                        className={`h-2.5 w-2.5 rounded-full ${index === activeImageIndex ? 'bg-white' : 'bg-white/50'}`}
+                                        aria-label={`Show image ${index + 1}`}
+                                    />
+                                ))}
+                            </div>
+                        </>
+                    )}
+                </div>
                 <div className="flex flex-col gap-y-6">
                     <Card className="rounded-t-none p-6 shadow-md">
                         <div className="flex flex-row justify-between">
