@@ -27,4 +27,18 @@ class EventRepository
     {
         DB::statement('EXEC usp_Event_Reject @event_id = :event_id', ['event_id' => $id]);
     }
+
+    public function setFeatured(int $id): void
+    {
+        DB::statement('EXEC usp_Event_SetFeatured @event_id = :event_id', [
+            'event_id' => $id,
+        ]);
+    }
+
+    public function getEventImages(int $eventId): array
+    {
+        return DB::select('EXEC usp_EventImages_GetByEvent @event_id = :event_id', [
+            'event_id' => $eventId,
+        ]);
+    }
 }

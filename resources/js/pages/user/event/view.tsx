@@ -3,14 +3,15 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { RegisterModal } from '@/components/ui/register-modal';
+import { useImageGallery } from '@/hooks/use-image-gallery';
 import AppLayout from '@/layouts/app-layout';
 import user from '@/routes/user';
 import { BreadcrumbItem } from '@/types';
 import { formatDateRange, formatTimeRange } from '@/utils/date-format';
 import { getEventDisplayStatus } from '@/utils/event-status';
 import { formatPrice } from '@/utils/price-format';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -47,61 +48,49 @@ interface Props {
 
 export default function ViewEvent({ event }: Props) {
     const [modalOpen, setModalOpen] = useState(false);
-    const [activeImageIndex, setActiveImageIndex] = useState(0);
 
     if (!event) {
         return <div className="p-6">Event not found</div>;
     }
 
     const eventStatus = getEventDisplayStatus(event);
-    const galleryImages = useMemo(() => {
-        const images = event.images?.filter(Boolean) ?? [];
-        if (images.length > 0) {
-            return images;
-        }
-
-        if (event.image_path) {
-            return [event.image_path];
-        }
-
-        return [];
-    }, [event]);
-
-    const displayImages = galleryImages.length
-        ? galleryImages
-        : [
-              'https://readdy.ai/api/search-image?query=modern%20technology%20conference%20summit%20with%20large%20screens%20displaying%20innovative%20tech%20presentations%20students%20and%20professionals%20networking%20in%20bright%20spacious%20university%20auditorium%20with%20stage%20and%20seating&width=1200&height=400&seq=tech-summit-detail-001&orientation=landscape',
-          ];
-
-    const resolveImageUrl = (path: string) =>
-        path.startsWith('http') ? path : `/storage/${path}`;
-
-    const goToPreviousImage = () => {
-        setActiveImageIndex((prev) =>
-            prev === 0 ? displayImages.length - 1 : prev - 1,
-        );
-    };
-
-    const goToNextImage = () => {
-        setActiveImageIndex((prev) =>
-            prev === displayImages.length - 1 ? 0 : prev + 1,
-        );
-    };
-
-    useEffect(() => {
-        setActiveImageIndex(0);
-    }, [event.id]);
+    const {
+        displayImages,
+        activeImageIndex,
+        setActiveImageIndex,
+        goToPreviousImage,
+        goToNextImage,
+        resolveImageUrl,
+        lightboxOpen,
+        openLightbox,
+        closeLightbox,
+        hasMultipleImages,
+    } = useImageGallery({
+        images: event.images,
+        imagePath: event.image_path,
+        resetKey: event.id,
+    });
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col overflow-hidden rounded-lg p-8">
                 <div className="relative h-64 w-full overflow-hidden rounded-t-md">
                     <img
-                        className="h-full w-full object-cover object-center"
                         src={resolveImageUrl(displayImages[activeImageIndex])}
                         alt={`${event.title} image ${activeImageIndex + 1}`}
+                        role="button"
+                        tabIndex={0}
+                        onClick={openLightbox}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                openLightbox();
+                            }
+                        }}
+                        aria-label="Expand image"
+                        className="h-full w-full cursor-pointer object-cover object-center"
                     />
-                    {displayImages.length > 1 && (
+                    {hasMultipleImages && (
                         <>
                             <button
                                 className="absolute top-1/2 left-4 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white"
@@ -306,6 +295,45 @@ export default function ViewEvent({ event }: Props) {
                         event.end_time,
                     )}
                 />
+                {lightboxOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+                        <button
+                            type="button"
+                            className="absolute top-6 right-6 rounded-full bg-black/60 p-2 text-white"
+                            aria-label="Close image viewer"
+                            onClick={closeLightbox}
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+                        {hasMultipleImages && (
+                            <>
+                                <button
+                                    type="button"
+                                    className="absolute top-1/2 left-6 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white"
+                                    aria-label="Previous image"
+                                    onClick={goToPreviousImage}
+                                >
+                                    <ChevronLeft className="h-6 w-6" />
+                                </button>
+                                <button
+                                    type="button"
+                                    className="absolute top-1/2 right-6 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white"
+                                    aria-label="Next image"
+                                    onClick={goToNextImage}
+                                >
+                                    <ChevronRight className="h-6 w-6" />
+                                </button>
+                            </>
+                        )}
+                        <img
+                            src={resolveImageUrl(
+                                displayImages[activeImageIndex],
+                            )}
+                            alt={`${event.title} image fullscreen`}
+                            className="max-h-[80vh] max-w-[90vw] rounded-lg object-contain"
+                        />
+                    </div>
+                )}
             </div>
         </AppLayout>
     );

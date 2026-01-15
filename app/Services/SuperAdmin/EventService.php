@@ -16,7 +16,20 @@ class EventService
 
     public function getEventById(int $id): ?object
     {
-        return $this->eventRepo->findById($id);
+        $event = $this->eventRepo->findById($id);
+
+        if (! $event) {
+            return null;
+        }
+
+        $images = $this->eventRepo->getEventImages($id);
+        $event->images = array_column($images, 'image_path');
+
+        if (! empty($event->images) && empty($event->image_path)) {
+            $event->image_path = $event->images[0];
+        }
+
+        return $event;
     }
 
     public function approveEvent(int $id): void
@@ -27,6 +40,11 @@ class EventService
     public function rejectEvent(int $id): void
     {
         $this->eventRepo->reject($id);
+    }
+
+    public function featureEvent(int $id): void
+    {
+        $this->eventRepo->setFeatured($id);
     }
 
     // public function getMonthlyPerformanceData(int $id): array

@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { RegisterModal } from '@/components/ui/register-modal';
+import { useImageGallery } from '@/hooks/use-image-gallery';
 import AppLayout from '@/layouts/app-layout';
 import superadmin from '@/routes/superadmin';
 import { BreadcrumbItem } from '@/types';
@@ -10,6 +11,7 @@ import { formatDateRange, formatTimeRange } from '@/utils/date-format';
 import { getEventStatus } from '@/utils/event-status';
 import { formatPrice } from '@/utils/price-format';
 import { router } from '@inertiajs/react';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -36,6 +38,9 @@ type Event = {
     registration_start_time: string;
     registration_end_time: string;
     status: EventStatus;
+    is_featured: string;
+    images?: string[];
+    image_path?: string | null;
 };
 
 interface Props {
@@ -50,14 +55,78 @@ export default function ViewEvent({ event }: Props) {
     }
 
     const eventStatus = getEventStatus(event);
+    const {
+        displayImages,
+        activeImageIndex,
+        setActiveImageIndex,
+        goToPreviousImage,
+        goToNextImage,
+        resolveImageUrl,
+        hasMultipleImages,
+        lightboxOpen,
+        openLightbox,
+        closeLightbox,
+    } = useImageGallery({
+        images: event.images,
+        imagePath: event.image_path,
+        resetKey: event.id,
+    });
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col overflow-hidden rounded-lg p-8">
-                <img
-                    className="h-64 w-full rounded-t-md object-cover object-top"
-                    src="https://readdy.ai/api/search-image?query=modern%20technology%20conference%20summit%20with%20large%20screens%20displaying%20innovative%20tech%20presentations%20students%20and%20professionals%20networking%20in%20bright%20spacious%20university%20auditorium%20with%20stage%20and%20seating&width=1200&height=400&seq=tech-summit-detail-001&orientation=landscape"
-                />
+                <div
+                    className="relative h-64 w-full overflow-hidden rounded-t-md"
+                    role="button"
+                    tabIndex={0}
+                    onClick={openLightbox}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            openLightbox();
+                        }
+                    }}
+                    aria-label="Expand image"
+                >
+                    <img
+                        className="h-full w-full cursor-pointer object-cover object-center"
+                        src={resolveImageUrl(displayImages[activeImageIndex])}
+                        alt={`${event.title} image ${activeImageIndex + 1}`}
+                    />
+                    {hasMultipleImages && (
+                        <>
+                            <button
+                                className="absolute top-1/2 left-4 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white"
+                                type="button"
+                                onClick={goToPreviousImage}
+                                aria-label="Previous image"
+                            >
+                                <ChevronLeft className="h-5 w-5" />
+                            </button>
+                            <button
+                                className="absolute top-1/2 right-4 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white"
+                                type="button"
+                                onClick={goToNextImage}
+                                aria-label="Next image"
+                            >
+                                <ChevronRight className="h-5 w-5" />
+                            </button>
+                            <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-2">
+                                {displayImages.map((_, index) => (
+                                    <button
+                                        key={`${event.id}-indicator-${index}`}
+                                        type="button"
+                                        onClick={() =>
+                                            setActiveImageIndex(index)
+                                        }
+                                        className={`h-2.5 w-2.5 rounded-full ${index === activeImageIndex ? 'bg-white' : 'bg-white/50'}`}
+                                        aria-label={`Show image ${index + 1}`}
+                                    />
+                                ))}
+                            </div>
+                        </>
+                    )}
+                </div>
                 <div className="flex flex-col gap-y-6">
                     <Card className="rounded-t-none p-6 shadow-md">
                         <div className="flex flex-row justify-between">
@@ -224,6 +293,20 @@ export default function ViewEvent({ event }: Props) {
                                     >
                                         Reject
                                     </Button>
+                                    <Button
+                                        onClick={() =>
+                                            router.patch(
+                                                `/superadmin/event/${event.id}/feature-event`,
+                                            )
+                                        }
+                                        className="bg-yellow-400 hover:bg-amber-600"
+                                        disabled={
+                                            event.is_featured === '1' ||
+                                            eventStatus === 'Rejected'
+                                        }
+                                    >
+                                        Feature Event
+                                    </Button>
                                 </div>
                             </Card>
                         </div>
@@ -245,6 +328,45 @@ export default function ViewEvent({ event }: Props) {
                         event.end_time,
                     )}
                 />
+                {lightboxOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+                        <button
+                            type="button"
+                            className="absolute top-6 right-6 rounded-full bg-black/60 p-2 text-white"
+                            aria-label="Close image viewer"
+                            onClick={closeLightbox}
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+                        {hasMultipleImages && (
+                            <>
+                                <button
+                                    type="button"
+                                    className="absolute top-1/2 left-6 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white"
+                                    aria-label="Previous image"
+                                    onClick={goToPreviousImage}
+                                >
+                                    <ChevronLeft className="h-6 w-6" />
+                                </button>
+                                <button
+                                    type="button"
+                                    className="absolute top-1/2 right-6 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white"
+                                    aria-label="Next image"
+                                    onClick={goToNextImage}
+                                >
+                                    <ChevronRight className="h-6 w-6" />
+                                </button>
+                            </>
+                        )}
+                        <img
+                            src={resolveImageUrl(
+                                displayImages[activeImageIndex],
+                            )}
+                            alt={`${event.title} image fullscreen`}
+                            className="max-h-[80vh] max-w-[90vw] rounded-lg object-contain"
+                        />
+                    </div>
+                )}
             </div>
         </AppLayout>
     );

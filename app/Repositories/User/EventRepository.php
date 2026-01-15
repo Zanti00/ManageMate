@@ -44,6 +44,11 @@ class EventRepository
         return DB::select('EXEC usp_Event_Upcoming');
     }
 
+    public function getFeaturedEvents(): array
+    {
+        return DB::select('EXEC usp_Event_Featured');
+    }
+
     public function getEventImages(int $eventId): array
     {
         return DB::select('EXEC usp_EventImages_GetByEvent @event_id = :event_id', [

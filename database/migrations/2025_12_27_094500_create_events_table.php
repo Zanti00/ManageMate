@@ -17,7 +17,6 @@ return new class extends Migration
             $table->timestamps();
             $table->string('title');
             $table->text('description');
-            $table->string('organization')->nullable();
             $table->smallInteger('attendees')->nullable();
             $table->smallInteger('registries')->nullable();
             $table->enum('status', ['pending', 'active', 'rejected', 'closed'])->default('pending');
@@ -33,6 +32,7 @@ return new class extends Migration
             $table->double('price');
             $table->double('earnings')->nullable();
             $table->boolean('is_deleted')->default(false);
+            $table->boolean('is_featured')->default(false);
         });
     }
 

@@ -96,4 +96,16 @@ class EventController extends Controller
             return back()->withErrors(['error' => 'Failed to reject event: '.$e->getMessage()]);
         }
     }
+
+    public function feature_event(string $id)
+    {
+        try {
+            $this->eventService->featureEvent((int) $id);
+
+            return redirect()->route('superadmin.event.index')
+                ->with('success', 'Event featured successfully!');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Failed to reject event: '.$e->getMessage()]);
+        }
+    }
 }

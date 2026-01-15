@@ -76,6 +76,7 @@ Route::middleware(['auth', 'verified', 'can:superadmin'])->prefix('superadmin')-
     Route::resource('event', SuperAdminEventController::class);
     Route::patch('/event/{event}/approve-event', [SuperAdminEventController::class, 'approve_event'])->name('event.approve');
     Route::patch('/event/{event}/reject-event', [SuperAdminEventController::class, 'reject_event'])->name('event.reject');
+    Route::patch('/event/{event}/feature-event', [SuperAdminEventController::class, 'feature_event'])->name('event.feature');
     Route::resource('admin', AdminController::class);
     Route::patch('/admin/{admin}/restore', [AdminController::class, 'restore'])->name('admin.restore');
     Route::resource('organization', OrganizationController::class);

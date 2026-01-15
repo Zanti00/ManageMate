@@ -15,9 +15,18 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import user from '@/routes/user';
 import { type BreadcrumbItem } from '@/types';
+import { formatDateRange, formatTimeRange } from '@/utils/date-format';
 import { Link } from '@inertiajs/react';
 import dayjs from 'dayjs';
-import { Bell, CalendarClock, CalendarDays, CalendarHeart } from 'lucide-react';
+import {
+    Bell,
+    Calendar1,
+    CalendarClock,
+    CalendarDays,
+    CalendarHeart,
+    Clock,
+    MapPin,
+} from 'lucide-react';
 import React, { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -55,16 +64,31 @@ type UpcomingEvent = {
     attendees?: number;
 };
 
+type FeaturedEvent = {
+    id: number;
+    title: string;
+    description?: string;
+    location?: string;
+    start_date: string;
+    end_date: string;
+    start_time: string;
+    end_time: string;
+    image_path?: string | null;
+    images?: string[];
+};
+
 interface Props {
     upcoming_events?: UpcomingEvent[];
     events_today?: EventToday[];
     total_active_registered_events: string;
     total_events_this_week: string;
+    featured_events?: FeaturedEvent[];
 }
 
 export default function Dashboard({
     events_today = [],
     upcoming_events = [],
+    featured_events = [],
     total_active_registered_events,
     total_events_this_week,
 }: Props) {
@@ -100,6 +124,21 @@ export default function Dashboard({
         statusFilter === 'all'
             ? upcoming_events
             : eventsWithFilter.filter((e) => e.status === statusFilter);
+
+    const featuredEvents = featured_events;
+    const FEATURED_FALLBACK_IMAGE =
+        'https://readdy.ai/api/search-image?query=featured%20event%20spotlight%20stage%20with%20audience%20and%20vibrant%20lighting&width=1200&height=500&seq=featured-event-spotlight-001&orientation=landscape';
+
+    const resolveFeaturedImage = (event: FeaturedEvent) => {
+        const firstImage = event.images?.find((path) => !!path);
+        const source = firstImage || event.image_path;
+
+        if (!source) {
+            return FEATURED_FALLBACK_IMAGE;
+        }
+
+        return source.startsWith('http') ? source : `/storage/${source}`;
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -141,62 +180,119 @@ export default function Dashboard({
                 <div className="grid grid-cols-1">
                     <div className="col-span-1">
                         <div className="mx-auto w-full">
-                            <Carousel
-                                setApi={setApi}
-                                className="w-full shadow-lg"
-                            >
-                                <CarouselContent>
-                                    {Array.from({ length: 5 }).map(
-                                        (_, index) => (
-                                            <CarouselItem key={index}>
+                            {featuredEvents.length === 0 ? (
+                                <Card className="flex h-64 items-center justify-center p-6 text-center text-muted-foreground">
+                                    No featured events available right now.
+                                </Card>
+                            ) : (
+                                <Carousel
+                                    setApi={setApi}
+                                    className="w-full shadow-lg"
+                                >
+                                    <CarouselContent>
+                                        {featuredEvents.map((event) => (
+                                            <CarouselItem key={event.id}>
                                                 <Card className="p-0">
                                                     <CardContent className="flex aspect-video items-center justify-between p-0">
-                                                        {/* Left: Image or number */}
                                                         <div className="flex h-full w-1/2 items-center justify-center">
                                                             <img
-                                                                src="https://readdy.ai/api/search-image?query=large%20modern%20technology%20conference%20with%20bright%20stage%20lighting%20innovative%20tech%20displays%20students%20and%20professionals%20networking%20in%20spacious%20university%20auditorium%20with%20futuristic%20atmosphere%20and%20digital%20screens&width=1200&height=500&seq=featured-tech-summit-001&orientation=landscape"
+                                                                src={resolveFeaturedImage(
+                                                                    event,
+                                                                )}
                                                                 className="h-full w-full rounded-l-2xl object-cover"
+                                                                alt={`${event.title} banner`}
                                                             />
                                                         </div>
-                                                        {/* Right: Details */}
                                                         <div className="flex h-full w-1/2 flex-col justify-between p-8">
-                                                            <div>
-                                                                <div className="text-lg font-bold">
-                                                                    Event Title{' '}
-                                                                    {index + 1}
+                                                            <div className="flex flex-col gap-4 text-primary-foreground">
+                                                                <div className="text-4xl font-bold">
+                                                                    {
+                                                                        event.title
+                                                                    }
                                                                 </div>
-                                                                <div className="mb-1 text-sm text-muted-foreground">
-                                                                    Short
-                                                                    description
-                                                                    for event{' '}
-                                                                    {index + 1}{' '}
-                                                                    goes here.
-                                                                </div>
-                                                                <div className="text-xs text-gray-500">
-                                                                    Date: 12
-                                                                    April 2025
-                                                                </div>
-                                                                <div className="text-xs text-gray-500">
-                                                                    Time: 9:00PM
-                                                                    - 11:30PM
+                                                                <p className="mb-1 line-clamp-20">
+                                                                    {event.description ||
+                                                                        'No description provided.'}
+                                                                </p>
+                                                                <div className="flex flex-col gap-4 text-sm font-medium">
+                                                                    <div className="flex flex-row gap-2">
+                                                                        <Calendar1
+                                                                            size={
+                                                                                15
+                                                                            }
+                                                                            className="stroke-3"
+                                                                        />
+                                                                        <div>
+                                                                            {formatDateRange(
+                                                                                event.start_date,
+                                                                                event.end_date,
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex flex-row gap-2">
+                                                                        <Clock
+                                                                            size={
+                                                                                15
+                                                                            }
+                                                                            className="stroke-3"
+                                                                        />
+                                                                        <div>
+                                                                            {formatTimeRange(
+                                                                                event.start_time,
+                                                                                event.end_time,
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex flex-row gap-2">
+                                                                        <MapPin
+                                                                            size={
+                                                                                15
+                                                                            }
+                                                                            className="stroke-3"
+                                                                        />
+                                                                        {event.location && (
+                                                                            <div>
+                                                                                {
+                                                                                    event.location
+                                                                                }
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                            <Button className="mt-2 shadow-xl">
-                                                                View
+                                                            <Button
+                                                                className="mt-2 shadow-xl"
+                                                                asChild
+                                                            >
+                                                                <Link
+                                                                    href={
+                                                                        user.event.show(
+                                                                            event.id,
+                                                                        ).url
+                                                                    }
+                                                                >
+                                                                    View
+                                                                </Link>
                                                             </Button>
                                                         </div>
                                                     </CardContent>
-                                                    <div className="py-2 text-center text-sm text-muted-foreground">
-                                                        {current} of {count}
-                                                    </div>
+                                                    {count > 0 && (
+                                                        <div className="py-2 text-center text-sm text-muted-foreground">
+                                                            {current} of {count}
+                                                        </div>
+                                                    )}
                                                 </Card>
                                             </CarouselItem>
-                                        ),
+                                        ))}
+                                    </CarouselContent>
+                                    {featuredEvents.length > 1 && (
+                                        <>
+                                            <CarouselPrevious className="absolute top-1/2 left-2 -translate-y-1/2" />
+                                            <CarouselNext className="absolute top-1/2 right-2 -translate-y-1/2" />
+                                        </>
                                     )}
-                                </CarouselContent>
-                                <CarouselPrevious className="absolute top-1/2 left-2 -translate-y-1/2" />
-                                <CarouselNext className="absolute top-1/2 right-2 -translate-y-1/2" />
-                            </Carousel>
+                                </Carousel>
+                            )}
                         </div>
                     </div>
                 </div>

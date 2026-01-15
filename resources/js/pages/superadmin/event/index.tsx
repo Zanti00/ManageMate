@@ -1,4 +1,10 @@
 import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { SearchInput } from '@/components/ui/search-input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
@@ -8,7 +14,7 @@ import { formatDate, formatDateRange } from '@/utils/date-format';
 import { getEventStatus } from '@/utils/event-status';
 import { formatPrice } from '@/utils/price-format';
 import { Link, router } from '@inertiajs/react';
-import { Check, Eye, X } from 'lucide-react';
+import { Ellipsis } from 'lucide-react';
 import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -23,7 +29,6 @@ type EventStatus = 'Pending' | 'Active' | 'Rejected' | 'Closed' | 'Deleted';
 type Event = {
     id: number;
     title: string;
-    organization: string;
     location: string;
     price: number;
     start_date: string;
@@ -58,6 +63,18 @@ export default function SuperAdminEvent({ events = [] }: Props) {
         statusFilter === 'all'
             ? eventsWithStatus
             : eventsWithStatus.filter((e) => e.status === statusFilter);
+
+    const handleApprove = (eventId: number) => {
+        router.patch(superadmin.event.approve(eventId).url);
+    };
+
+    const handleReject = (eventId: number) => {
+        if (!confirm('Are you sure you want to reject this event?')) {
+            return;
+        }
+
+        router.patch(superadmin.event.reject(eventId).url);
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -125,20 +142,21 @@ export default function SuperAdminEvent({ events = [] }: Props) {
                     </div>
                 </Tabs>
                 <div className="scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 h-[450px] overflow-x-auto bg-white">
-                    <table className="w-full min-w-[1500px] table-fixed text-sm">
+                    <table className="w-full text-sm">
                         <thead className="bg-foreground/95">
                             <tr className="text-left text-background">
-                                <th className="px-4 py-2 pl-4">EVENT</th>
-                                <th className="px-4 py-2">ORGANIZATION</th>
-                                <th className="px-4 py-2">EVENT DURATION</th>
-                                <th className="px-4 py-2">
+                                <th className="px-8 py-2 pl-4">EVENT</th>
+                                <th className="px-8 py-2 pl-4">
+                                    EVENT DURATION
+                                </th>
+                                <th className="px-8 py-2 pl-4">
                                     REGISTRATION DURATION
                                 </th>
-                                <th className="px-4 py-2">LOCATION</th>
-                                <th className="px-4 py-2">PRICE</th>
-                                <th className="px-4 py-2">STATUS</th>
-                                <th className="px-4 py-2">SUBMIT DATE</th>
-                                <th className="py-2 pr-6 text-right">
+                                <th className="px-8 py-2 pl-4">LOCATION</th>
+                                <th className="px-8 py-2 pl-4">PRICE</th>
+                                <th className="px-8 py-2">STATUS</th>
+                                <th className="px-8 py-2 pl-4">SUBMIT DATE</th>
+                                <th className="py-2 pr-4 pl-4 text-right">
                                     ACTIONS
                                 </th>
                             </tr>
@@ -162,33 +180,30 @@ export default function SuperAdminEvent({ events = [] }: Props) {
                                     return (
                                         <tr
                                             key={event.id}
-                                            className="hover:bg-gray-100"
+                                            className="text-primary-foreground hover:bg-gray-100"
                                         >
                                             <td className="truncate p-4 font-medium">
                                                 {event.title}
                                             </td>
-                                            <td className="p-4 font-medium">
-                                                {event.organization}
-                                            </td>
-                                            <td className="p-4 font-medium">
+                                            <td className="p-4">
                                                 {formatDateRange(
                                                     event.start_date,
                                                     event.end_date,
                                                 )}
                                             </td>
-                                            <td className="p-4 font-medium">
+                                            <td className="p-4">
                                                 {formatDateRange(
                                                     event.registration_start_date,
                                                     event.registration_end_date,
                                                 )}
                                             </td>
-                                            <td className="truncate p-4 font-medium">
+                                            <td className="truncate p-4">
                                                 {event.location}
                                             </td>
-                                            <td className="p-4 font-medium">
+                                            <td className="p-4">
                                                 {formatPrice(event.price)}
                                             </td>
-                                            <td className="items-start self-start p-4 font-medium">
+                                            <td className="flex flex-row items-center justify-center self-center p-4">
                                                 <span
                                                     className={`rounded-full px-3 py-1 text-xs ${
                                                         event.status ===
@@ -209,49 +224,78 @@ export default function SuperAdminEvent({ events = [] }: Props) {
                                             <td className="p-4 font-medium">
                                                 {formatDate(submitDate)}
                                             </td>
-                                            <td className="p-4">
-                                                <div className="flex flex-row gap-2">
-                                                    <Button
-                                                        onClick={() =>
-                                                            router.patch(
-                                                                `/superadmin/event/${event.id}/approve-event`,
-                                                            )
-                                                        }
-                                                        className="bg-green-600"
-                                                        disabled={
-                                                            event.status ===
-                                                            'Active'
-                                                        }
+                                            <td className="p-4 text-right">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger
+                                                        asChild
                                                     >
-                                                        <Check />
-                                                    </Button>
-
-                                                    <Button
-                                                        onClick={() =>
-                                                            router.patch(
-                                                                `/superadmin/event/${event.id}/reject-event`,
-                                                            )
-                                                        }
-                                                        className="bg-red-600"
-                                                        disabled={
-                                                            event.status ===
-                                                            'Rejected'
-                                                        }
-                                                    >
-                                                        <X />
-                                                    </Button>
-                                                    <Link
-                                                        href={
-                                                            superadmin.event.show(
-                                                                event.id,
-                                                            ).url
-                                                        }
-                                                    >
-                                                        <Button>
-                                                            <Eye />
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-9 w-9"
+                                                        >
+                                                            <Ellipsis className="h-4 w-4" />
                                                         </Button>
-                                                    </Link>
-                                                </div>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent
+                                                        align="end"
+                                                        className="w-32"
+                                                    >
+                                                        <DropdownMenuItem
+                                                            asChild
+                                                        >
+                                                            <Link
+                                                                href={
+                                                                    superadmin.event.show(
+                                                                        event.id,
+                                                                    ).url
+                                                                }
+                                                                className="w-full"
+                                                            >
+                                                                View
+                                                            </Link>
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            disabled={
+                                                                event.status ===
+                                                                'Active'
+                                                            }
+                                                            onSelect={(e) => {
+                                                                e.preventDefault();
+                                                                if (
+                                                                    event.status !==
+                                                                    'Active'
+                                                                ) {
+                                                                    handleApprove(
+                                                                        event.id,
+                                                                    );
+                                                                }
+                                                            }}
+                                                        >
+                                                            Approve
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            className="text-red-600 focus:text-red-600"
+                                                            disabled={
+                                                                event.status ===
+                                                                'Rejected'
+                                                            }
+                                                            onSelect={(e) => {
+                                                                e.preventDefault();
+                                                                if (
+                                                                    event.status !==
+                                                                    'Rejected'
+                                                                ) {
+                                                                    handleReject(
+                                                                        event.id,
+                                                                    );
+                                                                }
+                                                            }}
+                                                        >
+                                                            Reject
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
                                             </td>
                                         </tr>
                                     );
