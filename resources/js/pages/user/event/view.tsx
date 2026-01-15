@@ -10,8 +10,9 @@ import { BreadcrumbItem } from '@/types';
 import { formatDateRange, formatTimeRange } from '@/utils/date-format';
 import { getEventDisplayStatus } from '@/utils/event-status';
 import { formatPrice } from '@/utils/price-format';
+import { router, usePage } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -42,12 +43,26 @@ type Event = {
     image_path?: string | null;
 };
 
+type AuthenticatedUser = {
+    id: number;
+    email?: string | null;
+};
+
+type PageProps = {
+    auth?: {
+        user?: AuthenticatedUser | null;
+    };
+};
+
 interface Props {
     event: Event;
 }
 
 export default function ViewEvent({ event }: Props) {
+    const { props } = usePage<PageProps>();
+    const authUser = props.auth?.user ?? null;
     const [modalOpen, setModalOpen] = useState(false);
+    const [isRegistering, setIsRegistering] = useState(false);
 
     if (!event) {
         return <div className="p-6">Event not found</div>;
@@ -70,6 +85,59 @@ export default function ViewEvent({ event }: Props) {
         imagePath: event.image_path,
         resetKey: event.id,
     });
+
+    useEffect(() => {
+        if (!hasMultipleImages || lightboxOpen) {
+            return;
+        }
+
+        const intervalId = window.setInterval(() => {
+            goToNextImage();
+        }, 2000);
+
+        return () => {
+            window.clearInterval(intervalId);
+        };
+    }, [hasMultipleImages, goToNextImage, lightboxOpen]);
+
+    const registrationDisabled = useMemo(() => {
+        return event.is_registered || eventStatus === 'Closed';
+    }, [event.is_registered, eventStatus]);
+
+    const handleRegisterClick = () => {
+        if (registrationDisabled || isRegistering) {
+            return;
+        }
+
+        if (!authUser) {
+            window.alert(
+                'You need to be signed in to register for this event.',
+            );
+            return;
+        }
+
+        if (!authUser.email) {
+            window.alert('Missing email address. Please update your profile.');
+            return;
+        }
+
+        const qrValue = `user:${authUser.id}|event:${event.id}`;
+
+        setModalOpen(true);
+
+        router.post(
+            `/user/event/${event.id}/register`,
+            {
+                email: authUser.email,
+                qr_value: qrValue,
+            },
+            {
+                preserveScroll: true,
+                onStart: () => setIsRegistering(true),
+                onFinish: () => setIsRegistering(false),
+            },
+        );
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -263,17 +331,18 @@ export default function ViewEvent({ event }: Props) {
                                               : 'shadow-lg'
                                     }
                                     disabled={
-                                        event.is_registered ||
-                                        eventStatus === 'Closed'
+                                        registrationDisabled || isRegistering
                                     }
                                     variant="default"
-                                    onClick={() => setModalOpen(true)}
+                                    onClick={handleRegisterClick}
                                 >
                                     {event.is_registered
                                         ? "You're already registered!"
                                         : eventStatus === 'Closed'
                                           ? 'Registration closed'
-                                          : 'Register'}
+                                          : isRegistering
+                                            ? 'Sending ticket...'
+                                            : 'Register'}
                                 </Button>
                             </Card>
                         </div>

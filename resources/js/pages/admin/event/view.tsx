@@ -36,6 +36,7 @@ import {
     Users,
     X,
 } from 'lucide-react';
+import { useEffect } from 'react';
 import { Bar, Line, Pie } from 'react-chartjs-2';
 
 ChartJS.register(
@@ -145,6 +146,20 @@ export default function EventView({
         imagePath: event.image_path,
         resetKey: event.id,
     });
+
+    useEffect(() => {
+        if (!hasMultipleImages || lightboxOpen) {
+            return;
+        }
+
+        const intervalId = window.setInterval(() => {
+            goToNextImage();
+        }, 2000);
+
+        return () => {
+            window.clearInterval(intervalId);
+        };
+    }, [hasMultipleImages, goToNextImage, lightboxOpen]);
 
     const registrationTrendData: ChartData<'line'> = {
         labels: registration_trend_labels,

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->timestamps();
             $table->foreignId('user_id')->constrained();
             $table->foreignId('event_id')->constrained();
+            $table->timestamp('attended_at')->nullable();
         });
     }
 

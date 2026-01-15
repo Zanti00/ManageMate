@@ -3,10 +3,16 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Mail\EventTicketMail;
 use App\Services\User\EventService;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 
 class EventController extends Controller
@@ -95,15 +101,69 @@ class EventController extends Controller
         ]);
     }
 
-    public function register(string $eventId)
+    public function register(Request $request, string $eventId)
     {
+        $user = Auth::user();
+
+        if (! $user) {
+            return redirect()->back()->with('error', 'You must be signed in to register for this event.');
+        }
+
+        $validated = $request->validate([
+            'email' => ['nullable', 'email'],
+        ]);
+
+        $email = $validated['email'] ?? $user->email;
+
+        if (! $email) {
+            return redirect()->back()->with('error', 'Please provide an email address to receive your QR ticket.');
+        }
+
+        $eventIdInt = (int) $eventId;
+
         try {
-            $this->eventService->registerUserToEvent(Auth::id(), (int) $eventId);
+            $this->eventService->registerUserToEvent($user->id, $eventIdInt);
 
-            return redirect()->back()->with('success', 'Registration successful!');
+            $event = $this->eventService->getEventDetails($eventIdInt, $user->id);
+            $ticketSnapshot = $this->eventService->buildTicketSnapshot($event);
+            $qrPayload = $this->buildQrPayload($user->id, $eventIdInt);
+            $qrImageBase64 = $this->generateQrCodeBase64($qrPayload);
 
-        } catch (\Exception $e) {
+            Mail::to($email)->send(new EventTicketMail(
+                user: $user,
+                event: $event,
+                qrImageBase64: $qrImageBase64,
+                qrPayload: $qrPayload,
+                ticketSnapshot: $ticketSnapshot,
+            ));
+
+            return redirect()->back()->with('success', 'Registration successful! Check your email for the QR ticket.');
+
+        } catch (\Throwable $e) {
+            report($e);
+
             return redirect()->back()->with('error', 'Registration failed. Please try again.');
         }
+    }
+
+    private function buildQrPayload(int $userId, int $eventId): string
+    {
+        return json_encode([
+            'user_id' => $userId,
+            'event_id' => $eventId,
+            'issued_at' => now()->toIso8601String(),
+        ]);
+    }
+
+    private function generateQrCodeBase64(string $payload): string
+    {
+        $renderer = new ImageRenderer(
+            new RendererStyle(400),
+            new SvgImageBackEnd()
+        );
+
+        $writer = new Writer($renderer);
+
+        return base64_encode($writer->writeString($payload));
     }
 }

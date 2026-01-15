@@ -12,7 +12,7 @@ import { getEventStatus } from '@/utils/event-status';
 import { formatPrice } from '@/utils/price-format';
 import { router } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -72,6 +72,20 @@ export default function ViewEvent({ event }: Props) {
         resetKey: event.id,
     });
 
+    useEffect(() => {
+        if (!hasMultipleImages || lightboxOpen) {
+            return;
+        }
+
+        const intervalId = window.setInterval(() => {
+            goToNextImage();
+        }, 2000);
+
+        return () => {
+            window.clearInterval(intervalId);
+        };
+    }, [hasMultipleImages, goToNextImage, lightboxOpen]);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col overflow-hidden rounded-lg p-8">
@@ -98,7 +112,10 @@ export default function ViewEvent({ event }: Props) {
                             <button
                                 className="absolute top-1/2 left-4 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white"
                                 type="button"
-                                onClick={goToPreviousImage}
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    goToPreviousImage();
+                                }}
                                 aria-label="Previous image"
                             >
                                 <ChevronLeft className="h-5 w-5" />
@@ -106,7 +123,10 @@ export default function ViewEvent({ event }: Props) {
                             <button
                                 className="absolute top-1/2 right-4 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white"
                                 type="button"
-                                onClick={goToNextImage}
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    goToNextImage();
+                                }}
                                 aria-label="Next image"
                             >
                                 <ChevronRight className="h-5 w-5" />
@@ -116,9 +136,10 @@ export default function ViewEvent({ event }: Props) {
                                     <button
                                         key={`${event.id}-indicator-${index}`}
                                         type="button"
-                                        onClick={() =>
-                                            setActiveImageIndex(index)
-                                        }
+                                        onClick={(event) => {
+                                            event.stopPropagation();
+                                            setActiveImageIndex(index);
+                                        }}
                                         className={`h-2.5 w-2.5 rounded-full ${index === activeImageIndex ? 'bg-white' : 'bg-white/50'}`}
                                         aria-label={`Show image ${index + 1}`}
                                     />

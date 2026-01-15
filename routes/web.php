@@ -64,6 +64,7 @@ Route::middleware(['auth', 'verified', 'can:admin'])->prefix('admin')->name('adm
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::resource('event', AdminEventController::class);
     Route::get('/scanqr', [ScanQRController::class, 'index'])->name('scan-qr.index');
+    Route::post('/scanqr/check-in', [ScanQRController::class, 'checkIn'])->name('scan-qr.check-in');
 });
 
 // ----------------------
