@@ -21,12 +21,26 @@ class ScanQrRepository
 
     public function markAttendance(int $userId, int $eventId, string $attendedAt): void
     {
+        DB::transaction(function () use ($userId, $eventId, $attendedAt): void {
+            DB::statement(
+                'EXEC usp_RegisteredEvent_Update @user_id = :user_id, @event_id = :event_id, @attended_at = :attended_at',
+                [
+                    'user_id' => $userId,
+                    'event_id' => $eventId,
+                    'attended_at' => $attendedAt,
+                ],
+            );
+
+            $this->incrementEventAttendance($eventId);
+        });
+    }
+
+    private function incrementEventAttendance(int $eventId): void
+    {
         DB::statement(
-            'EXEC usp_RegisteredEvent_Update @user_id = :user_id, @event_id = :event_id, @attended_at = :attended_at',
+            'EXEC usp_Event_UpdateAttendees @event_id = :event_id',
             [
-                'user_id' => $userId,
                 'event_id' => $eventId,
-                'attended_at' => $attendedAt,
             ],
         );
     }

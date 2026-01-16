@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Repositories\Admin\EventRepository;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
@@ -24,6 +25,38 @@ class EventController extends Controller
         return Inertia::render('admin/event/index', [
             'events' => $events,
         ]);
+    }
+
+    /**
+     * Handle live search requests for admin events.
+     */
+    public function search(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'query' => 'nullable|string|max:150',
+            'status' => 'nullable|string|in:all,Pending,Active,Rejected,Closed',
+            'page' => 'nullable|integer|min:1',
+            'per_page' => 'nullable|integer|min:1|max:50',
+        ]);
+
+        $searchTerm = trim((string) ($validated['query'] ?? ''));
+        $status = $validated['status'] ?? null;
+        $page = (int) ($validated['page'] ?? 1);
+        $perPage = (int) ($validated['per_page'] ?? 6);
+
+        if ($status === 'all' || $status === '') {
+            $status = null;
+        }
+
+        $payload = $this->eventRepo->searchEvents(
+            Auth::id(),
+            $searchTerm,
+            $status,
+            $page,
+            $perPage,
+        );
+
+        return response()->json($payload);
     }
 
     /**

@@ -28,9 +28,21 @@ class EventRepository
 
     public function registerUserToEvent(int $userId, int $eventId): void
     {
+        DB::transaction(function () use ($userId, $eventId): void {
+            DB::statement(
+                'EXEC usp_RegisteredEvent_Insert @user_id = :user_id, @event_id = :event_id',
+                ['user_id' => $userId, 'event_id' => $eventId]
+            );
+
+            $this->incrementEventRegistries($eventId);
+        });
+    }
+
+    private function incrementEventRegistries(int $eventId): void
+    {
         DB::statement(
-            'EXEC usp_RegisteredEvent_Insert @user_id = :user_id, @event_id = :event_id',
-            ['user_id' => $userId, 'event_id' => $eventId]
+            'EXEC usp_Event_UpdateRegistries @event_id = :event_id',
+            ['event_id' => $eventId]
         );
     }
 

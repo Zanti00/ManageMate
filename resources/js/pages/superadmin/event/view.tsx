@@ -336,7 +336,6 @@ export default function ViewEvent({ event }: Props) {
                 <RegisterModal
                     open={modalOpen}
                     onClose={() => setModalOpen(false)}
-                    eventId={event.id}
                     eventTitle={event.title}
                     eventLocation={event.location}
                     eventPrice={formatPrice(event.price)}

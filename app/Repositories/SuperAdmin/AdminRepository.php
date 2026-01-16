@@ -78,4 +78,61 @@ class AdminRepository
     {
         return DB::select('EXEC usp_Event_GetByAdmin @user_id = :user_id', ['user_id' => $userId]);
     }
+
+    public function searchAdmins(
+        ?string $query = null,
+        ?string $status = null,
+        int $page = 1,
+        int $perPage = 6,
+    ): array {
+        $statement = 'EXEC usp_User_Search
+            @query = :query,
+            @page = :page,
+            @per_page = :per_page';
+
+        $bindings = [
+            'query' => $query ?? '',
+            'page' => $page,
+            'per_page' => $perPage,
+        ];
+
+        if ($status !== null && $status !== '') {
+            $statement .= ',
+            @status = :status';
+            $bindings['status'] = $status;
+        }
+
+        $result = DB::select($statement, $bindings);
+        $admins = array_map(static fn ($row) => (array) $row, $result);
+
+        $meta = [
+            'current_page' => $page,
+            'per_page' => $perPage,
+            'total' => count($admins),
+            'last_page' => max(1, (int) ceil(max(count($admins), 1) / max($perPage, 1))),
+        ];
+
+        if (! empty($admins)) {
+            $first = $admins[0];
+
+            $total = array_key_exists('total_count', $first) ? (int) $first['total_count'] : $meta['total'];
+            $per = array_key_exists('per_page', $first) ? (int) $first['per_page'] : $meta['per_page'];
+            $current = array_key_exists('current_page', $first) ? (int) $first['current_page'] : $meta['current_page'];
+            $last = array_key_exists('last_page', $first)
+                ? (int) $first['last_page']
+                : (int) ceil(max($total, 1) / max($per, 1));
+
+            $meta = [
+                'current_page' => max(1, $current),
+                'per_page' => max(1, $per),
+                'total' => max(0, $total),
+                'last_page' => max(1, $last),
+            ];
+        }
+
+        return [
+            'data' => $admins,
+            'meta' => $meta,
+        ];
+    }
 }

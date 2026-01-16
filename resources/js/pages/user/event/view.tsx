@@ -121,9 +121,17 @@ export default function ViewEvent({ event }: Props) {
             return;
         }
 
-        const qrValue = `user:${authUser.id}|event:${event.id}`;
-
         setModalOpen(true);
+    };
+
+    const handleConfirmRegistration = () => {
+        if (!authUser || !authUser.email) {
+            setModalOpen(false);
+            window.alert('Missing account information. Please sign in again.');
+            return;
+        }
+
+        const qrValue = `user:${authUser.id}|event:${event.id}`;
 
         router.post(
             `/user/event/${event.id}/register`,
@@ -134,6 +142,7 @@ export default function ViewEvent({ event }: Props) {
             {
                 preserveScroll: true,
                 onStart: () => setIsRegistering(true),
+                onSuccess: () => setModalOpen(false),
                 onFinish: () => setIsRegistering(false),
             },
         );
@@ -351,7 +360,8 @@ export default function ViewEvent({ event }: Props) {
                 <RegisterModal
                     open={modalOpen}
                     onClose={() => setModalOpen(false)}
-                    eventId={event.id}
+                    onConfirm={handleConfirmRegistration}
+                    isSubmitting={isRegistering}
                     eventTitle={event.title}
                     eventLocation={event.location}
                     eventPrice={formatPrice(event.price)}

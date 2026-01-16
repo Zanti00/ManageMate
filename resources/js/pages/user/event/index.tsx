@@ -1,8 +1,10 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { EventCard } from '@/components/ui/event-card';
+import { EventCardSkeleton } from '@/components/ui/event-card-skeleton';
 import { SearchInput } from '@/components/ui/search-input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { usePaginatedSearch } from '@/hooks/use-event-search';
 import AppLayout from '@/layouts/app-layout';
 import user from '@/routes/user';
 import { type BreadcrumbItem } from '@/types';
@@ -17,6 +19,8 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: user.event.index().url,
     },
 ];
+
+const SEARCH_RESULTS_PER_PAGE = 9;
 
 type FilterValues = 'Upcoming' | 'Ongoing' | 'Closed';
 
@@ -74,15 +78,37 @@ export default function UserEvent({ events }: Props) {
         'all',
     );
 
+    const {
+        searchQuery,
+        setSearchQuery,
+        debouncedQuery,
+        results: searchResults,
+        meta: searchMeta,
+        page: searchPage,
+        setPage: setSearchPage,
+        isLoading: searchLoading,
+        error: searchError,
+        hasActiveSearch,
+    } = usePaginatedSearch<Event>({
+        endpoint: user.event.search().url,
+        perPage: SEARCH_RESULTS_PER_PAGE,
+        buildParams: () =>
+            statusFilter !== 'all' ? { status: statusFilter } : undefined,
+        mapResult: (event) => ({
+            ...event,
+            status: getEventDisplayStatus(event),
+        }),
+        dependencies: [statusFilter],
+    });
+
     const filteredStatus =
         statusFilter === 'all'
             ? eventsWithStatus
             : eventsWithStatus.filter((e) => e.status === statusFilter);
 
-    const resolveImageUrl = (path?: string | null) => {
-        if (!path) return '/images/event-placeholder.png';
-        return path.startsWith('http') ? path : `/storage/${path}`;
-    };
+    const eventsToDisplay = hasActiveSearch ? searchResults : filteredStatus;
+    const baseSkeletonCount = SEARCH_RESULTS_PER_PAGE;
+    const shouldShowSearchSkeleton = hasActiveSearch && searchLoading;
 
     const handlePageChange = (url: string | null) => {
         if (!url) return;
@@ -119,6 +145,86 @@ export default function UserEvent({ events }: Props) {
         }
 
         return pages;
+    };
+
+    const renderSearchPagination = () => {
+        if (!hasActiveSearch || !searchMeta || searchMeta.last_page <= 1) {
+            return null;
+        }
+
+        const pages = [];
+        const maxVisible = 5;
+
+        let startPage = Math.max(
+            1,
+            searchMeta.current_page - Math.floor(maxVisible / 2),
+        );
+        let endPage = Math.min(
+            searchMeta.last_page,
+            startPage + maxVisible - 1,
+        );
+
+        if (endPage - startPage < maxVisible - 1) {
+            startPage = Math.max(1, endPage - maxVisible + 1);
+        }
+
+        for (let page = startPage; page <= endPage; page++) {
+            pages.push(
+                <Button
+                    key={page}
+                    variant={
+                        page === searchMeta.current_page ? 'default' : 'outline'
+                    }
+                    size="sm"
+                    onClick={() => setSearchPage(page)}
+                    disabled={searchLoading}
+                    className="min-w-[2.5rem]"
+                >
+                    {page}
+                </Button>,
+            );
+        }
+
+        return (
+            <Card className="p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                            setSearchPage((prev) => Math.max(1, prev - 1))
+                        }
+                        disabled={searchMeta.current_page <= 1 || searchLoading}
+                    >
+                        <ChevronLeft className="mr-1 h-4 w-4" />
+                        Previous
+                    </Button>
+                    <div className="flex flex-wrap justify-center gap-1">
+                        {pages}
+                    </div>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                            setSearchPage((prev) =>
+                                Math.min(searchMeta.last_page, prev + 1),
+                            )
+                        }
+                        disabled={
+                            searchMeta.current_page >= searchMeta.last_page ||
+                            searchLoading
+                        }
+                    >
+                        Next
+                        <ChevronRight className="ml-1 h-4 w-4" />
+                    </Button>
+                </div>
+                <p className="mt-2 text-center text-sm text-gray-600">
+                    Showing page {searchMeta.current_page} of{' '}
+                    {searchMeta.last_page} (total {searchMeta.total} events)
+                </p>
+            </Card>
+        );
     };
 
     return (
@@ -199,12 +305,59 @@ export default function UserEvent({ events }: Props) {
                             <div className="flex flex-row">
                                 <p>Search</p>
                             </div>
-                            <SearchInput placeholder="Search by title, category, or location..." />
+                            <div className="flex flex-col gap-1">
+                                <SearchInput
+                                    placeholder="Search by title, category, or location..."
+                                    value={searchQuery}
+                                    onChange={(event) =>
+                                        setSearchQuery(event.target.value)
+                                    }
+                                />
+                                {searchError && (
+                                    <p className="text-sm text-red-500">
+                                        {searchError}
+                                    </p>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </Card>
 
-                {filteredStatus.length > 0 ? (
+                {hasActiveSearch ? (
+                    shouldShowSearchSkeleton ? (
+                        <div className="grid grid-cols-3 gap-6">
+                            {Array.from({ length: baseSkeletonCount }).map(
+                                (_, index) => (
+                                    <EventCardSkeleton key={index} />
+                                ),
+                            )}
+                        </div>
+                    ) : eventsToDisplay.length > 0 ? (
+                        <>
+                            <div className="grid grid-cols-3 gap-6">
+                                {eventsToDisplay.map((event) => (
+                                    <div
+                                        key={event.id}
+                                        className="flex flex-col gap-2"
+                                    >
+                                        <EventCard
+                                            {...event}
+                                            viewDetailsHref={
+                                                user.event.show(event.id).url
+                                            }
+                                            className="hover:shadow-lg"
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                            {renderSearchPagination()}
+                        </>
+                    ) : (
+                        <Card className="p-12 text-center text-gray-500">
+                            {`No events found for "${debouncedQuery}".`}
+                        </Card>
+                    )
+                ) : filteredStatus.length > 0 ? (
                     <>
                         <div className="grid grid-cols-3 gap-6">
                             {filteredStatus.map((event) => (

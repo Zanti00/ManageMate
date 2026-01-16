@@ -5,6 +5,7 @@ namespace App\Services\User;
 use App\Repositories\User\EventRepository;
 use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Str;
 
 class EventService
 {
@@ -32,6 +33,47 @@ class EventService
                 'query' => $query,
             ]
         );
+    }
+
+    public function searchEvents(int $userId, ?string $query, ?string $status, int $page, int $perPage): array
+    {
+        $perPage = max(1, $perPage);
+        $normalizedStatus = $this->normalizeDisplayStatus($status);
+        $searchTerm = Str::lower(trim((string) $query));
+
+        $events = collect($this->attachImages($this->eventRepo->getEventsByUser($userId)))
+            ->map(function ($event) {
+                $event->display_status = $this->determineDisplayStatus($event);
+
+                return $event;
+            })
+            ->filter(function ($event) use ($searchTerm, $normalizedStatus) {
+                $matchesQuery = $this->matchesQuery($event, $searchTerm);
+                $matchesStatus = $normalizedStatus === null
+                    || $event->display_status === $normalizedStatus;
+
+                return $matchesQuery && $matchesStatus;
+            })
+            ->values();
+
+        $total = $events->count();
+        $lastPage = max(1, (int) ceil($total / $perPage));
+        $currentPage = max(1, min($page, $lastPage));
+        $slice = $events
+            ->slice(($currentPage - 1) * $perPage, $perPage)
+            ->values()
+            ->map(static fn ($event) => (array) $event)
+            ->all();
+
+        return [
+            'data' => $slice,
+            'meta' => [
+                'current_page' => $currentPage,
+                'per_page' => $perPage,
+                'total' => $total,
+                'last_page' => $lastPage,
+            ],
+        ];
     }
 
     public function getEventDetails(int $eventId, int $userId): ?object
@@ -168,5 +210,73 @@ class EventService
         }
 
         return '$'.number_format($numeric, 2);
+    }
+
+    private function matchesQuery(object $event, string $searchTerm): bool
+    {
+        if ($searchTerm === '') {
+            return true;
+        }
+
+        $haystacks = [
+            $event->title ?? '',
+            $event->location ?? '',
+            $event->description ?? '',
+        ];
+
+        foreach ($haystacks as $haystack) {
+            if ($haystack === null) {
+                continue;
+            }
+
+            if (Str::contains(Str::lower((string) $haystack), $searchTerm)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function normalizeDisplayStatus(?string $status): ?string
+    {
+        if (! $status) {
+            return null;
+        }
+
+        return match (Str::lower($status)) {
+            'upcoming' => 'upcoming',
+            'ongoing' => 'ongoing',
+            'closed' => 'closed',
+            'all' => null,
+            default => null,
+        };
+    }
+
+    private function determineDisplayStatus(object $event): string
+    {
+        if (empty($event->start_date) || empty($event->end_date)) {
+            return 'upcoming';
+        }
+
+        try {
+            $startDate = Carbon::parse($event->start_date);
+            $endDate = Carbon::parse($event->end_date);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return 'upcoming';
+        }
+
+        $now = Carbon::now();
+
+        if ($now->lt($startDate)) {
+            return 'upcoming';
+        }
+
+        if ($now->gte($startDate) && $now->lte($endDate)) {
+            return 'ongoing';
+        }
+
+        return 'closed';
     }
 }

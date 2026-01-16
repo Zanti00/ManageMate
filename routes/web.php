@@ -46,6 +46,7 @@ Route::middleware(['auth', 'verified', 'can:user'])->prefix('user')->name('user.
 
     Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
 
+    Route::get('/event/search', [UserEventController::class, 'search'])->name('event.search');
     Route::resource('/event', UserEventController::class);
     Route::post('/event/{eventId}/register', [UserEventController::class, 'register'])->name('event.register');
     Route::get('/user/event/my-events', [UserEventController::class, 'myevents'])->name('event.myevents');
@@ -62,6 +63,7 @@ Route::middleware(['auth', 'verified', 'can:admin'])->prefix('admin')->name('adm
     })->name('dashboard');
 
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/event/search', [AdminEventController::class, 'search'])->name('event.search');
     Route::resource('event', AdminEventController::class);
     Route::get('/scanqr', [ScanQRController::class, 'index'])->name('scan-qr.index');
     Route::post('/scanqr/check-in', [ScanQRController::class, 'checkIn'])->name('scan-qr.check-in');
@@ -78,6 +80,7 @@ Route::middleware(['auth', 'verified', 'can:superadmin'])->prefix('superadmin')-
     Route::patch('/event/{event}/approve-event', [SuperAdminEventController::class, 'approve_event'])->name('event.approve');
     Route::patch('/event/{event}/reject-event', [SuperAdminEventController::class, 'reject_event'])->name('event.reject');
     Route::patch('/event/{event}/feature-event', [SuperAdminEventController::class, 'feature_event'])->name('event.feature');
+    Route::get('/admin/search', [AdminController::class, 'search'])->name('admin.search');
     Route::resource('admin', AdminController::class);
     Route::patch('/admin/{admin}/restore', [AdminController::class, 'restore'])->name('admin.restore');
     Route::resource('organization', OrganizationController::class);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Services\SuperAdmin\AdminService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -22,6 +23,37 @@ class AdminController extends Controller
         return Inertia::render('superadmin/admin/index', [
             'admins' => $data['admins'],
         ]);
+    }
+
+    /**
+     * Handle live search requests for admins.
+     */
+    public function search(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'query' => 'nullable|string|max:150',
+            'status' => 'nullable|string|in:all,Active,Inactive',
+            'page' => 'nullable|integer|min:1',
+            'per_page' => 'nullable|integer|min:1|max:50',
+        ]);
+
+        $searchTerm = trim((string) ($validated['query'] ?? ''));
+        $status = $validated['status'] ?? null;
+        $page = (int) ($validated['page'] ?? 1);
+        $perPage = (int) ($validated['per_page'] ?? 6);
+
+        if ($status === 'all' || $status === '') {
+            $status = null;
+        }
+
+        $payload = $this->adminService->searchAdmins(
+            $searchTerm,
+            $status,
+            $page,
+            $perPage,
+        );
+
+        return response()->json($payload);
     }
 
     /**

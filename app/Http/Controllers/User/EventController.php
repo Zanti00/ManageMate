@@ -9,6 +9,7 @@ use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
@@ -38,6 +39,29 @@ class EventController extends Controller
         return Inertia::render('user/event/index', [
             'events' => $events,
         ]);
+    }
+
+    /**
+     * Provide paginated event search results for AJAX requests.
+     */
+    public function search(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'query' => 'nullable|string|max:150',
+            'status' => 'nullable|string|in:all,Upcoming,Ongoing,Closed',
+            'page' => 'nullable|integer|min:1',
+            'per_page' => 'nullable|integer|min:1|max:50',
+        ]);
+
+        $payload = $this->eventService->searchEvents(
+            Auth::id(),
+            $validated['query'] ?? '',
+            $validated['status'] ?? null,
+            (int) ($validated['page'] ?? 1),
+            (int) ($validated['per_page'] ?? 9),
+        );
+
+        return response()->json($payload);
     }
 
     /**

@@ -1,46 +1,27 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card } from './card';
-import { router } from '@inertiajs/react';
-import { useState } from 'react';
 
 interface RegisterModalProps {
     open: boolean;
     onClose: () => void;
     onConfirm?: () => void;
+    isSubmitting?: boolean;
     eventTitle?: string;
     eventLocation?: string;
     eventPrice?: string;
     eventDate: string;
     eventTime: string;
-    eventId: number;
 }
 
-export function RegisterModal({ open, onClose, onConfirm, eventTitle, eventLocation, eventPrice, eventDate, eventTime, eventId }: RegisterModalProps) {
-    
-    const [isSubmitting, setIsSubmitting] = useState(false);
+export function RegisterModal({ open, onClose, onConfirm, isSubmitting = false, eventTitle, eventLocation, eventPrice, eventDate, eventTime }: RegisterModalProps) {
 
     const handleConfirm = () => {
-        setIsSubmitting(true);
-        
-        router.post(
-            `/user/event/${eventId}/register`,
-            {
-                event_id: eventId,
-            },
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    onClose();
-                },
-                onError: (errors) => {
-                    console.error(errors);
-                },
-                onFinish: () => {
-                    setIsSubmitting(false);
-                },
-            }
-        );
+        if (isSubmitting) {
+            return;
+        }
+
+        onConfirm?.();
     };
     
     return (

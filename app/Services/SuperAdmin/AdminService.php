@@ -31,6 +31,11 @@ class AdminService
         ];
     }
 
+    public function searchAdmins(string $query, ?string $status, int $page, int $perPage): array
+    {
+        return $this->adminRepo->searchAdmins($query, $status, $page, $perPage);
+    }
+
     public function getOrganizationOptions(): array
     {
         $organizations = $this->organizationRepo->getAll();
