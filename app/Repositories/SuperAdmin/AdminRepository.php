@@ -21,7 +21,7 @@ class AdminRepository
     public function insert(array $data): void
     {
         DB::statement(
-            'EXEC usp_InsertAdmin
+            'EXEC usp_User_InsertAdmin
             @username = :username,
             @first_name = :first_name,
             @middle_name = :middle_name,

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Services\SuperAdmin\OrganizationService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -21,6 +22,34 @@ class OrganizationController extends Controller
         return Inertia::render('superadmin/organization/index', [
             'organizations' => $data['organizations'],
         ]);
+    }
+
+    public function search(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'query' => 'nullable|string|max:150',
+            'status' => 'nullable|string|in:all,Active,Inactive',
+            'page' => 'nullable|integer|min:1',
+            'per_page' => 'nullable|integer|min:1|max:50',
+        ]);
+
+        $query = trim((string) ($validated['query'] ?? ''));
+        $status = $validated['status'] ?? null;
+        $page = (int) ($validated['page'] ?? 1);
+        $perPage = (int) ($validated['per_page'] ?? 9);
+
+        if ($status === 'all' || $status === '') {
+            $status = null;
+        }
+
+        $result = $this->organizationService->searchOrganizations(
+            $query,
+            $status,
+            $page,
+            $perPage,
+        );
+
+        return response()->json($result);
     }
 
     /**

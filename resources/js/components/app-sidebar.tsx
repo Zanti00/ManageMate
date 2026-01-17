@@ -17,7 +17,6 @@ import user from '@/routes/user';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import {
-    Bell,
     BookOpen,
     Building2,
     Calendar,
@@ -92,11 +91,11 @@ export function AppSidebar() {
             href: user.event.myevents(),
             icon: CalendarHeart,
         });
-        mainNavItems.push({
-            title: 'Notifications',
-            href: user.notification.index(),
-            icon: Bell,
-        });
+        // mainNavItems.push({
+        //     title: 'Notifications',
+        //     href: user.notification.index(),
+        //     icon: Bell,
+        // });
     }
 
     if (auth.user.isSuperAdmin) {

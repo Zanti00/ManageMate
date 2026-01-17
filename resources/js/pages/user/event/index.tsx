@@ -4,7 +4,8 @@ import { EventCard } from '@/components/ui/event-card';
 import { EventCardSkeleton } from '@/components/ui/event-card-skeleton';
 import { SearchInput } from '@/components/ui/search-input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { usePaginatedSearch } from '@/hooks/use-event-search';
+import { useEventStatusCounts } from '@/hooks/use-event-status-counts';
+import { usePaginatedSearch } from '@/hooks/use-paginated-search';
 import AppLayout from '@/layouts/app-layout';
 import user from '@/routes/user';
 import { type BreadcrumbItem } from '@/types';
@@ -22,7 +23,15 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const SEARCH_RESULTS_PER_PAGE = 9;
 
-type FilterValues = 'Upcoming' | 'Ongoing' | 'Closed';
+const STATUS_OPTIONS = ['Upcoming', 'Ongoing', 'Closed'] as const;
+
+type FilterValues = (typeof STATUS_OPTIONS)[number];
+
+const STATUS_LABEL_MAP: Record<FilterValues, string> = {
+    Upcoming: 'Upcoming',
+    Ongoing: 'Ongoing',
+    Closed: 'Past Events',
+};
 
 type Event = {
     id: number;
@@ -109,6 +118,14 @@ export default function UserEvent({ events }: Props) {
     const eventsToDisplay = hasActiveSearch ? searchResults : filteredStatus;
     const baseSkeletonCount = SEARCH_RESULTS_PER_PAGE;
     const shouldShowSearchSkeleton = hasActiveSearch && searchLoading;
+
+    const statusCounts = useEventStatusCounts<FilterValues, Event>({
+        baseEvents: eventsWithStatus,
+        searchResults,
+        hasActiveSearch,
+        statuses: STATUS_OPTIONS,
+        statusResolver: (event) => event.status ?? getEventDisplayStatus(event),
+    });
 
     const handlePageChange = (url: string | null) => {
         if (!url) return;
@@ -249,53 +266,18 @@ export default function UserEvent({ events }: Props) {
                                                 value="all"
                                                 className="bg-gray-200"
                                             >
-                                                All Events ({events?.total || 0}
-                                                )
+                                                All Events ({statusCounts.all})
                                             </TabsTrigger>
-
-                                            <TabsTrigger
-                                                value="Upcoming"
-                                                className="bg-gray-200"
-                                            >
-                                                Upcoming (
-                                                {
-                                                    eventsWithStatus.filter(
-                                                        (e) =>
-                                                            e.status ===
-                                                            'Upcoming',
-                                                    ).length
-                                                }
-                                                )
-                                            </TabsTrigger>
-
-                                            <TabsTrigger
-                                                value="Ongoing"
-                                                className="bg-gray-200"
-                                            >
-                                                Ongoing (
-                                                {
-                                                    eventsWithStatus.filter(
-                                                        (e) =>
-                                                            e.status ===
-                                                            'Ongoing',
-                                                    ).length
-                                                }
-                                                )
-                                            </TabsTrigger>
-                                            <TabsTrigger
-                                                value="Closed"
-                                                className="bg-gray-200"
-                                            >
-                                                Past Events (
-                                                {
-                                                    eventsWithStatus.filter(
-                                                        (e) =>
-                                                            e.status ===
-                                                            'Closed',
-                                                    ).length
-                                                }
-                                                )
-                                            </TabsTrigger>
+                                            {STATUS_OPTIONS.map((status) => (
+                                                <TabsTrigger
+                                                    key={status}
+                                                    value={status}
+                                                    className="bg-gray-200"
+                                                >
+                                                    {STATUS_LABEL_MAP[status]} (
+                                                    {statusCounts[status]})
+                                                </TabsTrigger>
+                                            ))}
                                         </TabsList>
                                     </div>
                                 </Tabs>

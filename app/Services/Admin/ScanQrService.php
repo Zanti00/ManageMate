@@ -15,31 +15,48 @@ class ScanQrService
         private EventRepository $eventRepo,
     ) {}
 
-    public function handleScan(string $payload): array
+    public function handleScan(string $payload, int $adminId): array
     {
         [$userId, $eventId] = $this->extractIdentifiers($payload);
         $attendedAt = now()->toDateTimeString();
         $event = $this->eventRepo->getEventById($eventId);
 
         if (! $event) {
-            throw new InvalidArgumentException('Event details could not be found for this QR code.');
+            throw new InvalidArgumentException('Sorry, we could not find the event for this ticket.');
+        }
+
+        // Check event ownership
+        if ((int) ($event->user_id ?? 0) !== (int) $adminId) {
+            throw new InvalidArgumentException('This QR code cannot be used for this event. Please verify the correct event or contact the event administrator.');
         }
 
         $registration = $this->scanRepo->findRegistration($userId, $eventId);
-        if ($registration && ! empty($registration->attended_at)) {
-            $formatted = Carbon::parse($registration->attended_at)
+        if (! $registration) {
+            throw new InvalidArgumentException('This ticket is not registered for this event.');
+        }
+
+        $existingCheckIn = $this->scanRepo->findCheckIn($userId, $eventId);
+        if ($existingCheckIn && ! empty($existingCheckIn->checked_in_at)) {
+            $formatted = Carbon::parse($existingCheckIn->checked_in_at)
                 ->timezone(config('app.timezone'))
                 ->format('M j, Y g:i A');
 
             throw new InvalidArgumentException(
-                'This QR code was already scanned on '.$formatted.'.',
+                'This ticket was already used for check-in on '.$formatted.'.',
+            );
+        }
+
+        $eventStart = $this->determineEventStartMoment($event);
+        if ($eventStart && $eventStart->isFuture()) {
+            throw new InvalidArgumentException(
+                'Check-in is not yet open. The event starts on '.$eventStart->format('M j, Y g:i A').'.',
             );
         }
 
         $eventEnd = $this->determineEventEndMoment($event);
         if ($eventEnd && $eventEnd->isPast()) {
             throw new InvalidArgumentException(
-                'This event already ended on '.$eventEnd->format('M j, Y g:i A').'.',
+                'Sorry, this event has already ended. Check-in is closed.',
             );
         }
 
@@ -86,6 +103,25 @@ class ScanQrService
         }
     }
 
+    private function determineEventStartMoment(object $event): ?Carbon
+    {
+        $date = $event->start_date ?? $event->end_date ?? null;
+
+        if (! $date) {
+            return null;
+        }
+
+        $time = $event->start_time ?? '00:00:00';
+
+        try {
+            return Carbon::parse($date.' '.$time, config('app.timezone'));
+        } catch (\Throwable $e) {
+            report($e);
+
+            return null;
+        }
+    }
+
     private function extractIdentifiers(string $payload): array
     {
         $userId = null;
@@ -113,7 +149,7 @@ class ScanQrService
         }
 
         if (! $userId || ! $eventId) {
-            throw new InvalidArgumentException('QR code is invalid or incomplete.');
+            throw new InvalidArgumentException('Invalid or incomplete ticket. Please try again.');
         }
 
         return [$userId, $eventId];

@@ -7,6 +7,13 @@ type EventWithStatus = {
 };
 
 export function getEventStatus(event: EventWithStatus): EventStatus {
+    const now = new Date();
+    const endDate = event.end_date ? new Date(event.end_date) : undefined;
+
+    if (endDate && now > endDate) {
+        return 'Closed';
+    }
+
     if (!event.status) {
         return 'Pending';
     }

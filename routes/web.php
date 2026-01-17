@@ -76,6 +76,7 @@ Route::middleware(['auth', 'verified', 'can:superadmin'])->prefix('superadmin')-
 
     Route::get('/dashboard', [SuperadminDashboardController::class, 'index'])->name('dashboard');
 
+    Route::get('/event/search', [SuperAdminEventController::class, 'search'])->name('event.search');
     Route::resource('event', SuperAdminEventController::class);
     Route::patch('/event/{event}/approve-event', [SuperAdminEventController::class, 'approve_event'])->name('event.approve');
     Route::patch('/event/{event}/reject-event', [SuperAdminEventController::class, 'reject_event'])->name('event.reject');
@@ -83,6 +84,7 @@ Route::middleware(['auth', 'verified', 'can:superadmin'])->prefix('superadmin')-
     Route::get('/admin/search', [AdminController::class, 'search'])->name('admin.search');
     Route::resource('admin', AdminController::class);
     Route::patch('/admin/{admin}/restore', [AdminController::class, 'restore'])->name('admin.restore');
+    Route::get('/organization/search', [OrganizationController::class, 'search'])->name('organization.search');
     Route::resource('organization', OrganizationController::class);
 });
 

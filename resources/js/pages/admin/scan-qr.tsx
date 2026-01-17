@@ -187,10 +187,17 @@ export default function AdminScanQr() {
                     .catch(() => null);
 
                 if (!response.ok || !data?.data) {
-                    throw new Error(
+                    let errorMsg =
                         data?.message ??
-                            'Failed to update attendance. Please try again.',
-                    );
+                        'Failed to update attendance. Please try again.';
+                    if (
+                        response.status === 419 ||
+                        errorMsg.toLowerCase().includes('csrf')
+                    ) {
+                        errorMsg +=
+                            ' If this error persists, please refresh the page and try again.';
+                    }
+                    throw new Error(errorMsg);
                 }
 
                 setAttendanceDetails(data.data);

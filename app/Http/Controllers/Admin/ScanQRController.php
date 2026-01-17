@@ -23,8 +23,10 @@ class ScanQRController extends Controller
             'payload' => ['required', 'string'],
         ]);
 
+        $adminId = $request->user()->id;
+
         try {
-            $data = $this->scanQrService->handleScan($validated['payload']);
+            $data = $this->scanQrService->handleScan($validated['payload'], $adminId);
         } catch (\InvalidArgumentException $e) {
             return response()->json([
                 'message' => $e->getMessage(),

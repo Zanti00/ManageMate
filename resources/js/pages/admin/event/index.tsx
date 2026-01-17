@@ -1,9 +1,11 @@
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { EventCard } from '@/components/ui/event-card';
 import { EventCardSkeleton } from '@/components/ui/event-card-skeleton';
 import { SearchInput } from '@/components/ui/search-input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { usePaginatedSearch } from '@/hooks/use-event-search';
+import { useEventStatusCounts } from '@/hooks/use-event-status-counts';
+import { usePaginatedSearch } from '@/hooks/use-paginated-search';
 import AppLayout from '@/layouts/app-layout';
 import admin from '@/routes/admin';
 import { type BreadcrumbItem } from '@/types';
@@ -23,7 +25,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const SEARCH_RESULTS_PER_PAGE = 6;
 
-type FilterValues = 'Pending' | 'Active' | 'Rejected' | 'Closed';
+const STATUS_OPTIONS = ['Pending', 'Active', 'Rejected', 'Closed'] as const;
+
+type FilterValues = (typeof STATUS_OPTIONS)[number];
 
 type Event = {
     id: number;
@@ -53,7 +57,7 @@ export default function AdminEvent({ events = [] }: Props) {
     const [statusFilter, setStatusFilter] = useState<'all' | FilterValues>(
         'all',
     );
-
+    const [currentPage, setCurrentPage] = useState(1);
     const [isLoading, setIsLoading] = useState(true);
 
     const {
@@ -82,23 +86,49 @@ export default function AdminEvent({ events = [] }: Props) {
     useEffect(() => {
         const timer = setTimeout(() => {
             setIsLoading(false);
-        }, 2000); // 2 seconds delay
+        }, 2000);
 
         return () => clearTimeout(timer);
     }, []);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [statusFilter]);
 
     const filteredStatus =
         statusFilter === 'all'
             ? eventsWithStatus
             : eventsWithStatus.filter((e) => e.status === statusFilter);
-    const eventsToDisplay = hasActiveSearch ? searchResults : filteredStatus;
-    const baseSkeletonCount = 6;
+
+    const totalBasePages = Math.max(
+        1,
+        Math.ceil(filteredStatus.length / SEARCH_RESULTS_PER_PAGE),
+    );
+
+    const paginatedBaseEvents = filteredStatus.slice(
+        (currentPage - 1) * SEARCH_RESULTS_PER_PAGE,
+        currentPage * SEARCH_RESULTS_PER_PAGE,
+    );
+
+    const eventsToDisplay = hasActiveSearch
+        ? searchResults
+        : paginatedBaseEvents;
+
+    const baseSkeletonCount = SEARCH_RESULTS_PER_PAGE;
     const skeletonCount = hasActiveSearch
         ? SEARCH_RESULTS_PER_PAGE
         : baseSkeletonCount;
     const shouldShowSkeleton = hasActiveSearch
         ? searchLoading
         : isLoading || events === undefined;
+
+    const statusCounts = useEventStatusCounts<FilterValues, Event>({
+        baseEvents: eventsWithStatus,
+        searchResults,
+        hasActiveSearch,
+        statuses: STATUS_OPTIONS,
+        statusResolver: (event) => event.status ?? getEventStatus(event),
+    });
 
     const renderSearchPagination = () => {
         if (!hasActiveSearch || !searchMeta || searchMeta.last_page <= 1) {
@@ -138,7 +168,7 @@ export default function AdminEvent({ events = [] }: Props) {
         }
 
         return (
-            <div className="flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-sm">
+            <Card className="p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <Button
                         variant="outline"
@@ -171,11 +201,83 @@ export default function AdminEvent({ events = [] }: Props) {
                         <ChevronRight className="ml-1 h-4 w-4" />
                     </Button>
                 </div>
-                <p className="text-center text-sm text-muted-foreground">
+                <p className="mt-2 text-center text-sm text-gray-600">
                     Showing page {searchMeta.current_page} of{' '}
-                    {searchMeta.last_page} ( total {searchMeta.total} events)
+                    {searchMeta.last_page} (total {searchMeta.total} events)
                 </p>
-            </div>
+            </Card>
+        );
+    };
+
+    const renderBasePagination = () => {
+        if (hasActiveSearch || totalBasePages <= 1) {
+            return null;
+        }
+
+        const pages: JSX.Element[] = [];
+        const maxVisible = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+        let endPage = Math.min(totalBasePages, startPage + maxVisible - 1);
+
+        if (endPage - startPage < maxVisible - 1) {
+            startPage = Math.max(1, endPage - maxVisible + 1);
+        }
+
+        for (let page = startPage; page <= endPage; page++) {
+            pages.push(
+                <Button
+                    key={page}
+                    variant={page === currentPage ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setCurrentPage(page)}
+                    className="min-w-[2.5rem]"
+                >
+                    {page}
+                </Button>,
+            );
+        }
+
+        const from = (currentPage - 1) * SEARCH_RESULTS_PER_PAGE + 1;
+        const to = Math.min(
+            filteredStatus.length,
+            currentPage * SEARCH_RESULTS_PER_PAGE,
+        );
+
+        return (
+            <Card className="p-4">
+                <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-600">
+                        Showing {from} to {to} of {filteredStatus.length} events
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                                setCurrentPage((prev) => Math.max(1, prev - 1))
+                            }
+                            disabled={currentPage <= 1}
+                        >
+                            <ChevronLeft className="h-4 w-4" />
+                            Previous
+                        </Button>
+                        <div className="flex gap-1">{pages}</div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                                setCurrentPage((prev) =>
+                                    Math.min(totalBasePages, prev + 1),
+                                )
+                            }
+                            disabled={currentPage >= totalBasePages}
+                        >
+                            Next
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
+            </Card>
         );
     };
 
@@ -194,45 +296,21 @@ export default function AdminEvent({ events = [] }: Props) {
                     <div className="flex flex-row justify-between gap-50 rounded-2xl bg-white p-3 shadow-sm">
                         <TabsList className="h-10 gap-3">
                             <TabsTrigger value="all">
-                                All ({events.length})
+                                All ({statusCounts.all})
                             </TabsTrigger>
 
                             <TabsTrigger value="Pending">
-                                Pending (
-                                {
-                                    eventsWithStatus.filter(
-                                        (e) => e.status === 'Pending',
-                                    ).length
-                                }
-                                )
+                                Pending ({statusCounts.Pending})
                             </TabsTrigger>
 
                             <TabsTrigger value="Active">
-                                Active (
-                                {
-                                    eventsWithStatus.filter(
-                                        (e) => e.status === 'Active',
-                                    ).length
-                                }
-                                )
+                                Active ({statusCounts.Active})
                             </TabsTrigger>
                             <TabsTrigger value="Rejected">
-                                Rejected (
-                                {
-                                    eventsWithStatus.filter(
-                                        (e) => e.status === 'Rejected',
-                                    ).length
-                                }
-                                )
+                                Rejected ({statusCounts.Rejected})
                             </TabsTrigger>
                             <TabsTrigger value="Closed">
-                                Closed (
-                                {
-                                    eventsWithStatus.filter(
-                                        (e) => e.status === 'Closed',
-                                    ).length
-                                }
-                                )
+                                Closed ({statusCounts.Closed})
                             </TabsTrigger>
                         </TabsList>
                         <div className="flex w-80 flex-col gap-1">
@@ -264,7 +342,9 @@ export default function AdminEvent({ events = [] }: Props) {
                                 <EventCard key={event.id} {...event} />
                             ))}
                         </div>
-                        {hasActiveSearch && renderSearchPagination()}
+                        {hasActiveSearch
+                            ? renderSearchPagination()
+                            : renderBasePagination()}
                     </>
                 ) : (
                     <div className="rounded-2xl bg-white p-12 text-center text-gray-500 shadow-sm">
