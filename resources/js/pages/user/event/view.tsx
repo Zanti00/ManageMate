@@ -11,7 +11,7 @@ import { formatDateRange, formatTimeRange } from '@/utils/date-format';
 import { getEventDisplayStatus } from '@/utils/event-status';
 import { formatPrice } from '@/utils/price-format';
 import { router, usePage } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -151,6 +151,16 @@ export default function ViewEvent({ event }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col overflow-hidden rounded-lg p-8">
+                <div className="mb-2">
+                    <Button
+                        variant="ghost"
+                        className="flex cursor-pointer gap-2 hover:bg-transparent hover:font-bold hover:text-foreground"
+                        onClick={() => window.history.back()}
+                    >
+                        <ArrowLeft />
+                        Back
+                    </Button>
+                </div>
                 <div className="relative h-64 w-full overflow-hidden rounded-t-md">
                     <img
                         src={resolveImageUrl(displayImages[activeImageIndex])}
@@ -225,12 +235,14 @@ export default function ViewEvent({ event }: Props) {
                                     </div>
                                 )}
                                 <div className="flex flex-row">
-                                    <Label className="text-4xl font-extrabold">
+                                    <Label className="text-4xl font-bold">
                                         {event.title}
                                     </Label>
                                 </div>
                                 <div className="flex flex-row text-gray-800">
-                                    <p>{event.description}</p>
+                                    <p className="text-gray-600">
+                                        {event.description}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -239,7 +251,7 @@ export default function ViewEvent({ event }: Props) {
                         <div className="col-span-2 flex flex-col gap-6">
                             <Card className="flex flex-col px-6">
                                 <div className="flex flex-row">
-                                    <p className="text-xl font-extrabold">
+                                    <p className="text-xl font-bold">
                                         Event Details
                                     </p>
                                 </div>
@@ -247,7 +259,7 @@ export default function ViewEvent({ event }: Props) {
                                     <div className="flex flex-row">
                                         <div className="flex flex-col">
                                             <p className="font-medium">Date</p>
-                                            <p>
+                                            <p className="text-gray-600">
                                                 {formatDateRange(
                                                     event.start_date,
                                                     event.end_date,
@@ -258,7 +270,7 @@ export default function ViewEvent({ event }: Props) {
                                     <div className="flex flex-row">
                                         <div className="flex flex-col">
                                             <p className="font-medium">Time</p>
-                                            <p>
+                                            <p className="text-gray-600">
                                                 {formatTimeRange(
                                                     event.start_time,
                                                     event.end_time,
@@ -271,7 +283,9 @@ export default function ViewEvent({ event }: Props) {
                                             <p className="font-medium">
                                                 Location
                                             </p>
-                                            <p>{event.location}</p>
+                                            <p className="text-gray-600">
+                                                {event.location}
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="flex flex-row">
@@ -279,13 +293,15 @@ export default function ViewEvent({ event }: Props) {
                                             <p className="font-medium">
                                                 Ticket Price
                                             </p>
-                                            <p>{formatPrice(event.price)}</p>
+                                            <p className="text-gray-600">
+                                                {formatPrice(event.price)}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
                             </Card>
                             <Card className="gap-y-6 px-6">
-                                <p className="text-xl font-extrabold">
+                                <p className="text-xl font-bold">
                                     Organizer Information
                                 </p>
                                 <div className="flex flex-col gap-4">
@@ -294,7 +310,7 @@ export default function ViewEvent({ event }: Props) {
                                             <p className="font-medium">
                                                 Organization
                                             </p>
-                                            <p>
+                                            <p className="text-gray-600">
                                                 Commonwealth Information Society
                                             </p>
                                         </div>
@@ -302,13 +318,17 @@ export default function ViewEvent({ event }: Props) {
                                     <div className="flex flex-row">
                                         <div className="flex flex-col">
                                             <p className="font-medium">Email</p>
-                                            <p>commitspupqc@test.com</p>
+                                            <p className="text-gray-600">
+                                                commitspupqc@test.com
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="flex flex-row">
                                         <div className="flex flex-col">
                                             <p className="font-medium">Phone</p>
-                                            <p>09123456789</p>
+                                            <p className="text-gray-600">
+                                                09123456789
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -318,7 +338,7 @@ export default function ViewEvent({ event }: Props) {
                             <Card className="flex flex-col px-6">
                                 <Card className="flex flex-col gap-0 bg-orange-50 px-4 py-3">
                                     <div className="flex flex-row">
-                                        <p className="font-extrabold text-orange-900">
+                                        <p className="font-bold text-orange-900">
                                             Registration Date
                                         </p>
                                     </div>

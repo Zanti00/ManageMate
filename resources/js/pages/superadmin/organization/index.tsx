@@ -1,3 +1,4 @@
+import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { OrganizationCard } from '@/components/ui/organization-card';
 import { SearchInput } from '@/components/ui/search-input';
@@ -211,92 +212,103 @@ export default function OrganizationIndex({ organizations = [] }: Props) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <div className="flex flex-col gap-6 p-6">
-                <div className="flex flex-row items-center justify-end">
-                    <Link href={superadmin.organization.create.url()}>
-                        <Button>Create Organization</Button>
-                    </Link>
-                </div>
-                <div className="flex flex-row">
-                    <div className="flex w-full flex-row gap-100 rounded-2xl bg-white p-3 shadow-sm">
-                        <Tabs
-                            value={statusFilter}
-                            onValueChange={(value) =>
-                                setStatusFilter(value as any)
-                            }
-                        >
-                            <TabsList className="h-10 gap-3">
-                                <TabsTrigger value="all">
-                                    All ({statusCounts.all})
-                                </TabsTrigger>
-                                {STATUS_OPTIONS.map((status) => (
-                                    <TabsTrigger key={status} value={status}>
-                                        {status} ({statusCounts[status]})
-                                    </TabsTrigger>
-                                ))}
-                            </TabsList>
-                        </Tabs>
-                        <div className="flex w-80 flex-col gap-1">
-                            <SearchInput
-                                placeholder="Search organizations"
-                                value={searchQuery}
-                                onChange={(event) =>
-                                    setSearchQuery(event.target.value)
+            <div className="flex flex-col p-6">
+                <Heading
+                    title="Organization"
+                    description="Manage all organizations"
+                />
+                <div className="flex flex-col gap-6">
+                    <div className="flex flex-row items-center justify-end">
+                        <Link href={superadmin.organization.create.url()}>
+                            <Button>Create Organization</Button>
+                        </Link>
+                    </div>
+                    <div className="flex flex-row">
+                        <div className="flex w-full flex-row justify-between rounded-2xl bg-white p-3 shadow-sm">
+                            <Tabs
+                                value={statusFilter}
+                                onValueChange={(value) =>
+                                    setStatusFilter(value as any)
                                 }
-                            />
-                            {searchError && (
-                                <p className="text-sm text-red-500">
-                                    {searchError}
-                                </p>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {hasActiveSearch ? (
-                    searchLoading ? (
-                        <div className="flex items-center justify-center rounded-2xl bg-white py-12 text-muted-foreground">
-                            Searching organizations...
-                        </div>
-                    ) : organizationsToDisplay.length > 0 ? (
-                        <>
-                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                                {organizationsToDisplay.map((organization) => (
-                                    <OrganizationCard
-                                        key={organization.id}
-                                        {...organization}
-                                        is_deleted={
-                                            organization.is_deleted !==
-                                            undefined
-                                                ? String(
-                                                      organization.is_deleted,
-                                                  )
-                                                : undefined
-                                        }
-                                    />
-                                ))}
+                            >
+                                <TabsList className="h-10 gap-3">
+                                    <TabsTrigger value="all">
+                                        All ({statusCounts.all})
+                                    </TabsTrigger>
+                                    {STATUS_OPTIONS.map((status) => (
+                                        <TabsTrigger
+                                            key={status}
+                                            value={status}
+                                        >
+                                            {status} ({statusCounts[status]})
+                                        </TabsTrigger>
+                                    ))}
+                                </TabsList>
+                            </Tabs>
+                            <div className="flex w-80 flex-col gap-1">
+                                <SearchInput
+                                    placeholder="Search organizations"
+                                    value={searchQuery}
+                                    onChange={(event) =>
+                                        setSearchQuery(event.target.value)
+                                    }
+                                />
+                                {searchError && (
+                                    <p className="text-sm text-red-500">
+                                        {searchError}
+                                    </p>
+                                )}
                             </div>
-                            {renderSearchPagination()}
-                        </>
-                    ) : (
-                        <div className="flex items-center justify-center rounded-2xl bg-white py-12 text-gray-500">
-                            {`No organizations found for "${debouncedQuery}".`}
                         </div>
-                    )
-                ) : organizationsToDisplay.length === 0 ? (
-                    <div className="flex items-center justify-center rounded-2xl bg-white py-12 text-gray-500">
-                        No organizations found
                     </div>
-                ) : (
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {organizationsToDisplay.map((organization) => (
-                            <OrganizationCard
-                                key={organization.id}
-                                {...organization}
-                            />
-                        ))}
-                    </div>
-                )}
+
+                    {hasActiveSearch ? (
+                        searchLoading ? (
+                            <div className="flex items-center justify-center rounded-2xl bg-white py-12 text-muted-foreground">
+                                Searching organizations...
+                            </div>
+                        ) : organizationsToDisplay.length > 0 ? (
+                            <>
+                                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                    {organizationsToDisplay.map(
+                                        (organization) => (
+                                            <OrganizationCard
+                                                key={organization.id}
+                                                {...organization}
+                                                is_deleted={
+                                                    organization.is_deleted !==
+                                                    undefined
+                                                        ? String(
+                                                              organization.is_deleted,
+                                                          )
+                                                        : undefined
+                                                }
+                                            />
+                                        ),
+                                    )}
+                                </div>
+                                {renderSearchPagination()}
+                            </>
+                        ) : (
+                            <div className="flex items-center justify-center rounded-2xl bg-white py-12 text-gray-500">
+                                {`No organizations found for "${debouncedQuery}".`}
+                            </div>
+                        )
+                    ) : organizationsToDisplay.length === 0 ? (
+                        <div className="flex items-center justify-center rounded-2xl bg-white py-12 text-gray-500">
+                            No organizations found
+                        </div>
+                    ) : (
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                            {organizationsToDisplay.map((organization) => (
+                                <OrganizationCard
+                                    key={organization.id}
+                                    {...organization}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
         </AppLayout>
     );

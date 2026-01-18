@@ -110,9 +110,12 @@ class EventRepository
 
     public function insertEvent(int $userId, array $eventData): int
     {
+        $userOrganizationId = $this->getUserOrganizationId($userId);
+
         DB::statement(
             'EXEC usp_Event_Insert
             @user_id = :user_id,
+            @organization_id = :organization_id,
             @title = :title,
             @description = :description,
             @start_date = :start_date,
@@ -125,7 +128,10 @@ class EventRepository
             @registration_end_time = :registration_end_time,
             @location = :location,
             @price = :price',
-            array_merge(['user_id' => $userId], $eventData)
+            array_merge([
+                'user_id' => $userId,
+                'organization_id' => $userOrganizationId,
+            ], $eventData)
         );
 
         $eventId = (int) DB::getPdo()->lastInsertId();
@@ -185,13 +191,15 @@ class EventRepository
         return DB::select('EXEC usp_Event_GetAttendees @event_id = :event_id', ['event_id' => $eventId]);
     }
 
-    public function getTopFiveEventsByAdmin(int $userId): array
-    {
-        return DB::select('EXEC usp_Event_Top5ByAttendees @user_id = :user_id', ['user_id' => $userId]);
-    }
-
     public function deleteEventById(int $eventId): void
     {
         DB::statement('EXEC usp_Event_Delete @event_id = :event_id', ['event_id' => $eventId]);
+    }
+
+    public function getUserOrganizationId(int $userId): ?int
+    {
+        $result = DB::select('EXEC usp_User_GetOrganizationId @user_id = :user_id', ['user_id' => $userId]);
+
+        return ! empty($result) ? (int) $result[0]->organization_id : null;
     }
 }

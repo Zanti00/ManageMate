@@ -1,3 +1,4 @@
+import Heading from '@/components/heading';
 import { AdminCard } from '@/components/ui/admin-card';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -254,98 +255,102 @@ export default function AdminsManagement({ admins = [] }: Props) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <div className="flex flex-col gap-8 p-6">
-                <div className="flex justify-end">
-                    <Link href={superadmin.admin.create.url()}>
-                        <Button>Create Admin</Button>
-                    </Link>
-                </div>
-                <Tabs
-                    value={statusFilter}
-                    onValueChange={(value) =>
-                        setStatusFilter(value as AdminStatusFilter)
-                    }
-                >
-                    <Card className="p-6">
-                        <div className="flex flex-col gap-6">
-                            <div className="flex flex-col gap-2">
-                                <p className="text-sm font-medium text-muted-foreground">
-                                    Status
-                                </p>
-                                <TabsList className="h-10 flex-wrap gap-2 bg-transparent p-0">
-                                    <TabsTrigger
-                                        value="all"
-                                        className="data-[state=active]:bg-primary data-[state=active]:text-white"
-                                    >
-                                        All Admins ({statusCounts.all})
-                                    </TabsTrigger>
-                                    {STATUS_OPTIONS.map((status) => (
+            <div className="flex flex-col p-6">
+                <Heading
+                    title="Admins"
+                    description="Manage all organization administrators"
+                />
+                <div className="flex flex-col gap-8">
+                    <div className="flex justify-end">
+                        <Link href={superadmin.admin.create.url()}>
+                            <Button>Create Admin</Button>
+                        </Link>
+                    </div>
+                    <Tabs
+                        value={statusFilter}
+                        onValueChange={(value) =>
+                            setStatusFilter(value as AdminStatusFilter)
+                        }
+                    >
+                        <Card className="p-3">
+                            <div className="flex flex-row justify-between gap-6">
+                                <div className="flex flex-col gap-2">
+                                    <TabsList className="h-10 flex-wrap gap-2 bg-transparent p-0">
                                         <TabsTrigger
-                                            key={status}
-                                            value={status}
+                                            value="all"
                                             className="data-[state=active]:bg-primary data-[state=active]:text-white"
                                         >
-                                            {status} (
-                                            {statusCounts[status] ?? 0})
+                                            All Admins ({statusCounts.all})
                                         </TabsTrigger>
-                                    ))}
-                                </TabsList>
-                            </div>
-                            <div className="flex flex-col gap-2">
-                                <p className="text-sm font-medium text-muted-foreground">
-                                    Search
-                                </p>
-                                <div className="flex flex-col gap-1">
-                                    <SearchInput
-                                        placeholder="Search admins by name, email, or phone..."
-                                        value={searchQuery}
-                                        onChange={(event) =>
-                                            setSearchQuery(event.target.value)
-                                        }
-                                    />
-                                    {searchError && (
-                                        <p className="text-sm text-red-500">
-                                            {searchError}
-                                        </p>
-                                    )}
-                                    {hasActiveSearch && searchLoading && (
-                                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                            <Spinner className="h-4 w-4" />
-                                            Searching admins...
-                                        </div>
-                                    )}
+                                        {STATUS_OPTIONS.map((status) => (
+                                            <TabsTrigger
+                                                key={status}
+                                                value={status}
+                                                className="data-[state=active]:bg-primary data-[state=active]:text-white"
+                                            >
+                                                {status} (
+                                                {statusCounts[status] ?? 0})
+                                            </TabsTrigger>
+                                        ))}
+                                    </TabsList>
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex w-80 flex-col gap-1">
+                                        <SearchInput
+                                            placeholder="Search admins by name, email, or phone..."
+                                            value={searchQuery}
+                                            onChange={(event) =>
+                                                setSearchQuery(
+                                                    event.target.value,
+                                                )
+                                            }
+                                        />
+                                        {searchError && (
+                                            <p className="text-sm text-red-500">
+                                                {searchError}
+                                            </p>
+                                        )}
+                                        {hasActiveSearch && searchLoading && (
+                                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                <Spinner className="h-4 w-4" />
+                                                Searching admins...
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
+                        </Card>
+                    </Tabs>
+                    {showLoadingState ? (
+                        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl bg-white p-12 text-gray-500 shadow-sm">
+                            <Spinner className="h-6 w-6" />
+                            <p>Searching admins...</p>
                         </div>
-                    </Card>
-                </Tabs>
-                {showLoadingState ? (
-                    <div className="flex flex-col items-center justify-center gap-3 rounded-2xl bg-white p-12 text-gray-500 shadow-sm">
-                        <Spinner className="h-6 w-6" />
-                        <p>Searching admins...</p>
-                    </div>
-                ) : adminsToDisplay.length > 0 ? (
-                    <>
-                        <div className="grid grid-cols-2 gap-8">
-                            {adminsToDisplay.map((admin) => (
-                                <AdminCard
-                                    key={admin.id}
-                                    {...admin}
-                                    middle_name={admin.middle_name ?? undefined}
-                                />
-                            ))}
+                    ) : adminsToDisplay.length > 0 ? (
+                        <>
+                            <div className="grid grid-cols-2 gap-8">
+                                {adminsToDisplay.map((admin) => (
+                                    <AdminCard
+                                        key={admin.id}
+                                        {...admin}
+                                        middle_name={
+                                            admin.middle_name ?? undefined
+                                        }
+                                    />
+                                ))}
+                            </div>
+                            {hasActiveSearch
+                                ? renderSearchPagination()
+                                : renderBasePagination()}
+                        </>
+                    ) : (
+                        <div className="rounded-2xl bg-white p-12 text-center text-gray-500 shadow-sm">
+                            {hasActiveSearch && debouncedQuery
+                                ? `No admins found for "${debouncedQuery}".`
+                                : 'No admins found.'}
                         </div>
-                        {hasActiveSearch
-                            ? renderSearchPagination()
-                            : renderBasePagination()}
-                    </>
-                ) : (
-                    <div className="rounded-2xl bg-white p-12 text-center text-gray-500 shadow-sm">
-                        {hasActiveSearch && debouncedQuery
-                            ? `No admins found for "${debouncedQuery}".`
-                            : 'No admins found.'}
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         </AppLayout>
     );

@@ -1,3 +1,4 @@
+import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { EventCard } from '@/components/ui/event-card';
@@ -283,76 +284,84 @@ export default function AdminEvent({ events = [] }: Props) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <div className="flex flex-col gap-y-5 p-8">
-                <div className="flex flex-row-reverse gap-4">
-                    <Button>
-                        <Link href={create().url}>Create Event</Link>
-                    </Button>
-                </div>
-                <Tabs
-                    value={statusFilter}
-                    onValueChange={(value) => setStatusFilter(value as any)}
-                >
-                    <div className="flex flex-row justify-between gap-50 rounded-2xl bg-white p-3 shadow-sm">
-                        <TabsList className="h-10 gap-3">
-                            <TabsTrigger value="all">
-                                All ({statusCounts.all})
-                            </TabsTrigger>
+            <div className="flex flex-col p-8">
+                <Heading
+                    title="Events"
+                    description="Browse and manage all your events"
+                />
+                <div className="flex flex-col gap-5">
+                    <div className="flex flex-row-reverse gap-4">
+                        <Button>
+                            <Link href={create().url}>Create Event</Link>
+                        </Button>
+                    </div>
+                    <Tabs
+                        value={statusFilter}
+                        onValueChange={(value) => setStatusFilter(value as any)}
+                    >
+                        <div className="flex flex-row justify-between gap-50 rounded-2xl bg-white p-3 shadow-sm">
+                            <TabsList className="h-10 gap-3">
+                                <TabsTrigger value="all">
+                                    All ({statusCounts.all})
+                                </TabsTrigger>
 
-                            <TabsTrigger value="Pending">
-                                Pending ({statusCounts.Pending})
-                            </TabsTrigger>
+                                <TabsTrigger value="Pending">
+                                    Pending ({statusCounts.Pending})
+                                </TabsTrigger>
 
-                            <TabsTrigger value="Active">
-                                Active ({statusCounts.Active})
-                            </TabsTrigger>
-                            <TabsTrigger value="Rejected">
-                                Rejected ({statusCounts.Rejected})
-                            </TabsTrigger>
-                            <TabsTrigger value="Closed">
-                                Closed ({statusCounts.Closed})
-                            </TabsTrigger>
-                        </TabsList>
-                        <div className="flex w-80 flex-col gap-1">
-                            <SearchInput
-                                placeholder="Search events by title, location, or description..."
-                                value={searchQuery}
-                                onChange={(event) =>
-                                    setSearchQuery(event.target.value)
-                                }
-                            />
-                            {searchError && (
-                                <p className="text-sm text-red-500">
-                                    {searchError}
-                                </p>
+                                <TabsTrigger value="Active">
+                                    Active ({statusCounts.Active})
+                                </TabsTrigger>
+                                <TabsTrigger value="Rejected">
+                                    Rejected ({statusCounts.Rejected})
+                                </TabsTrigger>
+                                <TabsTrigger value="Closed">
+                                    Closed ({statusCounts.Closed})
+                                </TabsTrigger>
+                            </TabsList>
+                            <div className="flex w-80 flex-col gap-1">
+                                <SearchInput
+                                    placeholder="Search events by title, location, or description..."
+                                    value={searchQuery}
+                                    onChange={(event) =>
+                                        setSearchQuery(event.target.value)
+                                    }
+                                />
+                                {searchError && (
+                                    <p className="text-sm text-red-500">
+                                        {searchError}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </Tabs>
+                    {shouldShowSkeleton ? (
+                        <div className="grid grid-cols-3 gap-6">
+                            {Array.from({ length: skeletonCount }).map(
+                                (_, i) => (
+                                    <EventCardSkeleton key={i} />
+                                ),
                             )}
                         </div>
-                    </div>
-                </Tabs>
-                {shouldShowSkeleton ? (
-                    <div className="grid grid-cols-3 gap-6">
-                        {Array.from({ length: skeletonCount }).map((_, i) => (
-                            <EventCardSkeleton key={i} />
-                        ))}
-                    </div>
-                ) : eventsToDisplay.length > 0 ? (
-                    <>
-                        <div className="grid grid-cols-3 gap-6">
-                            {eventsToDisplay.map((event) => (
-                                <EventCard key={event.id} {...event} />
-                            ))}
+                    ) : eventsToDisplay.length > 0 ? (
+                        <>
+                            <div className="grid grid-cols-3 gap-6">
+                                {eventsToDisplay.map((event) => (
+                                    <EventCard key={event.id} {...event} />
+                                ))}
+                            </div>
+                            {hasActiveSearch
+                                ? renderSearchPagination()
+                                : renderBasePagination()}
+                        </>
+                    ) : (
+                        <div className="rounded-2xl bg-white p-12 text-center text-gray-500 shadow-sm">
+                            {hasActiveSearch && debouncedQuery
+                                ? `No events found for "${debouncedQuery}".`
+                                : 'No events found.'}
                         </div>
-                        {hasActiveSearch
-                            ? renderSearchPagination()
-                            : renderBasePagination()}
-                    </>
-                ) : (
-                    <div className="rounded-2xl bg-white p-12 text-center text-gray-500 shadow-sm">
-                        {hasActiveSearch && debouncedQuery
-                            ? `No events found for "${debouncedQuery}".`
-                            : 'No events found.'}
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         </AppLayout>
     );

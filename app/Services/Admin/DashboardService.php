@@ -3,13 +3,11 @@
 namespace App\Services\Admin;
 
 use App\Repositories\Admin\DashboardRepository;
-use App\Repositories\Admin\EventRepository;
 
 class DashboardService
 {
     public function __construct(
-        private DashboardRepository $dashboardRepo,
-        private EventRepository $eventRepo
+        private DashboardRepository $dashboardRepo
     ) {}
 
     public function getDashboardData(int $userId): array
@@ -22,7 +20,7 @@ class DashboardService
         $attendanceTrendData = $this->dashboardRepo->getTotalAttendancePerMonth($userId, $year);
         $eventStatusData = $this->dashboardRepo->getTotalEventStatus($userId);
         $eventAttendanceTrendData = $this->dashboardRepo->getEventTitleAttendees($userId);
-        $topFiveEvents = $this->eventRepo->getTopFiveEventsByAdmin($userId);
+        $topFiveEvents = $this->dashboardRepo->getTopFiveEventsByAdmin($userId);
 
         $statusRow = $eventStatusData[0] ?? null;
         $formattedStatusData = [
@@ -32,8 +30,8 @@ class DashboardService
         ];
 
         return [
-            'total_events' => $totalEvents,
-            'overall_total_attendees' => $totalAttendees,
+            'total_events' => (string) $totalEvents,
+            'overall_total_attendees' => (string) $totalAttendees,
             'attendance_rate' => $attendanceRate,
             'monthly_attendance_trend_data' => $attendanceTrendData,
             'event_status_data' => $formattedStatusData,

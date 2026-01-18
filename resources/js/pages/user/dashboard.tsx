@@ -24,6 +24,8 @@ import {
     CalendarClock,
     CalendarDays,
     CalendarHeart,
+    ChevronLeft,
+    ChevronRight,
     Clock,
     MapPin,
 } from 'lucide-react';
@@ -111,6 +113,10 @@ export default function Dashboard({
     const [statusFilter, setStatusFilter] = useState<'all' | FilterValues>(
         'all',
     );
+    // Reset pagination to page 1 when filter changes
+    React.useEffect(() => {
+        setUpcomingPage(1);
+    }, [statusFilter]);
 
     const eventsWithFilter = upcoming_events.map((event) => ({
         ...event,
@@ -124,6 +130,41 @@ export default function Dashboard({
         statusFilter === 'all'
             ? upcoming_events
             : eventsWithFilter.filter((e) => e.status === statusFilter);
+
+    // Pagination for upcoming events
+    const EVENTS_PER_PAGE = 5;
+    const [upcomingPage, setUpcomingPage] = useState(1);
+    const totalUpcomingPages = Math.ceil(
+        filteredUpcomingEvents.length / EVENTS_PER_PAGE,
+    );
+    const paginatedUpcomingEvents = filteredUpcomingEvents.slice(
+        (upcomingPage - 1) * EVENTS_PER_PAGE,
+        upcomingPage * EVENTS_PER_PAGE,
+    );
+
+    const renderUpcomingPageNumbers = () => {
+        const pages = [];
+        const maxVisible = 5;
+        let startPage = Math.max(1, upcomingPage - Math.floor(maxVisible / 2));
+        let endPage = Math.min(totalUpcomingPages, startPage + maxVisible - 1);
+        if (endPage - startPage < maxVisible - 1) {
+            startPage = Math.max(1, endPage - maxVisible + 1);
+        }
+        for (let i = startPage; i <= endPage; i++) {
+            pages.push(
+                <Button
+                    key={i}
+                    variant={i === upcomingPage ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setUpcomingPage(i)}
+                    className="min-w-[2.5rem]"
+                >
+                    {i}
+                </Button>,
+            );
+        }
+        return pages;
+    };
 
     const featuredEvents = featured_events;
     const FEATURED_FALLBACK_IMAGE =
@@ -380,15 +421,62 @@ export default function Dashboard({
                                     No upcoming events as of now.
                                 </div>
                             ) : (
-                                filteredUpcomingEvents.map((event) => (
-                                    <Link href={user.event.show(event.id).url}>
-                                        <HorizontalEventCard
+                                <>
+                                    {paginatedUpcomingEvents.map((event) => (
+                                        <Link
+                                            href={user.event.show(event.id).url}
                                             key={event.id}
-                                            event={event}
-                                            className="border-1 border-emerald-300"
-                                        />
-                                    </Link>
-                                ))
+                                        >
+                                            <HorizontalEventCard
+                                                event={event}
+                                                className="border-1 border-emerald-300"
+                                            />
+                                        </Link>
+                                    ))}
+                                    {totalUpcomingPages > 1 && (
+                                        <div className="mt-4 flex w-full flex-row items-center justify-between gap-4">
+                                            <div className="text-sm whitespace-nowrap text-gray-600">
+                                                {`Showing ${(upcomingPage - 1) * EVENTS_PER_PAGE + 1} to ${Math.min(upcomingPage * EVENTS_PER_PAGE, filteredUpcomingEvents.length)} of ${filteredUpcomingEvents.length} events`}
+                                            </div>
+                                            <div className="flex flex-shrink-0 flex-row items-center gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() =>
+                                                        setUpcomingPage(
+                                                            upcomingPage - 1,
+                                                        )
+                                                    }
+                                                    disabled={
+                                                        upcomingPage === 1
+                                                    }
+                                                >
+                                                    <ChevronLeft className="h-4 w-4" />
+                                                    Previous
+                                                </Button>
+                                                <div className="flex gap-1">
+                                                    {renderUpcomingPageNumbers()}
+                                                </div>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() =>
+                                                        setUpcomingPage(
+                                                            upcomingPage + 1,
+                                                        )
+                                                    }
+                                                    disabled={
+                                                        upcomingPage ===
+                                                        totalUpcomingPages
+                                                    }
+                                                >
+                                                    Next
+                                                    <ChevronRight className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </div>
                     </div>

@@ -47,7 +47,8 @@ class AdminRepository
             @last_name = :last_name,
             @position_title = :position_title,
             @email = :email,
-            @phone_number = :phone_number',
+            @phone_number = :phone_number,
+            @organization_id = :organization_id',
             array_merge(['user_id' => $id], $data)
         );
     }

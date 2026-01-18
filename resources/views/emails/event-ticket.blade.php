@@ -45,7 +45,17 @@
                                         <p style="margin:0 0 12px;"><strong>Location:</strong>
                                             {{ $ticketSnapshot['location'] ?? 'See event page for details' }}</p>
                                         <p style="margin:0;"><strong>Ticket Price:</strong>
-                                            {{ $ticketSnapshot['price_label'] ?? 'Free' }}</p>
+                                            @php
+                                                $priceLabel = $ticketSnapshot['price_label'] ?? 'Free';
+                                                // Remove any dollar sign and whitespace
+                                                $priceLabel = trim(str_replace('$', '', $priceLabel));
+                                                // If price is numeric and not free, prepend Peso sign
+                                                if (is_numeric($priceLabel) && $priceLabel > 0) {
+                                                    $priceLabel = '₱' . number_format($priceLabel, 2);
+                                                }
+                                            @endphp
+                                            {{ $priceLabel === 'Free' ? 'Free' : $priceLabel }}
+                                        </p>
                                     </td>
                                 </tr>
                             </table>

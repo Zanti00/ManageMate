@@ -1,3 +1,4 @@
+import Heading from '@/components/heading';
 import { Card } from '@/components/ui/card';
 import { EventCard } from '@/components/ui/event-card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -57,7 +58,11 @@ export default function MyEvents({ events = [] }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-8 p-8">
-                <div className="flex flex-row">
+                <Heading
+                    title="My Events"
+                    description="Browse events you've registered for"
+                />
+                <Card className="p-6">
                     <Tabs
                         value={statusFilter}
                         onValueChange={(value) => setStatusFilter(value as any)}
@@ -109,7 +114,7 @@ export default function MyEvents({ events = [] }: Props) {
                             </TabsList>
                         </div>
                     </Tabs>
-                </div>
+                </Card>
                 {filteredStatus.length === 0 ? (
                     <Card className="p-12">
                         <div className="text-center text-gray-500">

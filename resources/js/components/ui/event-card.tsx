@@ -92,7 +92,7 @@ function EventCard({ hideStatus = false, viewDetailsHref, className, ...event }:
                         </div>
                         <div className="flex flex-col px-4 gap-4">
                             <div className="flex flex-row">
-                                <strong className="text-lg w-full truncate">
+                                <strong className="text-lg font-semibold w-full truncate">
                                 {event.title}
                                 </strong>
                             </div>

@@ -44,4 +44,9 @@ class DashboardRepository
     {
         return DB::select('EXEC usp_Event_GetTitleAttendeesByAdmin @user_id = :user_id', ['user_id' => $userId]);
     }
+
+    public function getTopFiveEventsByAdmin(int $userId): array
+    {
+        return DB::select('EXEC usp_Event_Top5ByAttendees @user_id = :user_id', ['user_id' => $userId]);
+    }
 }

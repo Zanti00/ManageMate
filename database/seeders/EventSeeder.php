@@ -15,13 +15,16 @@ class EventSeeder extends Seeder
     public function run(): void
     {
         $admin = User::where('role', 'admin')->first();
+        $organizationId = DB::table('organizations')->value('id');
 
-        if (! $admin) {
+        if (! $admin || ! $organizationId) {
             return;
         }
 
         $now = Carbon::now();
 
+        // Use Unsplash/Internet images for demo
+        $eventImages = require __DIR__.'/event_image_urls.php';
         $baseEvents = [
             [
                 'title' => 'Campus Tech Expo',
@@ -41,7 +44,7 @@ class EventSeeder extends Seeder
                 'status' => 'pending',
                 'earnings' => 18000,
                 'is_featured' => true,
-                'images' => ['events/tech-expo.jpg'],
+                'images' => [$eventImages[0]],
             ],
             [
                 'title' => 'Leadership & Strategy Summit',
@@ -61,7 +64,7 @@ class EventSeeder extends Seeder
                 'status' => 'active',
                 'earnings' => 50000,
                 'is_featured' => true,
-                'images' => ['events/leadership-summit.jpg'],
+                'images' => [$eventImages[1]],
             ],
             [
                 'title' => 'Wellness & Sustainability Fair',
@@ -80,7 +83,7 @@ class EventSeeder extends Seeder
                 'registries' => 340,
                 'status' => 'closed',
                 'earnings' => 22500,
-                'images' => ['events/wellness-fair.jpg'],
+                'images' => [$eventImages[2]],
             ],
             [
                 'title' => 'Creative Arts Weekend',
@@ -99,7 +102,7 @@ class EventSeeder extends Seeder
                 'registries' => 200,
                 'status' => 'pending',
                 'earnings' => 21600,
-                'images' => ['events/creative-arts.jpg'],
+                'images' => [$eventImages[3]],
             ],
             [
                 'title' => 'Innovation Sprint Finals',
@@ -120,7 +123,7 @@ class EventSeeder extends Seeder
                 'earnings' => 0,
                 'is_deleted' => true,
                 'is_featured' => false,
-                'images' => ['events/innovation-sprint.jpg'],
+                'images' => [$eventImages[4]],
             ],
         ];
 
@@ -173,6 +176,7 @@ class EventSeeder extends Seeder
             $isDeleted = $status === 'rejected' && $i % 10 === 0;
             $isFeatured = $status === 'active' && $i % 7 === 0;
 
+            $imgIdx = ($i - 1) % count($eventImages);
             $generatedEvents[] = [
                 'title' => sprintf('%s %02d', $theme['title'], $i),
                 'description' => $theme['description'],
@@ -192,7 +196,7 @@ class EventSeeder extends Seeder
                 'earnings' => $price * $attendees,
                 'is_deleted' => $isDeleted,
                 'is_featured' => $isFeatured,
-                'images' => [$theme['image']],
+                'images' => [$eventImages[$imgIdx]],
             ];
         }
 
@@ -206,6 +210,7 @@ class EventSeeder extends Seeder
                 $event,
                 [
                     'user_id' => $admin->id,
+                    'organization_id' => $organizationId,
                     'created_at' => now(),
                     'updated_at' => now(),
                     'is_deleted' => $event['is_deleted'] ?? false,
@@ -216,6 +221,7 @@ class EventSeeder extends Seeder
             DB::table('events')->updateOrInsert(
                 [
                     'user_id' => $admin->id,
+                    'organization_id' => $organizationId,
                     'title' => $event['title'],
                 ],
                 $payload,
@@ -223,6 +229,7 @@ class EventSeeder extends Seeder
 
             $eventId = DB::table('events')
                 ->where('user_id', $admin->id)
+                ->where('organization_id', $organizationId)
                 ->where('title', $event['title'])
                 ->value('id');
 

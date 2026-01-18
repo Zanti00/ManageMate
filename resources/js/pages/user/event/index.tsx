@@ -1,3 +1,4 @@
+import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { EventCard } from '@/components/ui/event-card';
@@ -247,60 +248,54 @@ export default function UserEvent({ events }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-8 p-8">
+                <Heading
+                    title="Events"
+                    description="Discover and join exciting campus events"
+                />
                 <Card className="p-6">
-                    <div className="flex flex-col gap-4">
-                        <div className="flex flex-col gap-2">
-                            <div className="flex flex-row">
-                                <p>Status</p>
-                            </div>
-                            <div className="flex flex-row">
-                                <Tabs
-                                    value={statusFilter}
-                                    onValueChange={(value) =>
-                                        setStatusFilter(value as any)
-                                    }
-                                >
-                                    <div className="flex flex-row">
-                                        <TabsList className="h-10 gap-2 bg-transparent p-0">
+                    <div className="flex flex-row justify-between gap-4">
+                        <div className="flex flex-row">
+                            <Tabs
+                                value={statusFilter}
+                                onValueChange={(value) =>
+                                    setStatusFilter(value as any)
+                                }
+                            >
+                                <div className="flex flex-row">
+                                    <TabsList className="h-10 gap-2 bg-transparent p-0">
+                                        <TabsTrigger
+                                            value="all"
+                                            className="bg-gray-200"
+                                        >
+                                            All Events ({statusCounts.all})
+                                        </TabsTrigger>
+                                        {STATUS_OPTIONS.map((status) => (
                                             <TabsTrigger
-                                                value="all"
+                                                key={status}
+                                                value={status}
                                                 className="bg-gray-200"
                                             >
-                                                All Events ({statusCounts.all})
+                                                {STATUS_LABEL_MAP[status]} (
+                                                {statusCounts[status]})
                                             </TabsTrigger>
-                                            {STATUS_OPTIONS.map((status) => (
-                                                <TabsTrigger
-                                                    key={status}
-                                                    value={status}
-                                                    className="bg-gray-200"
-                                                >
-                                                    {STATUS_LABEL_MAP[status]} (
-                                                    {statusCounts[status]})
-                                                </TabsTrigger>
-                                            ))}
-                                        </TabsList>
-                                    </div>
-                                </Tabs>
-                            </div>
+                                        ))}
+                                    </TabsList>
+                                </div>
+                            </Tabs>
                         </div>
-                        <div className="flex flex-col gap-2">
-                            <div className="flex flex-row">
-                                <p>Search</p>
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <SearchInput
-                                    placeholder="Search by title, category, or location..."
-                                    value={searchQuery}
-                                    onChange={(event) =>
-                                        setSearchQuery(event.target.value)
-                                    }
-                                />
-                                {searchError && (
-                                    <p className="text-sm text-red-500">
-                                        {searchError}
-                                    </p>
-                                )}
-                            </div>
+                        <div className="w-80">
+                            <SearchInput
+                                placeholder="Search by title, category, or location..."
+                                value={searchQuery}
+                                onChange={(event) =>
+                                    setSearchQuery(event.target.value)
+                                }
+                            />
+                            {searchError && (
+                                <p className="text-sm text-red-500">
+                                    {searchError}
+                                </p>
+                            )}
                         </div>
                     </div>
                 </Card>

@@ -22,6 +22,7 @@ class DashboardService
         // $eventOverviewData = $eventOverviewData ?? (object) [];
 
         return [
+            'total_organizations' => (string) ($stats->total_organizations ?? 0),
             'active_admins' => (string) ($stats->active_admins ?? 0),
             'pending_events' => (string) ($stats->pending_events ?? 0),
             'active_events' => (string) ($stats->active_events ?? 0),

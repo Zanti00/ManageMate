@@ -2,7 +2,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { SummaryCard } from '@/components/ui/summary-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useImageGallery } from '@/hooks/use-image-gallery';
 import AppLayout from '@/layouts/app-layout';
@@ -28,15 +27,11 @@ import {
     Title,
     Tooltip,
 } from 'chart.js';
-import {
-    ChevronLeft,
-    ChevronRight,
-    PhilippinePeso,
-    Star,
-    Users,
-    X,
-} from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useEffect } from 'react';
+// import { generateEventReport } from '../../utils/generateEventReport';
+// Update the import path below if the file exists elsewhere:
+import { generateEventReport } from '@/utils/generateEventReport';
 import { Bar, Line, Pie } from 'react-chartjs-2';
 
 ChartJS.register(
@@ -65,8 +60,8 @@ type Event = {
     title: string;
     description: string;
     location: string;
-    attendees: string;
-    registries: string;
+    attendees: number;
+    registries: number;
     start_date: string;
     end_date: string;
     start_time: string;
@@ -106,6 +101,12 @@ type EventAttendee = {
     check_in_date: string;
 };
 
+interface Organization {
+    id: number;
+    name: string;
+    email?: string;
+}
+
 interface Props {
     event: Event;
     registration_trend_labels: string[];
@@ -114,6 +115,7 @@ interface Props {
     program_distribution_data: ProgramDistributionData[];
     check_in_timeline_data: CheckInTimelineData[];
     event_attendees: EventAttendee[];
+    organization?: Organization | null;
 }
 
 export default function EventView({
@@ -124,6 +126,7 @@ export default function EventView({
     program_distribution_data = [],
     check_in_timeline_data = [],
     event_attendees = [],
+    organization = null,
 }: Props) {
     if (!event) {
         return <div className="p-6">Event not found</div>;
@@ -142,9 +145,9 @@ export default function EventView({
         openLightbox,
         closeLightbox,
     } = useImageGallery({
-        images: event.images,
-        imagePath: event.image_path,
-        resetKey: event.id,
+        images: event?.images,
+        imagePath: event?.image_path,
+        resetKey: event?.id,
     });
 
     useEffect(() => {
@@ -221,6 +224,16 @@ export default function EventView({
         <>
             <AppLayout breadcrumbs={breadcrumbs}>
                 <div className="flex flex-col overflow-hidden rounded-lg p-8">
+                    <div className="mb-2">
+                        <Button
+                            variant="ghost"
+                            className="flex cursor-pointer gap-2 hover:bg-transparent hover:font-bold hover:text-foreground"
+                            onClick={() => window.history.back()}
+                        >
+                            <ArrowLeft />
+                            Back
+                        </Button>
+                    </div>
                     <div className="relative h-64 w-full overflow-hidden rounded-t-md">
                         <img
                             className="h-full w-full object-cover object-center"
@@ -303,7 +316,7 @@ export default function EventView({
                                         )}
                                     </div>
                                     <div className="flex flex-row">
-                                        <Label className="text-4xl font-extrabold">
+                                        <Label className="text-4xl font-bold">
                                             {event.title}
                                         </Label>
                                     </div>
@@ -312,22 +325,30 @@ export default function EventView({
                                     </div>
                                 </div>
                                 <div className="flex flex-col">
-                                    <Button className="bg-red-900 text-white">
+                                    <Button
+                                        className="bg-red-900 text-white"
+                                        onClick={() =>
+                                            generateEventReport(
+                                                event,
+                                                event_attendees,
+                                            )
+                                        }
+                                    >
                                         Generate Report
                                     </Button>
                                 </div>
                             </div>
                         </Card>
-                        <div className="grid grid-cols-4 gap-4">
-                            <SummaryCard
-                                value={event.registries}
+                        <div className="grid grid-cols-3 gap-4">
+                            {/* <SummaryCard
+                                value={event.registries.toString()}
                                 label={'Total Registries'}
                                 icon={Users}
                                 className="fill-white"
                                 iconBg="bg-gradient-to-br from-teal-400 to-teal-600"
-                            ></SummaryCard>
-                            <SummaryCard
-                                value={event.attendees}
+                            ></SummaryCard> */}
+                            {/* <SummaryCard
+                                value={event.attendees.toString()}
                                 label={'Total Attendees'}
                                 icon={Users}
                                 className="fill-white"
@@ -338,14 +359,14 @@ export default function EventView({
                                 label={'Total Earnings'}
                                 icon={PhilippinePeso}
                                 iconBg="bg-gradient-to-br from-purple-400 to-purple-600"
-                            ></SummaryCard>
-                            <SummaryCard
+                            ></SummaryCard> */}
+                            {/* <SummaryCard
                                 value={'1'}
                                 label={'Average Rating'}
                                 icon={Star}
                                 className="fill-white"
                                 iconBg="bg-gradient-to-br from-emerald-400 to-emerald-600"
-                            ></SummaryCard>
+                            ></SummaryCard> */}
                         </div>
                         <div className="rounded-2xl bg-white p-2">
                             <Tabs defaultValue="overview">
@@ -369,7 +390,7 @@ export default function EventView({
                                         <div className="grid grid-cols-2">
                                             <div className="flex flex-col px-6">
                                                 <div className="flex flex-row">
-                                                    <p className="text-xl font-extrabold">
+                                                    <p className="text-xl font-bold">
                                                         Event Details
                                                     </p>
                                                 </div>
@@ -379,7 +400,7 @@ export default function EventView({
                                                             <p className="font-medium">
                                                                 Date
                                                             </p>
-                                                            <p>
+                                                            <p className="text-gray-600">
                                                                 {formatDateRange(
                                                                     event.start_date,
                                                                     event.end_date,
@@ -392,7 +413,7 @@ export default function EventView({
                                                             <p className="font-medium">
                                                                 Time
                                                             </p>
-                                                            <p>
+                                                            <p className="text-gray-600">
                                                                 {formatTimeRange(
                                                                     event.start_time,
                                                                     event.end_time,
@@ -405,7 +426,7 @@ export default function EventView({
                                                             <p className="font-medium">
                                                                 Location
                                                             </p>
-                                                            <p>
+                                                            <p className="text-gray-600">
                                                                 {event.location}
                                                             </p>
                                                         </div>
@@ -415,7 +436,7 @@ export default function EventView({
                                                             <p className="font-medium">
                                                                 Ticket Price
                                                             </p>
-                                                            <p>
+                                                            <p className="text-gray-600">
                                                                 {formatPrice(
                                                                     event.price,
                                                                 )}
@@ -426,7 +447,7 @@ export default function EventView({
                                             </div>
                                             <div className="flex flex-col">
                                                 <div className="gap-y-6 px-6">
-                                                    <p className="text-xl font-extrabold">
+                                                    <p className="text-xl font-bold">
                                                         Organizer Information
                                                     </p>
                                                     <div className="flex flex-col gap-4">
@@ -435,10 +456,9 @@ export default function EventView({
                                                                 <p className="font-medium">
                                                                     Organization
                                                                 </p>
-                                                                <p>
-                                                                    Commonwealth
-                                                                    Information
-                                                                    Society
+                                                                <p className="text-gray-600">
+                                                                    {organization?.name ||
+                                                                        'N/A'}
                                                                 </p>
                                                             </div>
                                                         </div>
@@ -447,18 +467,9 @@ export default function EventView({
                                                                 <p className="font-medium">
                                                                     Email
                                                                 </p>
-                                                                <p>
-                                                                    commitspupqc@test.com
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex flex-row">
-                                                            <div className="flex flex-col">
-                                                                <p className="font-medium">
-                                                                    Phone
-                                                                </p>
-                                                                <p>
-                                                                    09123456789
+                                                                <p className="text-gray-600">
+                                                                    {organization?.email ||
+                                                                        'N/A'}
                                                                 </p>
                                                             </div>
                                                         </div>
@@ -471,7 +482,7 @@ export default function EventView({
                                 <TabsContent value="statistics">
                                     <Card className="px-4 shadow-none">
                                         <div className="flex flex-col gap-6">
-                                            <p className="font-extrabold">
+                                            <p className="font-bold">
                                                 Registration Trend
                                             </p>
                                             <div className="h-64 flex-col px-4">
@@ -502,7 +513,7 @@ export default function EventView({
                                             </div>
                                             <div className="grid grid-cols-2">
                                                 <div className="flex flex-col">
-                                                    <p className="font-extrabold">
+                                                    <p className="font-bold">
                                                         Student Year Level
                                                     </p>
                                                     <div className="col-span-1 h-64 w-full">
@@ -517,7 +528,7 @@ export default function EventView({
                                                     </div>
                                                 </div>
                                                 <div className="flex flex-col">
-                                                    <p className="font-extrabold">
+                                                    <p className="font-bold">
                                                         Program Distribution
                                                     </p>
                                                     <div className="col-span-1 h-64 w-full">
@@ -542,7 +553,7 @@ export default function EventView({
                                                 </div>
                                             </div>
                                             <div className="flex flex-col">
-                                                <p className="font-extrabold">
+                                                <p className="font-bold">
                                                     Check-in Timeline
                                                 </p>
                                                 <div className="flex h-64 w-full flex-col px-4">

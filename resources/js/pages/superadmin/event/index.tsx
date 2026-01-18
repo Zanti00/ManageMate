@@ -1,3 +1,4 @@
+import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -361,6 +362,10 @@ export default function SuperAdminEvent({ events = [] }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-6 p-6">
+                <Heading
+                    title="Events"
+                    description="Review and manage all events across organizations"
+                />
                 <Tabs
                     value={statusFilter}
                     onValueChange={(value) => setStatusFilter(value as any)}

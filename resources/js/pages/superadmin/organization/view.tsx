@@ -7,7 +7,7 @@ import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { formatDateRange } from '@/utils/date-format';
 import { Link } from '@inertiajs/react';
-import { Mail, MapPin } from 'lucide-react';
+import { ArrowLeft, Mail, MapPin } from 'lucide-react';
 
 const baseBreadcrumbs: BreadcrumbItem[] = [
     {
@@ -81,6 +81,16 @@ export default function OrganizationView({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-6 p-8">
+                <div className="mb-2">
+                    <Button
+                        variant="ghost"
+                        className="flex cursor-pointer gap-2 hover:bg-transparent hover:font-bold hover:text-foreground"
+                        onClick={() => window.history.back()}
+                    >
+                        <ArrowLeft />
+                        Back
+                    </Button>
+                </div>
                 <Card className="flex flex-row p-6">
                     <div className="flex w-full flex-row items-center justify-between gap-6">
                         <div className="flex flex-col gap-2">

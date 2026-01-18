@@ -123,9 +123,11 @@ class AdminController extends Controller
     public function edit(string $id)
     {
         $data = $this->adminService->getAdminWithStats((int) $id);
+        $organizations = $this->adminService->getOrganizationOptions();
 
         return Inertia::render('superadmin/admin/edit', [
             'admin' => $data['admin'],
+            'organizations' => $organizations,
         ]);
     }
 
@@ -144,6 +146,7 @@ class AdminController extends Controller
                 Rule::unique('users', 'email')->ignore($id),
             ],
             'phone_number' => 'required|string|size:11',
+            'organization_id' => 'required|integer',
         ]);
 
         try {

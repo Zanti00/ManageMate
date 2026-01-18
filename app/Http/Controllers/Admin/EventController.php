@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Repositories\Admin\EventRepository;
+use App\Repositories\Admin\OrganizationRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -13,7 +14,7 @@ use Inertia\Inertia;
 
 class EventController extends Controller
 {
-    public function __construct(private EventRepository $eventRepo) {}
+    public function __construct(private EventRepository $eventRepo, private OrganizationRepository $orgRepo) {}
 
     /**
      * Display a listing of the resource.
@@ -148,9 +149,11 @@ class EventController extends Controller
         $programDistributionData = $this->eventRepo->getProgramDistributionData((int) $id);
         $checkInTimelineData = $this->eventRepo->getCheckInTimelineData((int) $id);
         $eventAttendees = $this->eventRepo->getAttendeesByEvent((int) $id);
+        $organization = $this->orgRepo->findByEventId((int) $id);
 
         return Inertia::render('admin/event/view', [
             'event' => $event,
+            'organization' => $organization,
             'registration_trend_labels' => array_column($registrationTrendData, 'date_label'),
             'registration_trend_data' => array_column($registrationTrendData, 'total_registrations'),
             'student_year_level_data' => $studentYearLevelData,

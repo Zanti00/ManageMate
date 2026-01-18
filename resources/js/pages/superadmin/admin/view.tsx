@@ -6,6 +6,7 @@ import AppLayout from '@/layouts/app-layout';
 import superadmin from '@/routes/superadmin';
 import { BreadcrumbItem } from '@/types';
 import {
+    ArrowLeft,
     Calendar,
     CircleCheckBig,
     CircleX,
@@ -13,6 +14,7 @@ import {
     Mail,
     Phone,
 } from 'lucide-react';
+import React from 'react';
 
 import { Button } from '@/components/ui/button';
 import { SummaryCard } from '@/components/ui/summary-card';
@@ -104,6 +106,117 @@ export default function ViewAdmin({
     monthly_performance_data = [],
     events = [],
 }: Props) {
+    // Event status filter state and logic
+    const STATUS_OPTIONS = ['pending', 'active', 'rejected', 'closed'] as const;
+    type FilterValues = (typeof STATUS_OPTIONS)[number];
+    const STATUS_LABEL_MAP: Record<FilterValues, string> = {
+        pending: 'Pending',
+        active: 'Active',
+        rejected: 'Rejected',
+        closed: 'Closed',
+    };
+    const [statusFilter, setStatusFilter] = React.useState<
+        'all' | FilterValues
+    >('all');
+
+    // Add status property to events for filtering
+    const eventsWithStatus = events.map((event) => ({ ...event }));
+    const filteredEvents =
+        statusFilter === 'all'
+            ? eventsWithStatus
+            : eventsWithStatus.filter((e) => e.status === statusFilter);
+
+    // Pagination state for events tab
+    const [eventPage, setEventPage] = React.useState(1);
+    const pageSize = 5;
+    const totalEvents = filteredEvents.length;
+    const totalEventPages = Math.ceil(totalEvents / pageSize);
+    const paginatedEvents = filteredEvents.slice(
+        (eventPage - 1) * pageSize,
+        eventPage * pageSize,
+    );
+
+    // Calculate range info for display
+    const from = totalEvents === 0 ? 0 : (eventPage - 1) * pageSize + 1;
+    const to = Math.min(eventPage * pageSize, totalEvents);
+
+    // Status counts for filter tabs
+    const getStatusCounts = () => {
+        const counts: Record<'all' | FilterValues, number> = {
+            all: eventsWithStatus.length,
+            pending: 0,
+            active: 0,
+            rejected: 0,
+            closed: 0,
+        };
+        eventsWithStatus.forEach((event) => {
+            if (
+                event.status &&
+                ['pending', 'active', 'rejected', 'closed'].includes(
+                    event.status,
+                )
+            ) {
+                counts[event.status as FilterValues] += 1;
+            }
+        });
+        return counts;
+    };
+    const statusCounts = getStatusCounts();
+
+    // Render pagination bar similar to user/event/index
+    const renderPagination = () => {
+        if (totalEventPages <= 1) return null;
+        const pages = [];
+        const maxVisible = 5;
+        let startPage = Math.max(1, eventPage - Math.floor(maxVisible / 2));
+        let endPage = Math.min(totalEventPages, startPage + maxVisible - 1);
+        if (endPage - startPage < maxVisible - 1) {
+            startPage = Math.max(1, endPage - maxVisible + 1);
+        }
+        for (let page = startPage; page <= endPage; page++) {
+            pages.push(
+                <Button
+                    key={page}
+                    variant={page === eventPage ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setEventPage(page)}
+                    className="min-w-[2.5rem]"
+                >
+                    {page}
+                </Button>,
+            );
+        }
+        return (
+            <div className="flex w-full items-end justify-end gap-2 py-4">
+                <span className="text-sm whitespace-nowrap text-gray-600">
+                    Showing {to} of {totalEvents}
+                </span>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEventPage(Math.max(1, eventPage - 1))}
+                    disabled={eventPage <= 1}
+                >
+                    &#60; Previous
+                </Button>
+                <div className="flex gap-1">{pages}</div>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                        setEventPage(Math.min(totalEventPages, eventPage + 1))
+                    }
+                    disabled={eventPage >= totalEventPages}
+                >
+                    Next &#62;
+                </Button>
+            </div>
+        );
+    };
+
+    // Move useForm above conditional return
+    const { delete: destroy } = useForm();
+
     if (!admin) {
         return <div className="p-6">User not found</div>;
     }
@@ -161,11 +274,21 @@ export default function ViewAdmin({
         ],
     };
 
-    const { delete: destroy } = useForm();
+    // Removed duplicate useForm declaration
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-6 p-8">
+                <div className="mb-2">
+                    <Button
+                        variant="ghost"
+                        className="flex cursor-pointer items-center gap-2 hover:bg-transparent hover:font-bold hover:text-foreground"
+                        onClick={() => window.history.back()}
+                    >
+                        <ArrowLeft />
+                        Back
+                    </Button>
+                </div>
                 <Card className="flex flex-row p-6">
                     <div className="flex w-full flex-row gap-6">
                         <div className="flex flex-col items-center justify-center">
@@ -283,53 +406,108 @@ export default function ViewAdmin({
                         <TabsContent value="events">
                             <div className="flex flex-col gap-2">
                                 <Label>Recent Events</Label>
-                                {events.map((event) => (
-                                    <Link
-                                        href={superadmin.event.show(event.id)}
+                                <div className="flex flex-row items-end justify-end">
+                                    <Tabs
+                                        value={statusFilter}
+                                        onValueChange={(value) => {
+                                            setStatusFilter(value as any);
+                                            setEventPage(1);
+                                        }}
                                     >
-                                        <div className="flex flex-col gap-6">
-                                            <Card className="flex flex-row justify-between border-1 border-gray-200 px-4 shadow-none">
-                                                <div className="flex flex-col gap-2">
-                                                    <Label>{event.title}</Label>
-                                                    <Label>
-                                                        {formatDateRange(
-                                                            event.start_date,
-                                                            event.end_date,
-                                                        )}
-                                                    </Label>
-                                                </div>
-                                                {event.status && (
-                                                    <div>
-                                                        {event.status ===
-                                                            'pending' && (
-                                                            <Badge variant="pending">
-                                                                Pending
-                                                            </Badge>
-                                                        )}
-                                                        {event.status ===
-                                                            'active' && (
-                                                            <Badge variant="active">
-                                                                Active
-                                                            </Badge>
-                                                        )}
-                                                        {event.status ===
-                                                            'rejected' && (
-                                                            <Badge variant="rejected">
-                                                                Rejected
-                                                            </Badge>
-                                                        )}
-                                                        {event.status ===
-                                                            'closed' && (
-                                                            <Badge variant="closed">
-                                                                Closed
-                                                            </Badge>
-                                                        )}
-                                                    </div>
+                                        <div className="flex flex-row">
+                                            <TabsList className="h-10 gap-2 bg-transparent p-0">
+                                                <TabsTrigger
+                                                    value="all"
+                                                    className="bg-gray-200"
+                                                >
+                                                    All Events (
+                                                    {statusCounts.all})
+                                                </TabsTrigger>
+                                                {STATUS_OPTIONS.map(
+                                                    (status) => (
+                                                        <TabsTrigger
+                                                            key={status}
+                                                            value={status}
+                                                            className="bg-gray-200"
+                                                        >
+                                                            {
+                                                                STATUS_LABEL_MAP[
+                                                                    status
+                                                                ]
+                                                            }{' '}
+                                                            (
+                                                            {
+                                                                statusCounts[
+                                                                    status
+                                                                ]
+                                                            }
+                                                            )
+                                                        </TabsTrigger>
+                                                    ),
                                                 )}
-                                            </Card>
+                                            </TabsList>
                                         </div>
-                                    </Link>
-                                ))}
+                                    </Tabs>
+                                </div>
+                                {paginatedEvents.length > 0 ? (
+                                    paginatedEvents.map((event) => (
+                                        <Link
+                                            href={superadmin.event.show(
+                                                event.id,
+                                            )}
+                                            key={event.id}
+                                        >
+                                            <div className="flex flex-col gap-6">
+                                                <Card className="flex flex-row justify-between border-1 border-gray-200 px-4 shadow-none">
+                                                    <div className="flex flex-col gap-2">
+                                                        <Label>
+                                                            {event.title}
+                                                        </Label>
+                                                        <Label>
+                                                            {formatDateRange(
+                                                                event.start_date,
+                                                                event.end_date,
+                                                            )}
+                                                        </Label>
+                                                    </div>
+                                                    {event.status && (
+                                                        <div>
+                                                            {event.status ===
+                                                                'pending' && (
+                                                                <Badge variant="pending">
+                                                                    Pending
+                                                                </Badge>
+                                                            )}
+                                                            {event.status ===
+                                                                'active' && (
+                                                                <Badge variant="active">
+                                                                    Active
+                                                                </Badge>
+                                                            )}
+                                                            {event.status ===
+                                                                'rejected' && (
+                                                                <Badge variant="rejected">
+                                                                    Rejected
+                                                                </Badge>
+                                                            )}
+                                                            {event.status ===
+                                                                'closed' && (
+                                                                <Badge variant="closed">
+                                                                    Closed
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </Card>
+                                            </div>
+                                        </Link>
+                                    ))
+                                ) : (
+                                    <Card className="p-12 text-center text-gray-500">
+                                        No events found
+                                    </Card>
+                                )}
+                                {renderPagination()}
                             </div>
                         </TabsContent>
 

@@ -1,3 +1,4 @@
+import Heading from '@/components/heading';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { SummaryCard } from '@/components/ui/summary-card';
@@ -134,6 +135,10 @@ export default function SuperAdminDashboard({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-8 p-6">
+                <Heading
+                    title="Dashboard Overview"
+                    description="Monitor all organizations, admins, and events across the platform"
+                />
                 <div className="grid grid-cols-4 gap-4">
                     <SummaryCard
                         value={total_organizations}

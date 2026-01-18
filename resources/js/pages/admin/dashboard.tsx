@@ -1,3 +1,4 @@
+import Heading from '@/components/heading';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { SummaryCard } from '@/components/ui/summary-card';
@@ -20,7 +21,7 @@ import {
     Title,
     Tooltip,
 } from 'chart.js';
-import { Calendar, Star, TrendingUp, Users } from 'lucide-react';
+import { Calendar, TrendingUp, Users } from 'lucide-react';
 import { Bar, Line, Pie } from 'react-chartjs-2';
 
 ChartJS.register(
@@ -123,8 +124,12 @@ export default function AdminDashboard({
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <div className="flex flex-col gap-5 p-10">
-                <div className="grid grid-cols-4 gap-6">
+            <div className="flex flex-col gap-5 p-8">
+                <Heading
+                    title="Dashboard Overview"
+                    description="Monitor your event performance and key metrics"
+                />
+                <div className="grid grid-cols-3 gap-6">
                     <SummaryCard
                         value={total_events}
                         label={'Total Events'}
@@ -138,13 +143,13 @@ export default function AdminDashboard({
                         className="fill-white"
                         iconBg="bg-gradient-to-br from-orange-400 to-orange-600"
                     ></SummaryCard>
-                    <SummaryCard
+                    {/* <SummaryCard
                         value={total_events}
                         label={'Average Rating'}
                         icon={Star}
                         className="fill-white"
                         iconBg="bg-gradient-to-br from-purple-400 to-purple-600"
-                    ></SummaryCard>
+                    ></SummaryCard> */}
                     <SummaryCard
                         value={formatPercentage(attendance_rate)}
                         label={'Overall Attendance Rate'}
@@ -154,9 +159,7 @@ export default function AdminDashboard({
                 </div>
                 <div className="grid grid-cols-4 gap-6">
                     <Card className="col-span-2 gap-1 px-4">
-                        <p className="font-extrabold">
-                            Monthly Attendance Trend
-                        </p>
+                        <p className="font-bold">Monthly Attendance Trend</p>
                         <div className="flex flex-col px-4">
                             <Line
                                 data={MonthlyAttendanceTrendData}
@@ -183,7 +186,7 @@ export default function AdminDashboard({
                         </div>
                     </Card>
                     <Card className="col-span-2 gap-1 px-4">
-                        <p className="font-extrabold">Event Status</p>
+                        <p className="font-bold">Event Status</p>
                         <div className="flex h-[90%] w-[100%] flex-col items-center">
                             <Pie
                                 data={eventStatusData}
@@ -197,7 +200,7 @@ export default function AdminDashboard({
                 </div>
                 <div className="grid grid-cols-3 gap-6">
                     <Card className="col-span-2 gap-1 px-4">
-                        <p className="font-extrabold">Event Attendance Trend</p>
+                        <p className="font-bold">Event Attendance Trend</p>
                         <div className="flex flex-col px-4">
                             <Bar
                                 data={EventAttendanceTrendData}
@@ -209,7 +212,7 @@ export default function AdminDashboard({
                         </div>
                     </Card>
                     <Card className="col-span-1 gap-y-0">
-                        <p className="px-3 font-extrabold">Top Events</p>
+                        <p className="px-3 font-bold">Top Events</p>
                         {top_five_events.map((event) => (
                             <Link href={admin.event.show(event.id).url}>
                                 <div className="flex flex-col gap-1 px-7 py-1 hover:bg-gray-100">
