@@ -54,11 +54,18 @@ type PageProps = {
     };
 };
 
-interface Props {
-    event: Event;
+interface Organization {
+    id: number;
+    name: string;
+    email?: string;
 }
 
-export default function ViewEvent({ event }: Props) {
+interface Props {
+    event: Event;
+    organization?: Organization | null;
+}
+
+export default function ViewEvent({ event, organization = null }: Props) {
     const { props } = usePage<PageProps>();
     const authUser = props.auth?.user ?? null;
     const [modalOpen, setModalOpen] = useState(false);
@@ -311,7 +318,7 @@ export default function ViewEvent({ event }: Props) {
                                                 Organization
                                             </p>
                                             <p className="text-gray-600">
-                                                Commonwealth Information Society
+                                                {organization?.name || 'N/A'}
                                             </p>
                                         </div>
                                     </div>
@@ -319,15 +326,7 @@ export default function ViewEvent({ event }: Props) {
                                         <div className="flex flex-col">
                                             <p className="font-medium">Email</p>
                                             <p className="text-gray-600">
-                                                commitspupqc@test.com
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-row">
-                                        <div className="flex flex-col">
-                                            <p className="font-medium">Phone</p>
-                                            <p className="text-gray-600">
-                                                09123456789
+                                                {organization?.email || 'N/A'}
                                             </p>
                                         </div>
                                     </div>

@@ -11,7 +11,7 @@ import { formatDateRange, formatTimeRange } from '@/utils/date-format';
 import { getEventStatus } from '@/utils/event-status';
 import { formatPrice } from '@/utils/price-format';
 import { router } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -43,11 +43,22 @@ type Event = {
     image_path?: string | null;
 };
 
-interface Props {
-    event: Event;
+interface Organization {
+    id: number;
+    name: string;
+    email?: string;
+    address?: string;
+    abbreviation?: string;
+    type?: string;
+    is_deleted?: boolean;
 }
 
-export default function ViewEvent({ event }: Props) {
+interface Props {
+    event: Event;
+    organization?: Organization | null;
+}
+
+export default function ViewEvent({ event, organization = null }: Props) {
     const [modalOpen, setModalOpen] = useState(false);
 
     if (!event) {
@@ -89,6 +100,16 @@ export default function ViewEvent({ event }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col overflow-hidden rounded-lg p-8">
+                <div className="mb-2">
+                    <Button
+                        variant="ghost"
+                        className="flex cursor-pointer gap-2 hover:bg-transparent hover:font-bold hover:text-foreground"
+                        onClick={() => window.history.back()}
+                    >
+                        <ArrowLeft />
+                        Back
+                    </Button>
+                </div>
                 <div
                     className="relative h-64 w-full overflow-hidden rounded-t-md"
                     role="button"
@@ -246,21 +267,25 @@ export default function ViewEvent({ event }: Props) {
                                             <p className="font-medium">
                                                 Organization
                                             </p>
-                                            <p>
-                                                Commonwealth Information Society
-                                            </p>
+                                            <p>{organization?.name || 'N/A'}</p>
                                         </div>
                                     </div>
                                     <div className="flex flex-row">
                                         <div className="flex flex-col">
                                             <p className="font-medium">Email</p>
-                                            <p>commitspupqc@test.com</p>
+                                            <p>
+                                                {organization?.email || 'N/A'}
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="flex flex-row">
                                         <div className="flex flex-col">
-                                            <p className="font-medium">Phone</p>
-                                            <p>09123456789</p>
+                                            <p className="font-medium">
+                                                Address
+                                            </p>
+                                            <p>
+                                                {organization?.address || 'N/A'}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>

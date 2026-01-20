@@ -20,7 +20,7 @@ class AdminSeeder extends Seeder
                 'last_name' => 'User',
                 'password' => Hash::make('password'),
                 'role' => 'admin',
-                'email_verified_at' => now(),
+                'organization_id' => 1, // Change as needed
             ]
         );
 
@@ -32,7 +32,7 @@ class AdminSeeder extends Seeder
                     'last_name' => "Admin {$index}",
                     'password' => Hash::make('password'),
                     'role' => 'admin',
-                    'email_verified_at' => now(),
+                    'organization_id' => 1, // Change as needed
                 ]
             );
         });

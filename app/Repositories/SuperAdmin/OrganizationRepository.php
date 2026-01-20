@@ -105,4 +105,11 @@ class OrganizationRepository
     {
         DB::statement('EXEC usp_Organization_Update @organization_id = :organization_id', ['organization_id' => $id]);
     }
+
+    public function findByEventId(int $eventId): ?object
+    {
+        $result = DB::select('EXEC usp_Organization_GetByEvent @event_id = :event_id', ['event_id' => $eventId]);
+
+        return ! empty($result) ? $result[0] : null;
+    }
 }

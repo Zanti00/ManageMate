@@ -459,7 +459,10 @@ export default function SuperAdminEvent({ events = [] }: Props) {
                                             key={event.id}
                                             className="text-primary-foreground hover:bg-gray-100"
                                         >
-                                            <td className="truncate px-4 py-4 font-medium">
+                                            <td
+                                                className="truncate px-4 py-4 font-medium"
+                                                title={event.title}
+                                            >
                                                 {event.title}
                                             </td>
                                             <td className="px-4 py-4">
@@ -474,7 +477,10 @@ export default function SuperAdminEvent({ events = [] }: Props) {
                                                     event.registration_end_date,
                                                 )}
                                             </td>
-                                            <td className="truncate px-4 py-4">
+                                            <td
+                                                className="truncate px-4 py-4"
+                                                title={event.location}
+                                            >
                                                 {event.location}
                                             </td>
                                             <td className="px-4 py-4">

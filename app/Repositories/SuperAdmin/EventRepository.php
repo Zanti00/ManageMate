@@ -95,4 +95,11 @@ class EventRepository
             'event_id' => $eventId,
         ]);
     }
+
+    public function getOrganizationById(int $organizationId): ?object
+    {
+        $result = DB::select('SELECT TOP 1 * FROM organizations WHERE id = :id', ['id' => $organizationId]);
+
+        return $result ? $result[0] : null;
+    }
 }

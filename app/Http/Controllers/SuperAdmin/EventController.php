@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Repositories\SuperAdmin\OrganizationRepository;
 use App\Services\SuperAdmin\EventService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -10,7 +11,7 @@ use Inertia\Inertia;
 
 class EventController extends Controller
 {
-    public function __construct(private EventService $eventService) {}
+    public function __construct(private EventService $eventService, private OrganizationRepository $orgRepo) {}
 
     /**
      * Display a listing of the resource.
@@ -75,7 +76,12 @@ class EventController extends Controller
     {
         $event = $this->eventService->getEventById((int) $id);
 
-        return Inertia::render('superadmin/event/view', ['event' => $event]);
+        $organization = $this->orgRepo->findByEventId((int) $id);
+
+        return Inertia::render('superadmin/event/view', [
+            'event' => $event,
+            'organization' => $organization,
+        ]);
     }
 
     /**

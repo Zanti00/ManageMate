@@ -3,11 +3,12 @@
 namespace App\Services\SuperAdmin;
 
 use App\Repositories\SuperAdmin\EventRepository;
+use App\Repositories\SuperAdmin\OrganizationRepository;
 use Illuminate\Support\Facades\Log;
 
 class EventService
 {
-    public function __construct(private EventRepository $eventRepo) {}
+    public function __construct(private EventRepository $eventRepo, private OrganizationRepository $orgRepo) {}
 
     public function getAllEvents(): array
     {
@@ -66,7 +67,15 @@ class EventService
             $event->image_path = $event->images[0];
         }
 
-        return $event;
+        $organization = null;
+        if (! empty($event->organization_id)) {
+            $organization = $this->orgRepo->findByEventId((int) $event->organization_id);
+        }
+
+        return (object) [
+            ...((array) $event),
+            'organization' => $organization,
+        ];
     }
 
     public function approveEvent(int $id): void

@@ -22,7 +22,6 @@ class UserSeeder extends Seeder
                 'password' => 'password',
                 'year_level' => 1,
                 'program' => 'Bachelor of Science in Information Technology (BSIT)',
-                'email_verified_at' => now(),
             ]
         );
     }

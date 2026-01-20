@@ -16,19 +16,11 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
         $this->call([
             UserSeeder::class,
+            OrganizationSeeder::class,
             AdminSeeder::class,
             SuperAdminSeeder::class,
-            OrganizationSeeder::class,
+
             EventSeeder::class,
         ]);
-        // User::firstOrCreate(
-        //     ['email' => 'test@example.com'],
-        //     [
-        //         'first_name' => 'Test',
-        //         'last_name' => 'User',
-        //         'password' => 'password',
-        //         'email_verified_at' => now(),
-        //     ]
-        // );
     }
 }
