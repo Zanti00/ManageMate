@@ -1,8 +1,8 @@
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { EventCard } from '@/components/ui/event-card';
 import { EventCardSkeleton } from '@/components/ui/event-card-skeleton';
+import Pagination from '@/components/ui/pagination';
 import { SearchInput } from '@/components/ui/search-input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useEventStatusCounts } from '@/hooks/use-event-status-counts';
@@ -12,8 +12,7 @@ import admin from '@/routes/admin';
 import { type BreadcrumbItem } from '@/types';
 import { getEventStatus } from '@/utils/event-status';
 import { Link } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { JSX, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const { create } = admin.event;
 
@@ -135,78 +134,14 @@ export default function AdminEvent({ events = [] }: Props) {
         if (!hasActiveSearch || !searchMeta || searchMeta.last_page <= 1) {
             return null;
         }
-
-        const pages: JSX.Element[] = [];
-        const maxVisible = 5;
-        let startPage = Math.max(
-            1,
-            searchMeta.current_page - Math.floor(maxVisible / 2),
-        );
-        let endPage = Math.min(
-            searchMeta.last_page,
-            startPage + maxVisible - 1,
-        );
-
-        if (endPage - startPage < maxVisible - 1) {
-            startPage = Math.max(1, endPage - maxVisible + 1);
-        }
-
-        for (let page = startPage; page <= endPage; page++) {
-            pages.push(
-                <Button
-                    key={page}
-                    variant={
-                        page === searchMeta.current_page ? 'default' : 'outline'
-                    }
-                    size="sm"
-                    onClick={() => setSearchPage(page)}
-                    disabled={searchLoading}
-                    className="min-w-[2.5rem]"
-                >
-                    {page}
-                </Button>,
-            );
-        }
-
         return (
-            <Card className="p-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                            setSearchPage((prev) => Math.max(1, prev - 1))
-                        }
-                        disabled={searchMeta.current_page <= 1 || searchLoading}
-                    >
-                        <ChevronLeft className="mr-1 h-4 w-4" />
-                        Previous
-                    </Button>
-                    <div className="flex flex-wrap justify-center gap-1">
-                        {pages}
-                    </div>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                            setSearchPage((prev) =>
-                                Math.min(searchMeta.last_page, prev + 1),
-                            )
-                        }
-                        disabled={
-                            searchMeta.current_page >= searchMeta.last_page ||
-                            searchLoading
-                        }
-                    >
-                        Next
-                        <ChevronRight className="ml-1 h-4 w-4" />
-                    </Button>
-                </div>
-                <p className="mt-2 text-center text-sm text-gray-600">
-                    Showing page {searchMeta.current_page} of{' '}
-                    {searchMeta.last_page} (total {searchMeta.total} events)
-                </p>
-            </Card>
+            <Pagination
+                currentPage={searchMeta.current_page}
+                totalItems={searchMeta.total}
+                itemsPerPage={SEARCH_RESULTS_PER_PAGE}
+                onPageChange={setSearchPage}
+                isLoading={searchLoading}
+            />
         );
     };
 
@@ -214,71 +149,13 @@ export default function AdminEvent({ events = [] }: Props) {
         if (hasActiveSearch || totalBasePages <= 1) {
             return null;
         }
-
-        const pages: JSX.Element[] = [];
-        const maxVisible = 5;
-        let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-        let endPage = Math.min(totalBasePages, startPage + maxVisible - 1);
-
-        if (endPage - startPage < maxVisible - 1) {
-            startPage = Math.max(1, endPage - maxVisible + 1);
-        }
-
-        for (let page = startPage; page <= endPage; page++) {
-            pages.push(
-                <Button
-                    key={page}
-                    variant={page === currentPage ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setCurrentPage(page)}
-                    className="min-w-[2.5rem]"
-                >
-                    {page}
-                </Button>,
-            );
-        }
-
-        const from = (currentPage - 1) * SEARCH_RESULTS_PER_PAGE + 1;
-        const to = Math.min(
-            filteredStatus.length,
-            currentPage * SEARCH_RESULTS_PER_PAGE,
-        );
-
         return (
-            <Card className="p-4">
-                <div className="flex items-center justify-between">
-                    <div className="text-sm text-gray-600">
-                        Showing {from} to {to} of {filteredStatus.length} events
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                                setCurrentPage((prev) => Math.max(1, prev - 1))
-                            }
-                            disabled={currentPage <= 1}
-                        >
-                            <ChevronLeft className="h-4 w-4" />
-                            Previous
-                        </Button>
-                        <div className="flex gap-1">{pages}</div>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                                setCurrentPage((prev) =>
-                                    Math.min(totalBasePages, prev + 1),
-                                )
-                            }
-                            disabled={currentPage >= totalBasePages}
-                        >
-                            Next
-                            <ChevronRight className="h-4 w-4" />
-                        </Button>
-                    </div>
-                </div>
-            </Card>
+            <Pagination
+                currentPage={currentPage}
+                totalItems={filteredStatus.length}
+                itemsPerPage={SEARCH_RESULTS_PER_PAGE}
+                onPageChange={setCurrentPage}
+            />
         );
     };
 

@@ -7,6 +7,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import Pagination from '@/components/ui/pagination';
 import { SearchInput } from '@/components/ui/search-input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useEventStatusCounts } from '@/hooks/use-event-status-counts';
@@ -15,11 +16,10 @@ import AppLayout from '@/layouts/app-layout';
 import superadmin from '@/routes/superadmin';
 import { BreadcrumbItem } from '@/types';
 import { formatDate, formatDateRange } from '@/utils/date-format';
-import { getEventStatus } from '@/utils/event-status';
 import { formatPrice } from '@/utils/price-format';
 import { Link, router } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight, Ellipsis } from 'lucide-react';
-import { JSX, useEffect, useState } from 'react';
+import { Ellipsis } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -31,11 +31,11 @@ const breadcrumbs: BreadcrumbItem[] = [
 const SEARCH_RESULTS_PER_PAGE = 10;
 
 const STATUS_OPTIONS = [
-    'Pending',
-    'Active',
-    'Rejected',
-    'Closed',
-    'Deleted',
+    'pending',
+    'active',
+    'rejected',
+    'closed',
+    'deleted',
 ] as const;
 
 type TableHeader = {
@@ -111,38 +111,31 @@ interface Props {
 }
 
 export default function SuperAdminEvent({ events = [] }: Props) {
-    const eventsWithStatus: EventWithStatus[] = events.map((event) => {
-        const isDeleted = Number(event.is_deleted) === 1;
-
-        return {
-            ...event,
-            status: isDeleted ? 'Deleted' : getEventStatus(event),
-        };
-    });
-
     const [statusFilter, setStatusFilter] = useState<'all' | EventStatus>(
         'all',
     );
     const [currentPage, setCurrentPage] = useState(1);
 
+    const handleApprove = (eventId: number) => {
+        router.patch(superadmin.event.approve(eventId).url);
+    };
+
+    const handleReject = (eventId: number) => {
+        if (!confirm('Are you sure you want to reject this event?')) {
+            return;
+        }
+        router.patch(superadmin.event.reject(eventId).url);
+    };
+
     useEffect(() => {
         setCurrentPage(1);
     }, [statusFilter]);
 
+    // Use events directly, status is always lowercase from DB
     const filteredEvents =
         statusFilter === 'all'
-            ? eventsWithStatus
-            : eventsWithStatus.filter((e) => e.status === statusFilter);
-
-    const totalBasePages = Math.max(
-        1,
-        Math.ceil(filteredEvents.length / SEARCH_RESULTS_PER_PAGE),
-    );
-
-    const paginatedEvents = filteredEvents.slice(
-        (currentPage - 1) * SEARCH_RESULTS_PER_PAGE,
-        currentPage * SEARCH_RESULTS_PER_PAGE,
-    );
+            ? events
+            : events.filter((event) => event.status === statusFilter);
 
     const {
         searchQuery,
@@ -154,49 +147,36 @@ export default function SuperAdminEvent({ events = [] }: Props) {
         isLoading: searchLoading,
         error: searchError,
         hasActiveSearch,
-    } = usePaginatedSearch<Event, EventWithStatus>({
+    } = usePaginatedSearch<Event, Event>({
         endpoint: superadmin.event.search().url,
         perPage: SEARCH_RESULTS_PER_PAGE,
         buildParams: () =>
             statusFilter !== 'all' ? { status: statusFilter } : undefined,
-        mapResult: (event) => {
-            const isDeleted = Number(event.is_deleted) === 1;
-
-            return {
-                ...event,
-                status: isDeleted ? 'Deleted' : getEventStatus(event),
-            };
-        },
+        mapResult: (event) => event,
         dependencies: [statusFilter],
     });
 
-    const eventsToDisplay = hasActiveSearch ? searchResults : paginatedEvents;
+    // Events to display (search or filtered)
+    const eventsToDisplay = hasActiveSearch
+        ? searchResults
+        : filteredEvents.slice(
+              (currentPage - 1) * SEARCH_RESULTS_PER_PAGE,
+              currentPage * SEARCH_RESULTS_PER_PAGE,
+          );
 
-    const statusCounts = useEventStatusCounts<EventStatus, EventWithStatus>({
-        baseEvents: eventsWithStatus,
+    // Get status counts
+    const statusCounts = useEventStatusCounts<EventStatus, Event>({
+        baseEvents: events,
         searchResults,
         hasActiveSearch,
         statuses: STATUS_OPTIONS,
         statusResolver: (event) => event.status,
     });
 
-    const handleApprove = (eventId: number) => {
-        router.patch(superadmin.event.approve(eventId).url);
-    };
-
-    const handleReject = (eventId: number) => {
-        if (!confirm('Are you sure you want to reject this event?')) {
-            return;
-        }
-
-        router.patch(superadmin.event.reject(eventId).url);
-    };
-
     const renderSearchPagination = () => {
         if (!hasActiveSearch) {
             return null;
         }
-
         if (!searchMeta) {
             return (
                 <Card className="p-4">
@@ -206,76 +186,14 @@ export default function SuperAdminEvent({ events = [] }: Props) {
                 </Card>
             );
         }
-
-        const pages: JSX.Element[] = [];
-        const maxVisible = 5;
-        const totalPages = Math.max(1, searchMeta.last_page);
-        let startPage = Math.max(
-            1,
-            searchMeta.current_page - Math.floor(maxVisible / 2),
-        );
-        let endPage = Math.min(totalPages, startPage + maxVisible - 1);
-
-        if (endPage - startPage < maxVisible - 1) {
-            startPage = Math.max(1, endPage - maxVisible + 1);
-        }
-
-        for (let page = startPage; page <= endPage; page++) {
-            pages.push(
-                <Button
-                    key={page}
-                    variant={
-                        page === searchMeta.current_page ? 'default' : 'outline'
-                    }
-                    size="sm"
-                    onClick={() => setSearchPage(page)}
-                    disabled={searchLoading}
-                    className="min-w-[2.5rem]"
-                >
-                    {page}
-                </Button>,
-            );
-        }
-
         return (
-            <Card className="p-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                            setSearchPage((prev) => Math.max(1, prev - 1))
-                        }
-                        disabled={searchMeta.current_page <= 1 || searchLoading}
-                    >
-                        <ChevronLeft className="mr-1 h-4 w-4" />
-                        Previous
-                    </Button>
-                    <div className="flex flex-wrap justify-center gap-1">
-                        {pages}
-                    </div>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                            setSearchPage((prev) =>
-                                Math.min(totalPages, prev + 1),
-                            )
-                        }
-                        disabled={
-                            searchMeta.current_page >= totalPages ||
-                            searchLoading
-                        }
-                    >
-                        Next
-                        <ChevronRight className="ml-1 h-4 w-4" />
-                    </Button>
-                </div>
-                <p className="mt-2 text-center text-sm text-gray-600">
-                    Showing page {Math.min(searchMeta.current_page, totalPages)}{' '}
-                    of {totalPages} (total {searchMeta.total} events)
-                </p>
-            </Card>
+            <Pagination
+                currentPage={searchMeta.current_page}
+                totalItems={searchMeta.total}
+                itemsPerPage={SEARCH_RESULTS_PER_PAGE}
+                onPageChange={setSearchPage}
+                isLoading={searchLoading}
+            />
         );
     };
 
@@ -283,74 +201,13 @@ export default function SuperAdminEvent({ events = [] }: Props) {
         if (hasActiveSearch) {
             return null;
         }
-
-        const pages: JSX.Element[] = [];
-        const maxVisible = 5;
-        let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-        let endPage = Math.min(totalBasePages, startPage + maxVisible - 1);
-
-        if (endPage - startPage < maxVisible - 1) {
-            startPage = Math.max(1, endPage - maxVisible + 1);
-        }
-
-        for (let page = startPage; page <= endPage; page++) {
-            pages.push(
-                <Button
-                    key={page}
-                    variant={page === currentPage ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setCurrentPage(page)}
-                    className="min-w-[2.5rem]"
-                >
-                    {page}
-                </Button>,
-            );
-        }
-
-        const from =
-            filteredEvents.length === 0
-                ? 0
-                : (currentPage - 1) * SEARCH_RESULTS_PER_PAGE + 1;
-        const to = Math.min(
-            filteredEvents.length,
-            currentPage * SEARCH_RESULTS_PER_PAGE,
-        );
-
         return (
-            <Card className="p-4">
-                <div className="flex items-center justify-between">
-                    <div className="text-sm text-gray-600">
-                        Showing {from} to {to} of {filteredEvents.length} events
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                                setCurrentPage((prev) => Math.max(1, prev - 1))
-                            }
-                            disabled={currentPage <= 1}
-                        >
-                            <ChevronLeft className="h-4 w-4" />
-                            Previous
-                        </Button>
-                        <div className="flex gap-1">{pages}</div>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                                setCurrentPage((prev) =>
-                                    Math.min(totalBasePages, prev + 1),
-                                )
-                            }
-                            disabled={currentPage >= totalBasePages}
-                        >
-                            Next
-                            <ChevronRight className="h-4 w-4" />
-                        </Button>
-                    </div>
-                </div>
-            </Card>
+            <Pagination
+                currentPage={currentPage}
+                totalItems={filteredEvents.length}
+                itemsPerPage={SEARCH_RESULTS_PER_PAGE}
+                onPageChange={setCurrentPage}
+            />
         );
     };
 
@@ -444,15 +301,17 @@ export default function SuperAdminEvent({ events = [] }: Props) {
                                     const submitDate =
                                         event.updated_at || event.created_at;
                                     const badgeClass =
-                                        event.status === 'Pending'
+                                        event.status === 'pending'
                                             ? 'bg-yellow-100 text-yellow-700'
-                                            : event.status === 'Active'
+                                            : event.status === 'active'
                                               ? 'bg-green-100 text-green-700'
-                                              : event.status === 'Rejected'
+                                              : event.status === 'rejected'
                                                 ? 'bg-red-100 text-red-700'
-                                                : event.status === 'Deleted'
+                                                : event.status === 'deleted'
                                                   ? 'bg-gray-300 text-gray-700'
-                                                  : 'bg-gray-100 text-gray-700';
+                                                  : event.status === 'closed'
+                                                    ? 'bg-gray-400 text-gray-800'
+                                                    : 'bg-gray-100 text-gray-700';
 
                                     return (
                                         <tr
@@ -530,17 +389,21 @@ export default function SuperAdminEvent({ events = [] }: Props) {
                                                         <DropdownMenuItem
                                                             disabled={
                                                                 event.status ===
-                                                                    'Active' ||
+                                                                    'active' ||
                                                                 event.status ===
-                                                                    'Deleted'
+                                                                    'deleted' ||
+                                                                event.status ===
+                                                                    'closed'
                                                             }
                                                             onSelect={(e) => {
                                                                 e.preventDefault();
                                                                 if (
                                                                     event.status !==
-                                                                        'Active' &&
+                                                                        'active' &&
                                                                     event.status !==
-                                                                        'Deleted'
+                                                                        'deleted' &&
+                                                                    event.status !==
+                                                                        'closed'
                                                                 ) {
                                                                     handleApprove(
                                                                         event.id,
@@ -554,17 +417,21 @@ export default function SuperAdminEvent({ events = [] }: Props) {
                                                             className="text-red-600 focus:text-red-600"
                                                             disabled={
                                                                 event.status ===
-                                                                    'Rejected' ||
+                                                                    'rejected' ||
                                                                 event.status ===
-                                                                    'Deleted'
+                                                                    'deleted' ||
+                                                                event.status ===
+                                                                    'closed'
                                                             }
                                                             onSelect={(e) => {
                                                                 e.preventDefault();
                                                                 if (
                                                                     event.status !==
-                                                                        'Rejected' &&
+                                                                        'rejected' &&
                                                                     event.status !==
-                                                                        'Deleted'
+                                                                        'deleted' &&
+                                                                    event.status !==
+                                                                        'closed'
                                                                 ) {
                                                                     handleReject(
                                                                         event.id,

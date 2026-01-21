@@ -51,6 +51,8 @@ type EventToday = {
     end_time: string;
     submit_date: number;
     attendees?: number;
+    images?: string[];
+    image_path?: string | null;
 };
 
 type UpcomingEvent = {
@@ -64,6 +66,8 @@ type UpcomingEvent = {
     end_time: string;
     submit_date: number;
     attendees?: number;
+    image_path?: string | null;
+    images?: string[];
 };
 
 type FeaturedEvent = {
@@ -352,15 +356,36 @@ export default function Dashboard({
                                     No events happening today.
                                 </div>
                             ) : (
-                                events_today.map((event) => (
-                                    <Link href={user.event.show(event.id).url}>
-                                        <HorizontalEventCard
+                                events_today.map((event) => {
+                                    let imageUrl =
+                                        '/images/event-placeholder.png';
+                                    if (
+                                        event.images &&
+                                        event.images.length > 0
+                                    ) {
+                                        imageUrl =
+                                            event.images.find(Boolean) ||
+                                            imageUrl;
+                                    } else if (event.image_path) {
+                                        imageUrl = event.image_path.startsWith(
+                                            'http',
+                                        )
+                                            ? event.image_path
+                                            : `/storage/${event.image_path}`;
+                                    }
+                                    return (
+                                        <Link
+                                            href={user.event.show(event.id).url}
                                             key={event.id}
-                                            event={event}
-                                            className="border-1 border-emerald-300"
-                                        />
-                                    </Link>
-                                ))
+                                        >
+                                            <HorizontalEventCard
+                                                event={event}
+                                                imageUrl={imageUrl}
+                                                className="border-1 border-emerald-300"
+                                            />
+                                        </Link>
+                                    );
+                                })
                             )}
                         </div>
                         <div className="flex flex-col gap-4">
@@ -422,17 +447,40 @@ export default function Dashboard({
                                 </div>
                             ) : (
                                 <>
-                                    {paginatedUpcomingEvents.map((event) => (
-                                        <Link
-                                            href={user.event.show(event.id).url}
-                                            key={event.id}
-                                        >
-                                            <HorizontalEventCard
-                                                event={event}
-                                                className="border-1 border-emerald-300"
-                                            />
-                                        </Link>
-                                    ))}
+                                    {paginatedUpcomingEvents.map((event) => {
+                                        let imageUrl =
+                                            '/images/event-placeholder.png';
+                                        if (
+                                            event.images &&
+                                            event.images.length > 0
+                                        ) {
+                                            imageUrl =
+                                                event.images.find(Boolean) ||
+                                                imageUrl;
+                                        } else if (event.image_path) {
+                                            imageUrl =
+                                                event.image_path.startsWith(
+                                                    'http',
+                                                )
+                                                    ? event.image_path
+                                                    : `/storage/${event.image_path}`;
+                                        }
+                                        return (
+                                            <Link
+                                                href={
+                                                    user.event.show(event.id)
+                                                        .url
+                                                }
+                                                key={event.id}
+                                            >
+                                                <HorizontalEventCard
+                                                    event={event}
+                                                    imageUrl={imageUrl}
+                                                    className="border-1 border-emerald-300"
+                                                />
+                                            </Link>
+                                        );
+                                    })}
                                     {totalUpcomingPages > 1 && (
                                         <div className="mt-4 flex w-full flex-row items-center justify-between gap-4">
                                             <div className="text-sm whitespace-nowrap text-gray-600">

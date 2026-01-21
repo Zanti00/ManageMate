@@ -1,8 +1,8 @@
 import Heading from '@/components/heading';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { EventCard } from '@/components/ui/event-card';
 import { EventCardSkeleton } from '@/components/ui/event-card-skeleton';
+import Pagination from '@/components/ui/pagination';
 import { SearchInput } from '@/components/ui/search-input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useEventStatusCounts } from '@/hooks/use-event-status-counts';
@@ -12,7 +12,6 @@ import user from '@/routes/user';
 import { type BreadcrumbItem } from '@/types';
 import { getEventDisplayStatus } from '@/utils/event-status';
 import { router } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -128,123 +127,6 @@ export default function UserEvent({ events }: Props) {
         statusResolver: (event) => event.status ?? getEventDisplayStatus(event),
     });
 
-    const handlePageChange = (url: string | null) => {
-        if (!url) return;
-        router.get(url, {}, { preserveState: true, preserveScroll: true });
-    };
-
-    const renderPageNumbers = () => {
-        if (!events) return null;
-
-        const pages = [];
-        const currentPage = events.current_page;
-        const lastPage = events.last_page;
-        const maxVisible = 5;
-
-        let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-        let endPage = Math.min(lastPage, startPage + maxVisible - 1);
-
-        if (endPage - startPage < maxVisible - 1) {
-            startPage = Math.max(1, endPage - maxVisible + 1);
-        }
-
-        for (let i = startPage; i <= endPage; i++) {
-            pages.push(
-                <Button
-                    key={i}
-                    variant={i === currentPage ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => handlePageChange(`${events.path}?page=${i}`)}
-                    className="min-w-[2.5rem]"
-                >
-                    {i}
-                </Button>,
-            );
-        }
-
-        return pages;
-    };
-
-    const renderSearchPagination = () => {
-        if (!hasActiveSearch || !searchMeta || searchMeta.last_page <= 1) {
-            return null;
-        }
-
-        const pages = [];
-        const maxVisible = 5;
-
-        let startPage = Math.max(
-            1,
-            searchMeta.current_page - Math.floor(maxVisible / 2),
-        );
-        let endPage = Math.min(
-            searchMeta.last_page,
-            startPage + maxVisible - 1,
-        );
-
-        if (endPage - startPage < maxVisible - 1) {
-            startPage = Math.max(1, endPage - maxVisible + 1);
-        }
-
-        for (let page = startPage; page <= endPage; page++) {
-            pages.push(
-                <Button
-                    key={page}
-                    variant={
-                        page === searchMeta.current_page ? 'default' : 'outline'
-                    }
-                    size="sm"
-                    onClick={() => setSearchPage(page)}
-                    disabled={searchLoading}
-                    className="min-w-[2.5rem]"
-                >
-                    {page}
-                </Button>,
-            );
-        }
-
-        return (
-            <Card className="p-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                            setSearchPage((prev) => Math.max(1, prev - 1))
-                        }
-                        disabled={searchMeta.current_page <= 1 || searchLoading}
-                    >
-                        <ChevronLeft className="mr-1 h-4 w-4" />
-                        Previous
-                    </Button>
-                    <div className="flex flex-wrap justify-center gap-1">
-                        {pages}
-                    </div>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                            setSearchPage((prev) =>
-                                Math.min(searchMeta.last_page, prev + 1),
-                            )
-                        }
-                        disabled={
-                            searchMeta.current_page >= searchMeta.last_page ||
-                            searchLoading
-                        }
-                    >
-                        Next
-                        <ChevronRight className="ml-1 h-4 w-4" />
-                    </Button>
-                </div>
-                <p className="mt-2 text-center text-sm text-gray-600">
-                    Showing page {searchMeta.current_page} of{' '}
-                    {searchMeta.last_page} (total {searchMeta.total} events)
-                </p>
-            </Card>
-        );
-    };
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-8 p-8">
@@ -327,7 +209,13 @@ export default function UserEvent({ events }: Props) {
                                     </div>
                                 ))}
                             </div>
-                            {renderSearchPagination()}
+                            <Pagination
+                                currentPage={searchMeta?.current_page ?? 1}
+                                totalItems={searchMeta?.total ?? 0}
+                                itemsPerPage={searchMeta?.per_page ?? SEARCH_RESULTS_PER_PAGE}
+                                onPageChange={setSearchPage}
+                                isLoading={searchLoading}
+                            />
                         </>
                     ) : (
                         <Card className="p-12 text-center text-gray-500">
@@ -354,48 +242,23 @@ export default function UserEvent({ events }: Props) {
                         </div>
 
                         {events && events.last_page > 1 && (
-                            <Card className="p-4">
-                                <div className="flex items-center justify-between">
-                                    <div className="text-sm text-gray-600">
-                                        Showing {events.from} to {events.to} of{' '}
-                                        {events.total} events
-                                    </div>
-
-                                    <div className="flex items-center gap-2">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() =>
-                                                handlePageChange(
-                                                    events.prev_page_url,
-                                                )
-                                            }
-                                            disabled={!events.prev_page_url}
-                                        >
-                                            <ChevronLeft className="h-4 w-4" />
-                                            Previous
-                                        </Button>
-
-                                        <div className="flex gap-1">
-                                            {renderPageNumbers()}
-                                        </div>
-
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() =>
-                                                handlePageChange(
-                                                    events.next_page_url,
-                                                )
-                                            }
-                                            disabled={!events.next_page_url}
-                                        >
-                                            Next
-                                            <ChevronRight className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </div>
-                            </Card>
+                            <Pagination
+                                currentPage={events.current_page}
+                                totalItems={events.total}
+                                itemsPerPage={events.per_page}
+                                onPageChange={(page: number) => {
+                                    const url = `${events.path}?page=${page}`;
+                                    router.get(
+                                        url,
+                                        {},
+                                        {
+                                            preserveState: true,
+                                            preserveScroll: true,
+                                        },
+                                    );
+                                }}
+                                isLoading={false}
+                            />
                         )}
                     </>
                 ) : (

@@ -1,12 +1,13 @@
 import Heading from '@/components/heading';
 import { Card } from '@/components/ui/card';
 import { EventCard } from '@/components/ui/event-card';
+import Pagination from '@/components/ui/pagination';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import user from '@/routes/user';
 import { BreadcrumbItem } from '@/types';
 import { getEventDisplayStatus } from '@/utils/event-status';
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -46,15 +47,25 @@ export default function MyEvents({ events = [] }: Props) {
     const [statusFilter, setStatusFilter] = useState<'all' | FilterValues>(
         'all',
     );
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 9;
 
     const filteredStatus =
         statusFilter === 'all'
             ? eventsWithStatus
             : eventsWithStatus.filter((e) => e.status === statusFilter);
-    const resolveImageUrl = (path?: string | null) => {
-        if (!path) return '/images/event-placeholder.png';
-        return path.startsWith('http') ? path : `/storage/${path}`;
-    };
+
+    const totalItems = filteredStatus.length;
+    const paginatedEvents = filteredStatus.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE,
+    );
+
+    // Reset to first page when filter changes
+    React.useEffect(() => {
+        setCurrentPage(1);
+    }, [statusFilter]);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-8 p-8">
@@ -115,25 +126,36 @@ export default function MyEvents({ events = [] }: Props) {
                         </div>
                     </Tabs>
                 </Card>
-                {filteredStatus.length === 0 ? (
+                {totalItems === 0 ? (
                     <Card className="p-12">
                         <div className="text-center text-gray-500">
                             No events found
                         </div>
                     </Card>
                 ) : (
-                    <div className="grid grid-cols-3 gap-6">
-                        {filteredStatus.map((event) => (
-                            <div key={event.id} className="flex flex-col gap-2">
-                                <EventCard
-                                    {...event}
-                                    viewDetailsHref={
-                                        user.event.show(event.id).url
-                                    }
-                                />
-                            </div>
-                        ))}
-                    </div>
+                    <>
+                        <div className="grid grid-cols-3 gap-6">
+                            {paginatedEvents.map((event) => (
+                                <div
+                                    key={event.id}
+                                    className="flex flex-col gap-2"
+                                >
+                                    <EventCard
+                                        {...event}
+                                        viewDetailsHref={
+                                            user.event.show(event.id).url
+                                        }
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                        <Pagination
+                            currentPage={currentPage}
+                            totalItems={totalItems}
+                            itemsPerPage={ITEMS_PER_PAGE}
+                            onPageChange={setCurrentPage}
+                        />
+                    </>
                 )}
             </div>
         </AppLayout>

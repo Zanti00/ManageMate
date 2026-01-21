@@ -15,8 +15,8 @@ class DashboardService
 
     public function getDashboardData(int $userId): array
     {
-        $eventsToday = $this->eventRepo->getEventsToday();
-        $upcomingEvents = $this->eventRepo->getUpcomingEvents();
+        $eventsToday = $this->attachImagesToEvents($this->eventRepo->getEventsToday());
+        $upcomingEvents = $this->attachImagesToEvents($this->eventRepo->getUpcomingEvents());
         $featuredEvents = $this->attachImagesToEvents(
             $this->eventRepo->getFeaturedEvents()
         );

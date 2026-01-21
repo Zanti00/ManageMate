@@ -1,6 +1,7 @@
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { OrganizationCard } from '@/components/ui/organization-card';
+import Pagination from '@/components/ui/pagination';
 import { SearchInput } from '@/components/ui/search-input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useEventStatusCounts } from '@/hooks/use-event-status-counts';
@@ -9,8 +10,7 @@ import AppLayout from '@/layouts/app-layout';
 import superadmin from '@/routes/superadmin';
 import { BreadcrumbItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { JSX, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -134,79 +134,27 @@ export default function OrganizationIndex({ organizations = [] }: Props) {
         if (!hasActiveSearch || !searchMeta || searchMeta.last_page <= 1) {
             return null;
         }
-
-        const pages: JSX.Element[] = [];
-        const maxVisible = 5;
-        let startPage = Math.max(
-            1,
-            searchMeta.current_page - Math.floor(maxVisible / 2),
-        );
-        let endPage = Math.min(
-            searchMeta.last_page,
-            startPage + maxVisible - 1,
-        );
-
-        if (endPage - startPage < maxVisible - 1) {
-            startPage = Math.max(1, endPage - maxVisible + 1);
-        }
-
-        for (let page = startPage; page <= endPage; page++) {
-            pages.push(
-                <Button
-                    key={page}
-                    variant={
-                        page === searchMeta.current_page ? 'default' : 'outline'
-                    }
-                    size="sm"
-                    onClick={() => setSearchPage(page)}
-                    disabled={searchLoading}
-                    className="min-w-[2.5rem]"
-                >
-                    {page}
-                </Button>,
-            );
-        }
-
         return (
-            <div className="flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-sm">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                            setSearchPage((prev) => Math.max(1, prev - 1))
-                        }
-                        disabled={searchMeta.current_page <= 1 || searchLoading}
-                    >
-                        <ChevronLeft className="mr-1 h-4 w-4" />
-                        Previous
-                    </Button>
-                    <div className="flex flex-wrap justify-center gap-1">
-                        {pages}
-                    </div>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                            setSearchPage((prev) =>
-                                Math.min(searchMeta.last_page, prev + 1),
-                            )
-                        }
-                        disabled={
-                            searchMeta.current_page >= searchMeta.last_page ||
-                            searchLoading
-                        }
-                    >
-                        Next
-                        <ChevronRight className="ml-1 h-4 w-4" />
-                    </Button>
-                </div>
-                <p className="text-center text-sm text-muted-foreground">
-                    Showing page {searchMeta.current_page} of{' '}
-                    {searchMeta.last_page} (total {searchMeta.total}{' '}
-                    organizations)
-                </p>
-            </div>
+            <Pagination
+                currentPage={searchMeta.current_page}
+                totalItems={searchMeta.total}
+                itemsPerPage={SEARCH_RESULTS_PER_PAGE}
+                onPageChange={setSearchPage}
+                isLoading={searchLoading}
+            />
+        );
+    };
+    const renderBasePagination = () => {
+        if (hasActiveSearch || filteredOrganizations.length === 0) {
+            return null;
+        }
+        return (
+            <Pagination
+                currentPage={1} // If you have base pagination logic, replace with currentPage state
+                totalItems={filteredOrganizations.length}
+                itemsPerPage={SEARCH_RESULTS_PER_PAGE}
+                onPageChange={() => {}} // If you have base pagination logic, replace with setCurrentPage
+            />
         );
     };
 
@@ -288,6 +236,7 @@ export default function OrganizationIndex({ organizations = [] }: Props) {
                                     )}
                                 </div>
                                 {renderSearchPagination()}
+                                {renderBasePagination()}
                             </>
                         ) : (
                             <div className="flex items-center justify-center rounded-2xl bg-white py-12 text-gray-500">
@@ -299,14 +248,17 @@ export default function OrganizationIndex({ organizations = [] }: Props) {
                             No organizations found
                         </div>
                     ) : (
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                            {organizationsToDisplay.map((organization) => (
-                                <OrganizationCard
-                                    key={organization.id}
-                                    {...organization}
-                                />
-                            ))}
-                        </div>
+                        <>
+                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                {organizationsToDisplay.map((organization) => (
+                                    <OrganizationCard
+                                        key={organization.id}
+                                        {...organization}
+                                    />
+                                ))}
+                            </div>
+                            {renderBasePagination()}
+                        </>
                     )}
                 </div>
             </div>

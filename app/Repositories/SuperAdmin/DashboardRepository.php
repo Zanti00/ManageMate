@@ -8,16 +8,12 @@ class DashboardRepository
 {
     public function getDashboardStats(): ?object
     {
-        $result = DB::select('EXEC usp_SuperadminDashboardStats');
-
-        return $result[0] ?? null;
+        return DB::table('vw_SuperAdminDashboardStats')->first();
     }
 
     public function getEventStatusOverview(): ?object
     {
-        $result = DB::select('EXEC usp_Event_AllStats');
-
-        return $result[0] ?? null;
+        return DB::table('vw_Event_AllStats')->first();
     }
 
     public function getPlatformGrowthTrends(int $year): array
