@@ -4,7 +4,6 @@ namespace App\Services\SuperAdmin;
 
 use App\Repositories\SuperAdmin\EventRepository;
 use App\Repositories\SuperAdmin\OrganizationRepository;
-use Illuminate\Support\Facades\Log;
 
 class EventService
 {
@@ -93,16 +92,8 @@ class EventService
         $this->eventRepo->setFeatured($id);
     }
 
-    // public function getMonthlyPerformanceData(int $id): array
-    // {
-    //     $year = (int) now()->year;
-
-    //     $result = $this->eventRepo->getMonthlyPerformanceById($id, $year);
-
-    //     Log::info('query result', [
-    //         'result' => $result,
-    //     ]);
-
-    //     return $result;
-    // }
+    public function insertRejectReason(int $id, string $reject_reason): void
+    {
+        $this->eventRepo->insertRejectReason($id, $reject_reason);
+    }
 }

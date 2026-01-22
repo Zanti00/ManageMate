@@ -120,10 +120,12 @@ class EventController extends Controller
         }
     }
 
-    public function reject_event(string $id)
+    public function reject_event(Request $request, string $id)
     {
         try {
             $this->eventService->rejectEvent((int) $id);
+            $reason = $request->input('reason', '');
+            $this->eventService->insertRejectReason((int) $id, $reason);
 
             return redirect()->route('superadmin.event.index')
                 ->with('success', 'Event rejected successfully!');

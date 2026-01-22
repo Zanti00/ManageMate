@@ -59,6 +59,7 @@ type Event = {
     id: number;
     title: string;
     description: string;
+    rejection_reason: string;
     location: string;
     attendees: number;
     registries: number;
@@ -380,6 +381,9 @@ export default function EventView({
                                     <TabsTrigger value="attendees">
                                         Attendees
                                     </TabsTrigger>
+                                    <TabsTrigger value="reject_reason">
+                                        Reject Reason
+                                    </TabsTrigger>
                                 </TabsList>
                                 <hr className="border-t-1 border-gray-200" />
                                 <TabsContent
@@ -664,6 +668,18 @@ export default function EventView({
                                                 )}
                                             </tbody>
                                         </table>
+                                    </div>
+                                </TabsContent>
+                                <TabsContent value="reject_reason">
+                                    <div className="flex flex-col p-6">
+                                        <div className="flex flex-row">
+                                            <p className="text-xl font-bold text-primary-foreground">
+                                                Reject Reason
+                                            </p>
+                                        </div>
+                                        <div className="flex flex-row text-gray-600">
+                                            {event.rejection_reason}
+                                        </div>
                                     </div>
                                 </TabsContent>
                             </Tabs>

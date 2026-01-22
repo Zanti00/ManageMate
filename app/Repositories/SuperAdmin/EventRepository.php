@@ -102,4 +102,14 @@ class EventRepository
 
         return $result ? $result[0] : null;
     }
+
+    public function insertRejectReason(int $eventId, string $reject_reason): void
+    {
+        DB::statement('EXEC usp_Event_InsertRejectReason @event_id = :event_id, @reject_reason = :reject_reason',
+            [
+                'event_id' => $eventId,
+                'reject_reason' => $reject_reason,
+            ],
+        );
+    }
 }

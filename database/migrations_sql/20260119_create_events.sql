@@ -9,6 +9,7 @@ BEGIN
         updated_at DATETIME2 NOT NULL DEFAULT GETDATE(),
         title NVARCHAR(255) NOT NULL,
         description NVARCHAR(MAX) NOT NULL,
+        rejection_reason NVARCHAR(MAX) NULL,
         attendees BIGINT NULL,
         registries BIGINT NULL,
         status NVARCHAR(20) NOT NULL DEFAULT 'pending',

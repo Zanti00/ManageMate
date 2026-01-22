@@ -7,9 +7,11 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import Modal from '@/components/ui/modal';
 import Pagination from '@/components/ui/pagination';
 import { SearchInput } from '@/components/ui/search-input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import { useEventStatusCounts } from '@/hooks/use-event-status-counts';
 import { usePaginatedSearch } from '@/hooks/use-paginated-search';
 import AppLayout from '@/layouts/app-layout';
@@ -109,22 +111,47 @@ type EventWithStatus = Event & { status: EventStatus };
 interface Props {
     events?: Event[];
 }
-
 export default function SuperAdminEvent({ events = [] }: Props) {
     const [statusFilter, setStatusFilter] = useState<'all' | EventStatus>(
         'all',
     );
     const [currentPage, setCurrentPage] = useState(1);
+    const [rejectModalOpen, setRejectModalOpen] = useState(false);
+    const [rejectingEventId, setRejectingEventId] = useState<number | null>(
+        null,
+    );
+    const [rejectLoading, setRejectLoading] = useState(false);
+    const [rejectReason, setRejectReason] = useState('');
 
     const handleApprove = (eventId: number) => {
         router.patch(superadmin.event.approve(eventId).url);
     };
 
-    const handleReject = (eventId: number) => {
-        if (!confirm('Are you sure you want to reject this event?')) {
-            return;
-        }
-        router.patch(superadmin.event.reject(eventId).url);
+    const openRejectModal = (eventId: number) => {
+        setRejectingEventId(eventId);
+        setRejectModalOpen(true);
+        setRejectReason('');
+    };
+
+    const closeRejectModal = () => {
+        setRejectModalOpen(false);
+        setRejectingEventId(null);
+        setRejectReason('');
+    };
+
+    const confirmReject = () => {
+        if (!rejectingEventId) return;
+        setRejectLoading(true);
+        router.patch(
+            superadmin.event.reject(rejectingEventId).url,
+            { reason: rejectReason },
+            {
+                onFinish: () => {
+                    setRejectLoading(false);
+                    closeRejectModal();
+                },
+            },
+        );
     };
 
     useEffect(() => {
@@ -227,7 +254,7 @@ export default function SuperAdminEvent({ events = [] }: Props) {
                     value={statusFilter}
                     onValueChange={(value) => setStatusFilter(value as any)}
                 >
-                    <div className="flex flex-row gap-48 rounded-2xl bg-white p-3 shadow-sm">
+                    <div className="flex flex-row gap-20 rounded-2xl bg-white p-3 shadow-sm">
                         <TabsList className="h-10 gap-3">
                             <TabsTrigger value="all">
                                 All ({statusCounts.all})
@@ -310,7 +337,7 @@ export default function SuperAdminEvent({ events = [] }: Props) {
                                                 : event.status === 'deleted'
                                                   ? 'bg-gray-300 text-gray-700'
                                                   : event.status === 'closed'
-                                                    ? 'bg-gray-400 text-gray-800'
+                                                    ? 'bg-gray-100 text-gray-800'
                                                     : 'bg-gray-100 text-gray-700';
 
                                     return (
@@ -433,7 +460,7 @@ export default function SuperAdminEvent({ events = [] }: Props) {
                                                                     event.status !==
                                                                         'closed'
                                                                 ) {
-                                                                    handleReject(
+                                                                    openRejectModal(
                                                                         event.id,
                                                                     );
                                                                 }
@@ -455,6 +482,34 @@ export default function SuperAdminEvent({ events = [] }: Props) {
                     ? renderSearchPagination()
                     : renderBasePagination()}
             </div>
+            {/* Reject Modal */}
+            <Modal
+                open={rejectModalOpen}
+                title="Reject Event"
+                onClose={closeRejectModal}
+                onConfirm={confirmReject}
+                confirmText="Reject"
+                cancelText="Cancel"
+                loading={rejectLoading}
+            >
+                <div className="flex flex-col gap-3">
+                    <p>Are you sure you want to reject this event?</p>
+                    <label
+                        htmlFor="reject-reason"
+                        className="text-sm font-medium"
+                    >
+                        Reason (optional):
+                    </label>
+                    <Textarea
+                        id="reject-reason"
+                        className="min-h-[80px] resize-y rounded-md border p-2 selection:bg-blue-200 selection:text-blue-900"
+                        value={rejectReason}
+                        onChange={(e) => setRejectReason(e.target.value)}
+                        placeholder="Enter reason for rejection..."
+                        disabled={rejectLoading}
+                    />
+                </div>
+            </Modal>
         </AppLayout>
     );
 }
