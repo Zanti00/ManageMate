@@ -3,10 +3,11 @@
 namespace App\Services\SuperAdmin;
 
 use App\Repositories\SuperAdmin\OrganizationRepository;
+use App\Repositories\SuperAdmin\EventRepository;
 
 class OrganizationService
 {
-    public function __construct(private OrganizationRepository $organizationRepo) {}
+    public function __construct(private OrganizationRepository $organizationRepo, private EventRepository $eventRepo) {}
 
     public function create(array $validated): void
     {
@@ -77,6 +78,57 @@ class OrganizationService
     public function getOrganization(int $id): ?object
     {
         return $this->organizationRepo->findById($id);
+    }
+
+    /**
+     * Get organization and associated event stats using stored procedure.
+     * Returns an array with keys: organization, events, total_events, active_events, pending_events, rejected_events
+     */
+    public function getOrganizationWithStats(int $id): array
+    {
+        $organization = $this->organizationRepo->findById($id);
+
+        if (! $organization) {
+            return [
+                'organization' => null,
+                'events' => [],
+                'total_events' => 0,
+                'active_events' => 0,
+                'pending_events' => 0,
+                'rejected_events' => 0,
+            ];
+        }
+
+        $events = $this->eventRepo->getByOrganization($id) ?: [];
+
+        // normalize objects to arrays for the frontend
+        $eventsArray = array_map(static fn ($e) => (array) $e, $events);
+
+        $total = count($eventsArray);
+        $active = 0;
+        $pending = 0;
+        $rejected = 0;
+
+        foreach ($eventsArray as $e) {
+            $status = isset($e['status']) ? strtolower((string) $e['status']) : '';
+
+            if ($status === 'active') {
+                $active++;
+            } elseif ($status === 'pending') {
+                $pending++;
+            } elseif ($status === 'rejected') {
+                $rejected++;
+            }
+        }
+
+        return [
+            'organization' => $organization,
+            'events' => $eventsArray,
+            'total_events' => $total,
+            'active_events' => $active,
+            'pending_events' => $pending,
+            'rejected_events' => $rejected,
+        ];
     }
 
     public function updateOrganization(int $id, array $validated): void

@@ -27,10 +27,18 @@ import {
     Title,
     Tooltip,
 } from 'chart.js';
-import { ArrowLeft, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import {
+    ArrowLeft,
+    ChevronLeft,
+    ChevronRight,
+    PhilippinePeso,
+    Users,
+    X,
+} from 'lucide-react';
 import { useEffect } from 'react';
 // import { generateEventReport } from '../../utils/generateEventReport';
 // Update the import path below if the file exists elsewhere:
+import { SummaryCard } from '@/components/ui/summary-card';
 import { generateEventReport } from '@/utils/generateEventReport';
 import { Bar, Line, Pie } from 'react-chartjs-2';
 
@@ -129,11 +137,6 @@ export default function EventView({
     event_attendees = [],
     organization = null,
 }: Props) {
-    if (!event) {
-        return <div className="p-6">Event not found</div>;
-    }
-
-    const eventStatus = getEventStatus(event);
     const {
         displayImages,
         activeImageIndex,
@@ -151,6 +154,8 @@ export default function EventView({
         resetKey: event?.id,
     });
 
+    const eventStatus = event ? getEventStatus(event) : 'Pending';
+
     useEffect(() => {
         if (!hasMultipleImages || lightboxOpen) {
             return;
@@ -164,6 +169,10 @@ export default function EventView({
             window.clearInterval(intervalId);
         };
     }, [hasMultipleImages, goToNextImage, lightboxOpen]);
+
+    if (!event) {
+        return <div className="p-6">Event not found</div>;
+    }
 
     const registrationTrendData: ChartData<'line'> = {
         labels: registration_trend_labels,
@@ -341,15 +350,15 @@ export default function EventView({
                             </div>
                         </Card>
                         <div className="grid grid-cols-3 gap-4">
-                            {/* <SummaryCard
-                                value={event.registries.toString()}
+                            <SummaryCard
+                                value={String(event.registries ?? 0)}
                                 label={'Total Registries'}
                                 icon={Users}
                                 className="fill-white"
                                 iconBg="bg-gradient-to-br from-teal-400 to-teal-600"
-                            ></SummaryCard> */}
-                            {/* <SummaryCard
-                                value={event.attendees.toString()}
+                            ></SummaryCard>
+                            <SummaryCard
+                                value={String(event.attendees ?? 0)}
                                 label={'Total Attendees'}
                                 icon={Users}
                                 className="fill-white"
@@ -360,7 +369,7 @@ export default function EventView({
                                 label={'Total Earnings'}
                                 icon={PhilippinePeso}
                                 iconBg="bg-gradient-to-br from-purple-400 to-purple-600"
-                            ></SummaryCard> */}
+                            ></SummaryCard>
                             {/* <SummaryCard
                                 value={'1'}
                                 label={'Average Rating'}

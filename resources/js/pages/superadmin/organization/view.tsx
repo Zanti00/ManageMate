@@ -5,7 +5,6 @@ import { Label } from '@/components/ui/label';
 import { SummaryCard } from '@/components/ui/summary-card';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
-import { formatDateRange } from '@/utils/date-format';
 import { Link } from '@inertiajs/react';
 import { ArrowLeft, Mail, MapPin } from 'lucide-react';
 
@@ -157,7 +156,7 @@ export default function OrganizationView({
                     />
                 </div>
 
-                <Card className="p-6">
+                {/* <Card className="p-6">
                     <CardTitle>Recent Events</CardTitle>
                     <div className="mt-4 flex flex-col gap-3">
                         {events.length === 0 ? (
@@ -202,7 +201,7 @@ export default function OrganizationView({
                             ))
                         )}
                     </div>
-                </Card>
+                </Card> */}
 
                 <Card className="p-6">
                     <CardTitle>Contact Information</CardTitle>

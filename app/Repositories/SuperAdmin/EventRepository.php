@@ -112,4 +112,12 @@ class EventRepository
             ],
         );
     }
+
+    /**
+     * Fetch events (and their statuses) for a specific organization using stored procedure.
+     */
+    public function getByOrganization(int $organizationId): array
+    {
+        return DB::select('EXEC usp_Event_GetByOrganization @organization_id = :organization_id', ['organization_id' => $organizationId]);
+    }
 }

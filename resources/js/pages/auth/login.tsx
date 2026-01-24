@@ -13,7 +13,6 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/auth-layout';
 import { store } from '@/routes/login';
-import { request } from '@/routes/password';
 import { store as registerStore } from '@/routes/register';
 import { Form, Head } from '@inertiajs/react';
 import { Ellipsis } from 'lucide-react';
@@ -103,6 +102,14 @@ export default function Login({
                                         placeholder="Password"
                                     />
                                     <InputError message={errors.password} />
+                                    <div className="mt-1 text-right">
+                                        <TextLink
+                                            href="/forgot-password"
+                                            className="text-sm text-chart-1 hover:underline"
+                                        >
+                                            Forgot password?
+                                        </TextLink>
+                                    </div>
                                 </div>
 
                                 <div className="flex items-center space-x-3">
@@ -116,7 +123,7 @@ export default function Login({
                                     </Label>
                                 </div>
 
-                                <div className="text-end">
+                                {/* <div className="text-end">
                                     {canResetPassword && (
                                         <TextLink
                                             href={request()}
@@ -126,7 +133,7 @@ export default function Login({
                                             Forgot password?
                                         </TextLink>
                                     )}
-                                </div>
+                                </div> */}
 
                                 <Button
                                     type="submit"

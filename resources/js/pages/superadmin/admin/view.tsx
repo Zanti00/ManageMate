@@ -385,7 +385,7 @@ export default function ViewAdmin({
                         <TabsList className="h-10 gap-3">
                             <TabsTrigger value="overview">Overview</TabsTrigger>
                             <TabsTrigger value="events">Events</TabsTrigger>
-                            <TabsTrigger value="activity">Activity</TabsTrigger>
+                            {/* <TabsTrigger value="activity">Activity</TabsTrigger> */}
                         </TabsList>
                         <TabsContent className="bg-white" value="overview">
                             <div className="grid grid-cols-2 gap-4">
@@ -511,7 +511,7 @@ export default function ViewAdmin({
                             </div>
                         </TabsContent>
 
-                        <TabsContent value="activity">
+                        {/* <TabsContent value="activity">
                             <div className="flex flex-col gap-6">
                                 <Label>Activity Log</Label>
                                 <Card className="flex flex-row border-1 border-gray-200 px-4 shadow-none">
@@ -529,7 +529,7 @@ export default function ViewAdmin({
                                     </div>
                                 </Card>
                             </div>
-                        </TabsContent>
+                        </TabsContent> */}
                     </Card>
                 </Tabs>
             </div>

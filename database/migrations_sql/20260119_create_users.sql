@@ -18,6 +18,7 @@ BEGIN
         role NVARCHAR(20) NOT NULL DEFAULT 'user',
         created_at DATETIME2 NOT NULL DEFAULT GETDATE(),
         updated_at DATETIME2 NOT NULL DEFAULT GETDATE(),
+        remember_token VARCHAR(100) NULL,
         CONSTRAINT fk_users_organization FOREIGN KEY (organization_id) REFERENCES organizations(id),
         CONSTRAINT chk_users_role CHECK (role IN ('user', 'admin', 'superadmin'))
     );

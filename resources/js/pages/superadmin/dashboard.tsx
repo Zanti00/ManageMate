@@ -319,7 +319,7 @@ export default function SuperAdminDashboard({
                         </div>
                     </Card>
                 </div>
-                <Card>
+                {/* <Card>
                     <div className="flex flex-col gap-4 p-6">
                         <div className="flex flex-row justify-between">
                             <Label>Recent Activities</Label>
@@ -350,7 +350,7 @@ export default function SuperAdminDashboard({
                             </Card>
                         </div>
                     </div>
-                </Card>
+                </Card> */}
             </div>
         </AppLayout>
     );

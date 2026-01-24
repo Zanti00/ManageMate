@@ -90,7 +90,9 @@ class OrganizationController extends Controller
      */
     public function show(string $id)
     {
-        $organization = $this->organizationService->getOrganization((int) $id);
+        $payload = $this->organizationService->getOrganizationWithStats((int) $id);
+
+        $organization = $payload['organization'] ?? null;
 
         if (! $organization) {
             abort(404);
@@ -98,6 +100,11 @@ class OrganizationController extends Controller
 
         return Inertia::render('superadmin/organization/view', [
             'organization' => $organization,
+            'events' => $payload['events'] ?? [],
+            'total_events' => $payload['total_events'] ?? 0,
+            'active_events' => $payload['active_events'] ?? 0,
+            'pending_events' => $payload['pending_events'] ?? 0,
+            'rejected_events' => $payload['rejected_events'] ?? 0,
         ]);
     }
 

@@ -26,7 +26,7 @@ class ScanQrService
         }
 
         // Check event ownership
-        if ((int) ($event->user_id ?? 0) !== (int) $adminId) {
+        if ((int) ($event->user_id ?? 0) == (int) $adminId) {
             throw new InvalidArgumentException('This QR code cannot be used for this event. Please verify the correct event or contact the event administrator.');
         }
 

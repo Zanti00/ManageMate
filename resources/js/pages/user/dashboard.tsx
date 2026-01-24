@@ -19,7 +19,6 @@ import { formatDateRange, formatTimeRange } from '@/utils/date-format';
 import { Link } from '@inertiajs/react';
 import dayjs from 'dayjs';
 import {
-    Bell,
     Calendar1,
     CalendarClock,
     CalendarDays,
@@ -188,7 +187,7 @@ export default function Dashboard({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-5 p-8">
-                <div className="grid grid-cols-4 gap-6">
+                <div className="grid grid-cols-3 gap-6">
                     <SummaryCard
                         value={total_active_registered_events}
                         label={'My Events'}
@@ -209,12 +208,12 @@ export default function Dashboard({
                         icon={CalendarDays}
                         iconBg="bg-gradient-to-br from-orange-400 to-orange-600"
                     ></SummaryCard>
-                    <SummaryCard
+                    {/* <SummaryCard
                         value={'1'}
                         label={'Notifications'}
                         icon={Bell}
                         iconBg="bg-gradient-to-br from-rose-400 to-rose-600"
-                    ></SummaryCard>
+                    ></SummaryCard> */}
                 </div>
                 <div className="flex flex-row">
                     <strong className="text-2xl font-extrabold text-black">
